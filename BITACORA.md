@@ -46,3 +46,19 @@ Participantes: Luciano Tejada (docente) y Claude (Claude Code).
 - **Explicaciones en diálogos.** Cada imagen tiene su «Ver más», y hay uno general sobre las proyecciones y sobre cómo se conectan las imágenes. Las líneas de datos detalladas (cuentas, franja, medida de movimiento) viven dentro del diálogo que les corresponde; a la vista queda un resumen de una línea.
 
 **Validación.** Prueba en emulación de teléfono con el ZIP real: las cuatro imágenes y los controles dentro de la pantalla; la línea amarilla aparece en cine, suma y linograma al cambiar la fila; la celeste aparece en sinograma y linograma al reproducir y el deslizador la sigue; tocar el sinograma en el medio lleva el cine a la vista 33; tocar la suma y el linograma mueve los cursores; los cinco «Ver más» abren y cierran; ninguna explicación larga visible antes de pedirla.
+
+## 2026-09-27 · Vista corregido: dos columnas, sin corregir y corregido
+
+**Contexto.** El docente fijó que la carga será siempre desde el ZIP y pidió un botón «Vista corregido» que muestre dos columnas: a la izquierda lo que salió del equipo sin corregir y a la derecha la copia corregida; primera fila las proyecciones, segunda el sinograma y, bajando por la página, la imagen suma y el linograma.
+
+**Decisiones.**
+- **El ZIP entrega las dos adquisiciones.** Además de `NM_estres.dcm` se extrae `NM_estres_QC_corregido.dcm` de la misma carpeta. Se acepta solo si comparte marco de referencia y matriz con la cruda. Si el ZIP no la trae, el botón queda deshabilitado.
+- **La rejilla se arma según la vista.** En una columna, las cuatro imágenes de la cruda en una pantalla. En dos columnas, ocho imágenes en el orden pedido, con los rótulos «Sin corregir» y «Corregido» y un «Ver más» por fila.
+- **Misma escala de color en las dos columnas.** La corregida se pinta con los máximos de la cruda (cine, suma, linograma y sinograma de la fila): una diferencia de brillo entre columnas es una diferencia de cuentas, no de ventana.
+- **Los cursores van juntos.** Fila y vista se mueven a la vez en las dos columnas, así siempre se compara lo mismo.
+- **Controles pegados abajo** en la vista de dos columnas, porque la página se desplaza y sin eso habría que subir para reproducir o cambiar la fila. En esta vista las imágenes dejan pasar el arrastre vertical para desplazar la página; se siguen pudiendo tocar.
+- **La comparación se mide, no se supone.** Vista por vista se comprueba si las cuentas son idénticas y, si no, el desplazamiento entero que mejor hace calzar los perfiles a lo largo de la camilla y hacia el lado. El resultado va en el resumen y en «Ver más sobre la comparación».
+
+**Hallazgo.** En el estrés del caso 1 la copia corregida es idéntica a la original, píxel por píxel, en las 64 vistas: las dos columnas se ven iguales y la aplicación lo dice. En el caso 4 (ZIP de prueba) difieren 62 de 64 vistas, con hasta 2 píxeles hacia el lado y menos de un píxel a lo largo de la camilla.
+
+**Validación.** Emulación de teléfono con dos ZIP reales: orden de las ocho imágenes, columnas rotuladas, sin corregir a la izquierda, proyecciones y sinograma visibles sobre los controles, suma y linograma bajo el pliegue y visibles al bajar, controles siempre a la vista, cursores presentes en las dos columnas.

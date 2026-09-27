@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=3">
+<link rel="stylesheet" href="movil.css?v=4">
 </head>
 <body>
 <header class="barra">
@@ -13,37 +13,17 @@
 </header>
 <main>
  <section class="tarjeta" id="carga">
-  <h2>Cargar las proyecciones sin corregir</h2>
-  <p>Elige el ZIP que descargaste de U-Cursos («Cardiaco …zip»), tal como está. La aplicación busca dentro el archivo <b>NM_estres.dcm</b> del Caso 1 y abre solo ese.</p>
-  <label class="boton" for="archivo">Elegir archivo…</label>
-  <input id="archivo" type="file" accept=".zip,.dcm,application/zip,application/dicom,*/*">
+  <h2>Cargar el ZIP del caso</h2>
+  <p>Elige el ZIP que descargaste de U-Cursos («Cardiaco …zip»), tal como está. La aplicación busca dentro las proyecciones de estrés del Caso 1: las que salieron del equipo sin corregir y la copia que el equipo corrigió.</p>
+  <label class="boton" for="archivo">Elegir el ZIP…</label>
+  <input id="archivo" type="file" accept=".zip,application/zip,application/x-zip-compressed,.dcm,*/*">
   <button type="button" class="vermas" data-dialogo="dCarga">Ver más</button>
   <p id="estado" class="estado">Nada cargado todavía.</p>
  </section>
 
  <section class="oculta" id="qc">
-  <div class="rejilla">
-   <figure>
-    <figcaption>Cine <span id="vistaTexto" class="mono"></span></figcaption>
-    <canvas id="cine"></canvas>
-    <button type="button" class="vermas" data-dialogo="dCine">Ver más</button>
-   </figure>
-   <figure>
-    <figcaption>Imagen suma</figcaption>
-    <canvas id="suma"></canvas>
-    <button type="button" class="vermas" data-dialogo="dSuma">Ver más</button>
-   </figure>
-   <figure>
-    <figcaption>Sinograma <span class="mono">fila <span id="filaValor"></span></span></figcaption>
-    <canvas id="sino"></canvas>
-    <button type="button" class="vermas" data-dialogo="dSino">Ver más</button>
-   </figure>
-   <figure>
-    <figcaption>Linograma</figcaption>
-    <canvas id="lino"></canvas>
-    <button type="button" class="vermas" data-dialogo="dLino">Ver más</button>
-   </figure>
-  </div>
+  <button id="modo" type="button" class="cambio" aria-pressed="false">Vista corregido</button>
+  <div id="rejilla" class="rejilla"></div>
 
   <div class="controles">
    <div class="fila">
@@ -55,7 +35,7 @@
     <span class="etq amarilla">Fila</span>
     <input id="fila" type="range" min="0" max="127" value="64" aria-label="Fila del sinograma">
    </div>
-   <p class="clave"><span class="amarilla">━</span> fila elegida · <span class="celeste">┃</span> vista que muestra el cine. También puedes tocar o arrastrar sobre las imágenes.</p>
+   <p class="clave"><span class="amarilla">━</span> fila elegida · <span class="celeste">┃</span> vista que muestra el cine. También puedes tocar las imágenes.</p>
   </div>
   <p id="resumen" class="dato"></p>
   <button type="button" class="vermas ancho" data-dialogo="dGeneral">Ver más sobre las proyecciones y estos números</button>
@@ -64,12 +44,16 @@
 <footer><p>Uso educativo · Los DICOM no salen del teléfono · Paso 1 de la versión móvil</p></footer>
 
 <dialog id="dCarga">
- <h2>Qué archivo se carga</h2>
+ <h2>Qué se carga</h2>
  <dl class="leyenda">
   <dt>El ZIP de U-Cursos</dt>
-  <dd>Es el mismo que descargaste para el computador. No hace falta descomprimirlo en el teléfono: la aplicación lo abre, busca <b>NM_estres.dcm</b> en la carpeta Caso 1 › Estres y lee solo ese archivo. También puedes elegir ese archivo suelto.</dd>
-  <dt>Qué quiere decir «sin corregir»</dt>
-  <dd>Tal como salieron de la gammacámara. El ZIP trae además una copia que el equipo corrigió por movimiento y una adquisición sincronizada con el electrocardiograma; en este paso no se usan.</dd>
+  <dd>Es el mismo que descargaste para el computador. No hace falta descomprimirlo en el teléfono: la aplicación lo abre y lee solo dos archivos de la carpeta Caso 1 › Estres.</dd>
+  <dt>NM_estres.dcm, sin corregir</dt>
+  <dd>Las proyecciones tal como salieron de la gammacámara.</dd>
+  <dt>NM_estres_QC_corregido.dcm, corregido</dt>
+  <dd>Una copia de las mismas proyecciones a la que el equipo le aplicó su corrección de movimiento. Se ve con el botón «Vista corregido».</dd>
+  <dt>Lo que no se usa en este paso</dt>
+  <dd>El ZIP trae además una adquisición sincronizada con el electrocardiograma y las imágenes de tomografía computada. Aquí no se abren.</dd>
   <dt>Privacidad</dt>
   <dd>El archivo se lee dentro del teléfono. No se envía a ningún servidor.</dd>
  </dl>
@@ -81,6 +65,22 @@
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
 
+<dialog id="dCorregido">
+ <h2>Sin corregir y corregido</h2>
+ <dl class="leyenda">
+  <dt>Qué es la copia corregida</dt>
+  <dd>Después de adquirir, el equipo puede revisar si el paciente se movió y desplazar cada proyección para volver a alinearla con las demás. El resultado se guarda como una copia aparte; las proyecciones originales no se tocan.</dd>
+  <dt>Cómo está armada esta vista</dt>
+  <dd>A la izquierda, lo que salió del equipo sin corregir. A la derecha, la copia corregida. Cada fila de la pantalla compara la misma imagen: primero las proyecciones, después el sinograma y, bajando, la imagen suma y el linograma. Las dos columnas usan la misma escala de color, para que una diferencia de brillo sea una diferencia real.</dd>
+  <dt>Los cursores van juntos</dt>
+  <dd>La fila amarilla y la vista celeste se mueven a la vez en las dos columnas. Así siempre se compara la misma vista y la misma fila.</dd>
+  <dt>Qué buscar</dt>
+  <dd>Si el equipo corrigió, en la columna derecha los quiebres del sinograma y los escalones del linograma deberían verse más suaves. Si las dos columnas se ven iguales, puede que el equipo no haya aplicado ninguna corrección: el resultado de la comparación, más abajo, lo dice.</dd>
+ </dl>
+ <p id="comparacion" class="dato"></p>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
 <dialog id="dGeneral">
  <h2>Las proyecciones</h2>
  <dl class="leyenda">
@@ -88,7 +88,7 @@
   <dd>La gammacámara giró alrededor del pecho del paciente y se detuvo a tomar una imagen plana cada 2,8 grados. Cada una de esas imágenes es una proyección, o vista: muestra todo lo que el detector tenía enfrente desde ese ángulo, superpuesto, igual que una radiografía superpone lo que atraviesa.</dd>
   <dt>Por qué se miran antes de reconstruir</dt>
   <dd>Los cortes del corazón todavía no existen: se calculan después, a partir de estas imágenes. Si el paciente se movió o si hay algo raro en las proyecciones, el cálculo lo convierte en un defecto falso. Por eso primero se revisan. Eso es el control de calidad.</dd>
-  <dt>Cómo están conectadas las cuatro imágenes</dt>
+  <dt>Cómo están conectadas las imágenes</dt>
   <dd>La línea amarilla horizontal es la fila elegida: está a la misma altura en el cine, en la imagen suma y en el linograma, y es la fila con que se arma el sinograma. La línea celeste vertical es la vista que muestra el cine: marca esa misma vista en el sinograma y en el linograma. Al reproducir el cine, la línea celeste avanza.</dd>
  </dl>
  <p id="cuentas" class="dato"></p>
@@ -105,7 +105,7 @@
   <dt>Qué buscar</dt>
   <dd>Al avanzar, el corazón debe desplazarse hacia el lado de forma suave y mantenerse a la misma altura. La línea amarilla ayuda: si el corazón sube o baja respecto de ella de una vista a la siguiente, el paciente se movió.</dd>
   <dt>Tocar la imagen</dt>
-  <dd>Al tocar o arrastrar hacia arriba y abajo se mueve la fila amarilla.</dd>
+  <dd>Al tocar se mueve la fila amarilla a esa altura.</dd>
  </dl>
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
@@ -150,7 +150,7 @@
   <dt>Lo que es normal aunque llame la atención</dt>
   <dd>Un cambio de brillo entre la mitad izquierda y la mitad derecha. Son los dos cabezales: uno estuvo más lejos del paciente que el otro y recibió menos fotones.</dd>
   <dt>Tocar la imagen</dt>
-  <dd>Hacia los lados cambia la vista (línea celeste); hacia arriba y abajo cambia la fila (línea amarilla).</dd>
+  <dd>Según dónde toques cambia la vista (línea celeste) y la fila (línea amarilla).</dd>
  </dl>
  <p id="medida" class="dato"></p>
  <button type="button" class="boton" data-cerrar>Cerrar</button>
@@ -172,6 +172,6 @@
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
-<script src="movil.js?v=4"></script>
+<script src="movil.js?v=5"></script>
 </body>
 </html>

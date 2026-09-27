@@ -25,7 +25,7 @@ figure{margin:0;min-width:0}
 figcaption{font-size:.85rem;font-weight:600;color:var(--acento);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
 canvas{display:block;width:100%;aspect-ratio:1;background:#000;border-radius:6px;image-rendering:pixelated;touch-action:none;cursor:crosshair}
 /* En pantallas bajas la rejilla se achica para que quepan tambien los controles */
-@media (max-height:760px){.rejilla{max-width:calc((100vh - 330px));margin:0 auto}}
+@media (max-height:760px){body:not(.comparar) .rejilla{max-width:calc((100vh - 370px));margin:0 auto}}
 
 .controles{margin-top:8px;background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:6px 10px}
 .fila{display:flex;gap:10px;align-items:center}
@@ -57,3 +57,14 @@ details{margin-top:10px;color:var(--texto2)}
 summary{cursor:pointer;color:var(--texto)}
 footer{text-align:center;color:var(--texto2);font-size:.75rem;padding:6px}
 footer p{margin:0}
+
+/* Boton que cambia entre una columna y la vista corregido */
+.cambio{width:100%;background:var(--tarjeta);color:var(--texto);border:1px solid var(--acento);border-radius:8px;padding:9px 10px;font-size:.9rem;font-weight:600;margin:0 0 6px;cursor:pointer}
+.cambio[aria-pressed=true]{background:var(--acento);color:#111}
+.cambio:disabled{opacity:.45;border-color:var(--linea)}
+/* Vista corregido: dos columnas, la pagina se desplaza y los controles quedan siempre a mano */
+.columna{font-size:.8rem;font-weight:700;text-align:center;color:var(--texto);background:var(--tarjeta);border:1px solid var(--linea);border-radius:6px;padding:3px 0}
+.vermas.doble{grid-column:1 / -1;margin:0 0 6px;padding:7px 10px}
+body.comparar canvas{touch-action:pan-y}
+body.comparar .controles{position:sticky;bottom:0;z-index:5;box-shadow:0 -6px 14px rgba(0,0,0,.55)}
+body.comparar .clave{display:none}
