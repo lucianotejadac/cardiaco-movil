@@ -28,3 +28,9 @@ Participantes: Luciano Tejada (docente) y Claude (Claude Code).
 **Decisión.** Nota fija bajo el sinograma que lo explica y una línea calculada sobre el archivo cargado: cuántas vistas tienen columnas en cero y el ancho máximo en columnas y milímetros. El mismo texto se corrigió en el tutorial de escritorio de `spect-lab-95`.
 
 **Pendiente.** La OSEM de `spect-lab-95` trata esos píxeles como ceros medidos y no como dato ausente; excluirlos del cálculo cambiaría la periferia de la reconstrucción y obliga a revalidar los seis casos. No se tocó.
+
+## 2026-09-27 · Leyendas que no dan nada por sabido
+
+**Contexto.** El docente pidió leyendas más explicativas: las primeras asumían que el estudiante ya sabía qué es una proyección, una cuenta, un cabezal o por qué un sinograma se curva.
+
+**Decisión.** Cada imagen lleva una leyenda con la misma estructura: qué es (cómo se construye a partir de las proyecciones), qué significa cada eje, cómo leerla y qué buscar. Antes de las imágenes se explica qué es una proyección y por qué se revisan antes de reconstruir. La zona sin medición del sinograma se explica en cuatro pasos y se enseña a distinguirla del aire fuera del paciente (oscuro granulado frente a negro absoluto). Las líneas de datos dicen en palabras lo que antes decían en abreviaturas: «cuenta» se define, la medida de movimiento explica cómo se calcula y advierte que es una ayuda y no un veredicto, y la franja se da en píxeles y en milímetros respecto del ancho total. Decimales con coma. Se comprobó en la cabecera que arriba de la imagen es hacia la cabeza (segundo vector de orientación 0, 0, −1) antes de escribirlo.

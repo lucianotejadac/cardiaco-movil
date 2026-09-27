@@ -31,3 +31,11 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;bac
 details{margin-top:10px;color:var(--texto2)}
 summary{cursor:pointer;color:var(--texto)}
 footer{text-align:center;color:var(--texto2);font-size:.8rem;padding:12px}
+
+.leyenda{margin:10px 0 0;font-size:.95rem}
+.leyenda dt{font-weight:600;color:var(--texto);margin-top:10px}
+.leyenda dd{margin:2px 0 0;color:var(--texto2)}
+.leyenda dd+dd{margin-top:6px}
+.leyenda.aviso{background:#0d1114;border-left:3px solid #7fd1ff;border-radius:6px;padding:4px 10px 10px}
+.leyenda.aviso dt{color:#7fd1ff}
+.dato{margin-top:10px}

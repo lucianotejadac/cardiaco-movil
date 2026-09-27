@@ -6,6 +6,7 @@
 const CASO=1,FASE='estres';
 const $=id=>document.getElementById(id);
 const paleta=v=>{v=Math.max(0,Math.min(1,v));return [255*Math.min(1,v*3),255*Math.max(0,Math.min(1,v*3-1)),255*Math.max(0,v*3-2)];};
+const dec=(x,d)=>Number(x).toFixed(d).replace('.',',');
 const estado={s:null,frames:[],max:1,k:0,timer:null,suma:null,lino:null,n:0};
 
 function pintar(canvas,img,w,h,max){
@@ -78,16 +79,16 @@ function prepararQc(s){
  let mi=0;for(let i=1;i<p;i++)if(suma[i]>suma[mi])mi=i;$('fila').value=Math.floor(mi/n);
  let lmax=0;for(let i=0;i<lino.length;i++)if(lino[i]>lmax)lmax=lino[i];pintar($('lino'),lino,fr.length,n,lmax);
  const porVista=Math.round(total/fr.length);
- $('cuentas').textContent=`Cruda: ${fr.length} vistas de ${s.arc}°, ${s.n}×${s.n}, píxel ${s.spacing.toFixed(2)} mm · ${(total/1e6).toFixed(2)} M cuentas en la ventana de fotopico · ${(porVista/1000).toFixed(0)} k por vista.`;
+ $('cuentas').textContent=`Este archivo trae ${fr.length} vistas repartidas en ${s.arc} grados de giro. Cada vista es una imagen de ${s.n} × ${s.n} píxeles, y cada píxel mide ${dec(s.spacing,1)} mm. En total se detectaron ${dec(total/1e6,2)} millones de fotones con la energía del tecnecio (a cada fotón detectado se le llama «cuenta»), unas ${dec(porVista/1000,0)} mil por vista. Mientras más cuentas tiene una imagen, menos granulada se ve.`;
  // Movimiento axial: corrimiento entero del perfil axial de cada vista respecto de la vecina.
  const perfil=k=>{const q=new Float64Array(n);for(let y=0;y<n;y++)q[y]=lino[y*fr.length+k];return q;};
  let salto=0,deriva=0,prev=perfil(0);
  for(let k=1;k<fr.length;k++){const cur=perfil(k);let mejor=Infinity,mdy=0;for(let dy=-6;dy<=6;dy++){let ssd=0;for(let y=8;y<n-8;y++){const q=cur[y]-prev[y+dy];ssd+=q*q;}if(ssd<mejor){mejor=ssd;mdy=dy;}}salto=Math.max(salto,Math.abs(mdy));deriva+=mdy;prev=cur;}
- $('medida').textContent=`Medida automática: salto axial máximo entre vistas vecinas de ${salto} vóxel(es) (${(salto*s.spacing).toFixed(1)} mm) y deriva acumulada de ${(Math.abs(deriva)*s.spacing).toFixed(1)} mm. Un vóxel son ${s.spacing.toFixed(1)} mm. Júzgalo junto con el cine y el linograma.`;
+ $('medida').textContent=`Medida automática del movimiento a lo largo de la camilla. El programa compara cada vista con la siguiente y busca cuántos píxeles habría que subirla o bajarla para que calcen. El mayor salto que encontró fue de ${salto} ${salto===1?'píxel':'píxeles'} (${dec(salto*s.spacing,1)} mm), y la suma de todos los saltos de la órbita da ${dec(Math.abs(deriva)*s.spacing,1)} mm. Es una ayuda, no un veredicto: cuando hay pocas cuentas el ruido puede parecer un salto. Compárala con lo que ves en el linograma y en el cine.`;
  // Franja sin dato: columnas completas con cero cuentas exactas en el borde de cada vista.
  let anchoMax=0,afectadas=0;const anchos=fr.map(v=>{const a=s.data.subarray(v.source*p,(v.source+1)*p);const vacia=x=>{for(let y=0;y<n;y++)if(a[y*n+x]>0)return false;return true;};let izq=0;while(izq<n&&vacia(izq))izq++;let der=0;while(der<n-izq&&vacia(n-1-der))der++;return izq+der;});
  anchos.forEach(w=>{if(w>0)afectadas++;if(w>anchoMax)anchoMax=w;});estado.franja=anchos;
- $('franja').textContent=afectadas?`En este archivo: ${afectadas} de ${fr.length} vistas tienen columnas completas en cero; la franja más ancha mide ${anchoMax} columnas (${(anchoMax*s.spacing).toFixed(0)} mm). Es truncación: «sin dato», no «sin actividad».`:'En este archivo ninguna vista tiene columnas completas en cero.';
+ $('franja').textContent=afectadas?`En este archivo, ${afectadas} de las ${fr.length} vistas tienen una franja sin medición en un borde. La más ancha ocupa ${anchoMax} píxeles, es decir ${dec(anchoMax*s.spacing,0)} mm de los ${dec(n*s.spacing,0)} mm que mide la imagen de lado a lado.`:'En este archivo ninguna vista tiene franjas sin medición.';
  dibujarCine();dibujarSino();
 }
 function dibujarCine(){
