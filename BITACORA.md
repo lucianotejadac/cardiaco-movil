@@ -62,3 +62,18 @@ Participantes: Luciano Tejada (docente) y Claude (Claude Code).
 **Hallazgo.** En el estrés del caso 1 la copia corregida es idéntica a la original, píxel por píxel, en las 64 vistas: las dos columnas se ven iguales y la aplicación lo dice. En el caso 4 (ZIP de prueba) difieren 62 de 64 vistas, con hasta 2 píxeles hacia el lado y menos de un píxel a lo largo de la camilla.
 
 **Validación.** Emulación de teléfono con dos ZIP reales: orden de las ocho imágenes, columnas rotuladas, sin corregir a la izquierda, proyecciones y sinograma visibles sobre los controles, suma y linograma bajo el pliegue y visibles al bajar, controles siempre a la vista, cursores presentes en las dos columnas.
+
+## 2026-09-27 · Entrega modificada: movimiento simulado en el estrés
+
+**Contexto.** En el caso 1 la copia corregida del equipo es idéntica a la original, así que la vista de dos columnas no mostraba ninguna diferencia. El docente pidió modificar las proyecciones sin corregir para que tengan un par de saltos coherentes, asumiendo que eso cambia los ZIP, y trabajar sobre una copia local con los mismos nombres.
+
+**Decisiones** (confirmadas por el docente antes de empezar).
+- **Copia completa** en `Downloads\CARDIACOS\ENTREGA CARDIACO MODIFICADA`; la entrega original queda intacta y es la que sigue en U-Cursos.
+- **Los cinco casos**, solo la fase de estrés: `NM_estres.dcm` y, para ser coherente con el mismo giro, `NM_estres_gatillado.dcm`. La copia corregida, el reposo, los CT y las referencias no se tocan. Así la copia corregida pasa a ser la versión sin el movimiento simulado.
+- **Dos saltos que se mantienen hasta el final**, como un paciente que se acomoda y no vuelve: uno de 2 píxeles (6,6 mm) a lo largo de la camilla y uno de 2 píxeles de lado a lado. Pasos y sentidos distintos por caso, para que no haya una respuesta única.
+- **Coherencia física.** Los dos cabezales adquieren a la vez, así que cada salto afecta a las vistas de ambos desde ese paso del giro y aparece en dos lugares del sinograma. El salto lateral es un desplazamiento del paciente y se proyecta en cada vista según su ángulo (de 0 a 2 píxeles, redondeado a entero para no interpolar cuentas). La franja sin medición pertenece al detector y no se mueve: el corrimiento se hace dentro de la zona medida. Las líneas que entran por el borde se rellenan con cuentas de Poisson a partir de la media de las tres líneas vecinas.
+- **Cabecera intacta**: mismos identificadores y marco de referencia, para que los simuladores sigan reconociendo los archivos. Se agregó solo un comentario que dice que los datos incluyen movimiento simulado, sin decir dónde.
+
+**Validación.** Verificación exacta sobre los diez archivos: cada cuadro modificado es el original corrido exactamente lo planificado dentro de la zona medida, ningún cuadro tiene cuentas fuera de ella, las cabeceras son idénticas salvo el comentario y en cada ZIP cambiaron solo dos entradas de las mismas en el mismo orden. En la versión móvil, con el ZIP modificado del caso 1, la comparación informa 46 de 64 vistas distintas, que son las 23 de cada cabezal desde el paso 10.
+
+**Advertencias.** Las validaciones de eje y FEVI de las dos partes de escritorio se hicieron con la cruda original; con la entrega modificada la reconstrucción de estrés lleva movimiento y hay que revalidar antes de publicarla. El caso 3 no trae copia corregida de estrés. La medida automática de movimiento da 3 píxeles en el caso 1 tanto antes como después de agregar los saltos: con pocas cuentas no discrimina.
