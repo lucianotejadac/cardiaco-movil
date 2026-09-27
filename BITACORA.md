@@ -77,3 +77,13 @@ Participantes: Luciano Tejada (docente) y Claude (Claude Code).
 **Validación.** Verificación exacta sobre los diez archivos: cada cuadro modificado es el original corrido exactamente lo planificado dentro de la zona medida, ningún cuadro tiene cuentas fuera de ella, las cabeceras son idénticas salvo el comentario y en cada ZIP cambiaron solo dos entradas de las mismas en el mismo orden. En la versión móvil, con el ZIP modificado del caso 1, la comparación informa 46 de 64 vistas distintas, que son las 23 de cada cabezal desde el paso 10.
 
 **Advertencias.** Las validaciones de eje y FEVI de las dos partes de escritorio se hicieron con la cruda original; con la entrega modificada la reconstrucción de estrés lleva movimiento y hay que revalidar antes de publicarla. El caso 3 no trae copia corregida de estrés. La medida automática de movimiento da 3 píxeles en el caso 1 tanto antes como después de agregar los saltos: con pocas cuentas no discrimina.
+
+## 2026-09-27 · Caso 1: saltos más evidentes y sin copia corregida
+
+**Contexto.** Con 2 píxeles el salto del caso 1 se veía poco: el estrés tiene pocas cuentas (9 mCi) y el ruido lo disimula. El docente pidió hacerlo más evidente y quitar la copia corregida del caso 1, porque la corrección la hará la propia aplicación en un paso siguiente.
+
+**Decisión.** En la entrega modificada, el caso 1 lleva saltos de 4 píxeles (13,2 mm): a lo largo de la camilla desde el paso 10 y lateral desde el paso 21. Se regeneró desde la cruda original, no sobre la versión de 2 píxeles. `NM_estres_QC_corregido.dcm` se quitó de la carpeta y del ZIP del caso 1 (80 entradas en vez de 81). Los casos 2 a 5 quedan con 2 píxeles y conservan su copia corregida.
+
+**Validación.** Verificación exacta sin fallas en los diez archivos y los cinco ZIP. En la versión móvil el linograma muestra los escalones a simple vista y la medida automática pasa de 3 a 5 píxeles. Como el ZIP ya no trae copia corregida, el botón «Vista corregido» queda deshabilitado y el resumen lo dice.
+
+**Pendiente.** La corrección de movimiento hecha por la aplicación, que devolverá la columna «Corregido» al caso 1.
