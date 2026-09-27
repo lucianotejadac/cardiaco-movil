@@ -1,41 +1,59 @@
-:root{--fondo:#111417;--tarjeta:#1b2026;--texto:#e8ecf0;--texto2:#aab3bd;--acento:#ffb347;--linea:#2c343d}
+:root{--fondo:#111417;--tarjeta:#1b2026;--texto:#e8ecf0;--texto2:#aab3bd;--acento:#ffb347;--linea:#2c343d;--amarilla:#ffee58;--celeste:#4dd0e1}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--fondo);color:var(--texto);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{padding:16px 16px 4px}
-h1{font-size:1.25rem;margin:0 0 4px}
+.barra{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 4px;max-width:640px;margin:0 auto}
+h1{font-size:1rem;margin:0}
 h2{font-size:1.05rem;margin:0 0 8px}
-h3{font-size:1rem;margin:18px 0 6px;color:var(--acento)}
-.sub{margin:0;color:var(--texto2);font-size:.95rem}
-main{padding:8px 12px 24px;max-width:640px;margin:0 auto}
-.tarjeta{background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:14px;margin:10px 0}
+main{padding:4px 10px 8px;max-width:640px;margin:0 auto}
+.tarjeta{background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:14px;margin:8px 0}
 .oculta{display:none}
 .boton{display:inline-block;background:var(--acento);color:#111;font-weight:600;padding:12px 18px;border-radius:8px;border:0;font-size:1rem;cursor:pointer;margin:6px 0}
-.boton.chico{padding:10px 14px;white-space:nowrap}
+.boton.chico{padding:0;width:44px;height:44px;font-size:1.1rem;margin:0;flex:none}
+.mini{background:transparent;color:var(--texto2);border:1px solid var(--linea);border-radius:6px;padding:6px 10px;font-size:.8rem}
+.vermas{background:transparent;color:var(--acento);border:1px solid var(--linea);border-radius:6px;padding:5px 10px;font-size:.8rem;cursor:pointer;margin-top:4px}
+.vermas.ancho{width:100%;padding:9px 10px;margin-top:6px}
 input[type=file]{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
-.estado{color:var(--texto2);margin:6px 0 0;min-height:1.4em}
+.estado{color:var(--texto2);margin:6px 0 0;min-height:1.4em;font-size:.9rem}
 .estado.error{color:#ff8a80}
 .estado.ok{color:#9be7a0}
-.dato{background:#0d1114;border-left:3px solid var(--acento);padding:8px 10px;border-radius:6px;font-size:.95rem;color:var(--texto)}
-.nota{color:var(--texto2);font-size:.9rem;margin:6px 0 0}
-.mono{font-family:ui-monospace,Consolas,monospace;font-size:.9rem;color:var(--texto2)}
-canvas{display:block;width:100%;background:#000;border-radius:6px;image-rendering:pixelated;touch-action:none}
-canvas.cuadrado{aspect-ratio:1}
-canvas.ancho{aspect-ratio:1}
-.fila{display:flex;gap:10px;align-items:center;margin-top:8px}
-.fila input[type=range]{flex:1}
-input[type=range]{width:100%;height:44px;margin:4px 0;-webkit-appearance:none;appearance:none;background:transparent}
-input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--linea);border-radius:3px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--acento);margin-top:-11px;border:2px solid #111}
-input[type=range]::-moz-range-track{height:6px;background:var(--linea);border-radius:3px}
-input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:var(--acento);border:2px solid #111}
-details{margin-top:10px;color:var(--texto2)}
-summary{cursor:pointer;color:var(--texto)}
-footer{text-align:center;color:var(--texto2);font-size:.8rem;padding:12px}
+.dato{background:#0d1114;border-left:3px solid var(--acento);padding:7px 10px;border-radius:6px;font-size:.85rem;color:var(--texto);margin:8px 0 0}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:.72rem;color:var(--texto2);font-weight:400}
 
-.leyenda{margin:10px 0 0;font-size:.95rem}
+/* Las cuatro imagenes en la misma pantalla */
+.rejilla{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px}
+figure{margin:0;min-width:0}
+figcaption{font-size:.85rem;font-weight:600;color:var(--acento);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
+canvas{display:block;width:100%;aspect-ratio:1;background:#000;border-radius:6px;image-rendering:pixelated;touch-action:none;cursor:crosshair}
+/* En pantallas bajas la rejilla se achica para que quepan tambien los controles */
+@media (max-height:760px){.rejilla{max-width:calc((100vh - 330px));margin:0 auto}}
+
+.controles{margin-top:8px;background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:6px 10px}
+.fila{display:flex;gap:10px;align-items:center}
+.fila input[type=range]{flex:1}
+.etq{font-size:.8rem;font-weight:600;width:38px;flex:none}
+.amarilla{color:var(--amarilla)}
+.celeste{color:var(--celeste)}
+.clave{font-size:.75rem;color:var(--texto2);margin:2px 0 4px}
+input[type=range]{width:100%;height:40px;margin:0;-webkit-appearance:none;appearance:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--linea);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--acento);margin-top:-10px;border:2px solid #111}
+input[type=range]::-moz-range-track{height:6px;background:var(--linea);border-radius:3px}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--acento);border:2px solid #111}
+#frame::-webkit-slider-thumb{background:var(--celeste)}
+#fila::-webkit-slider-thumb{background:var(--amarilla)}
+#frame::-moz-range-thumb{background:var(--celeste)}
+#fila::-moz-range-thumb{background:var(--amarilla)}
+
+/* Explicaciones: se abren con «Ver mas» */
+dialog{background:var(--tarjeta);color:var(--texto);border:1px solid var(--linea);border-radius:12px;padding:16px;width:min(92vw,560px);max-height:86vh;overflow-y:auto}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+.leyenda{margin:6px 0 0;font-size:.95rem}
 .leyenda dt{font-weight:600;color:var(--texto);margin-top:10px}
 .leyenda dd{margin:2px 0 0;color:var(--texto2)}
 .leyenda dd+dd{margin-top:6px}
-.leyenda.aviso{background:#0d1114;border-left:3px solid #7fd1ff;border-radius:6px;padding:4px 10px 10px}
+.leyenda.aviso{background:#0d1114;border-left:3px solid #7fd1ff;border-radius:6px;padding:4px 10px 10px;margin-top:12px}
 .leyenda.aviso dt{color:#7fd1ff}
-.dato{margin-top:10px}
+details{margin-top:10px;color:var(--texto2)}
+summary{cursor:pointer;color:var(--texto)}
+footer{text-align:center;color:var(--texto2);font-size:.75rem;padding:6px}
+footer p{margin:0}

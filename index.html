@@ -4,110 +4,174 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=2">
+<link rel="stylesheet" href="movil.css?v=3">
 </head>
 <body>
-<header>
+<header class="barra">
  <h1>SPECT cardíaco · Caso 1 · Estrés</h1>
- <p class="sub">Control de calidad de las proyecciones, antes de reconstruir. Versión para teléfono.</p>
+ <button id="cambiar" type="button" class="mini" hidden>Cambiar archivo</button>
 </header>
 <main>
  <section class="tarjeta" id="carga">
-  <h2>1. Cargar las proyecciones sin corregir</h2>
-  <p>Elige el ZIP que descargaste de U-Cursos («Cardiaco …zip»), tal como está. No hace falta descomprimirlo: la aplicación busca dentro el archivo <b>NM_estres.dcm</b> de la carpeta Caso 1 › Estres y abre solo ese. También puedes elegir ese archivo suelto.</p>
-  <p class="nota">«Sin corregir» quiere decir tal como salieron de la gammacámara. El ZIP trae además una copia que el equipo corrigió por movimiento y una adquisición sincronizada con el electrocardiograma; en este paso no se usan.</p>
+  <h2>Cargar las proyecciones sin corregir</h2>
+  <p>Elige el ZIP que descargaste de U-Cursos («Cardiaco …zip»), tal como está. La aplicación busca dentro el archivo <b>NM_estres.dcm</b> del Caso 1 y abre solo ese.</p>
   <label class="boton" for="archivo">Elegir archivo…</label>
   <input id="archivo" type="file" accept=".zip,.dcm,application/zip,application/dicom,*/*">
+  <button type="button" class="vermas" data-dialogo="dCarga">Ver más</button>
   <p id="estado" class="estado">Nada cargado todavía.</p>
-  <details id="antecedente" hidden>
-   <summary>Antecedente clínico del caso</summary>
-   <p id="antecedenteTexto"></p>
-   <p id="procedimientoTexto"></p>
-  </details>
  </section>
 
- <section class="tarjeta oculta" id="qc">
-  <h2>2. Mirar las proyecciones tal como salieron del equipo</h2>
-  <dl class="leyenda">
-   <dt>Qué es una proyección</dt>
-   <dd>La gammacámara giró alrededor del pecho del paciente y se detuvo a tomar una imagen plana cada 2,8 grados. Cada una de esas imágenes es una proyección, o vista: muestra todo lo que el detector tenía enfrente desde ese ángulo, superpuesto, igual que una radiografía superpone lo que atraviesa.</dd>
-   <dt>Por qué se miran antes de reconstruir</dt>
-   <dd>Los cortes del corazón todavía no existen: se calculan después, a partir de estas imágenes. Si el paciente se movió o si hay algo raro en las proyecciones, el cálculo lo convierte en un defecto falso. Por eso primero se revisan. Eso es el control de calidad.</dd>
-  </dl>
-  <p id="cuentas" class="dato"></p>
-
-  <h3>Cine <span id="vistaTexto" class="mono"></span></h3>
-  <canvas id="cine" class="cuadrado"></canvas>
-  <div class="fila">
-   <button id="play" type="button" class="boton chico">▶ Reproducir</button>
-   <input id="frame" type="range" min="0" max="63" value="0">
+ <section class="oculta" id="qc">
+  <div class="rejilla">
+   <figure>
+    <figcaption>Cine <span id="vistaTexto" class="mono"></span></figcaption>
+    <canvas id="cine"></canvas>
+    <button type="button" class="vermas" data-dialogo="dCine">Ver más</button>
+   </figure>
+   <figure>
+    <figcaption>Imagen suma</figcaption>
+    <canvas id="suma"></canvas>
+    <button type="button" class="vermas" data-dialogo="dSuma">Ver más</button>
+   </figure>
+   <figure>
+    <figcaption>Sinograma <span class="mono">fila <span id="filaValor"></span></span></figcaption>
+    <canvas id="sino"></canvas>
+    <button type="button" class="vermas" data-dialogo="dSino">Ver más</button>
+   </figure>
+   <figure>
+    <figcaption>Linograma</figcaption>
+    <canvas id="lino"></canvas>
+    <button type="button" class="vermas" data-dialogo="dLino">Ver más</button>
+   </figure>
   </div>
-  <dl class="leyenda">
-   <dt>Qué es</dt>
-   <dd>Las proyecciones mostradas una tras otra, en el orden en que giró el detector. Es la película de lo que vio la cámara. Con el deslizador avanzas a mano; el número y el ángulo de la vista aparecen junto al título.</dd>
-   <dt>Cómo orientarte</dt>
-   <dd>Arriba de la imagen es hacia la cabeza del paciente y abajo hacia los pies. El color indica cuántos fotones llegaron a cada punto: negro es ninguno, rojo pocos, amarillo y blanco muchos. El corazón es la estructura pequeña, en forma de anillo o herradura. Lo que brilla más abajo suele ser el hígado y, a veces, intestino o vesícula.</dd>
-   <dt>Qué buscar</dt>
-   <dd>Al avanzar, el corazón debe desplazarse hacia el lado de forma suave y mantenerse a la misma altura. Si en algún momento sube, baja o salta de golpe, el paciente se movió durante esa parte del examen.</dd>
-  </dl>
 
-  <h3>Sinograma <span class="mono">fila <span id="filaValor"></span></span></h3>
-  <canvas id="sino" class="ancho"></canvas>
-  <input id="fila" type="range" min="0" max="127" value="64">
-  <dl class="leyenda">
-   <dt>Qué es</dt>
-   <dd>De cada proyección se toma una sola fila horizontal de píxeles, siempre a la misma altura, y las 64 filas se colocan una al lado de la otra. El deslizador elige la altura. La línea amarilla sobre la imagen suma, al final de la página, muestra qué fila estás mirando.</dd>
-   <dt>Qué significa cada eje</dt>
-   <dd>De izquierda a derecha avanzan las vistas, es decir, el giro del detector. De arriba a abajo está la posición a lo ancho del detector.</dd>
-   <dt>Cómo leerlo</dt>
-   <dd>Un órgano que capta aparece como una banda que se curva suavemente, porque a medida que el detector gira lo ve correrse hacia un lado. En una vuelta completa esa curva sería una onda, una sinusoide, y de ahí viene el nombre. Aquí el giro fue de media vuelta, así que se ve media onda.</dd>
-   <dt>Qué buscar</dt>
-   <dd>La banda debe ser continua. Un quiebre o un escalón en la curva indica que el paciente se movió hacia el lado en ese momento del giro.</dd>
-  </dl>
-  <dl class="leyenda aviso">
-   <dt>La zona negra de borde neto no es el paciente</dt>
-   <dd>Es una parte de la imagen donde el detector no pudo medir. Se explica en cuatro pasos:</dd>
-   <dd>1. La cámara tiene dos detectores, llamados cabezales, puestos en ángulo recto, en forma de L. Cada uno toma 32 de las 64 vistas. En el sinograma, una mitad viene de un cabezal y la otra mitad del otro. El escalón vertical del medio es el punto donde se pasa de uno al otro.</dd>
-   <dd>2. Durante el giro, cada cabezal se acerca al cuerpo todo lo que puede, para ver mejor. Como el cuerpo no es redondo, esa distancia cambia de una vista a otra.</dd>
-   <dd>3. Los cabezales están unidos por la esquina de la L. Cuando uno se aleja, empuja al otro hacia el lado, y una parte de la imagen de ese otro queda fuera de su zona sensible.</dd>
-   <dd>4. En esa parte no hay medición. El equipo la guarda con valor cero y por eso se ve negra pareja, con un borde recto o curvo muy definido.</dd>
-   <dt>Cómo distinguirla del aire fuera del paciente</dt>
-   <dd>Fuera del cuerpo la imagen es oscura pero granulada, porque siempre llegan algunos fotones desviados. La zona sin medición es negro absoluto, sin un solo punto. Negro absoluto quiere decir «no se midió», no «aquí no hay actividad».</dd>
-  </dl>
-  <p id="franja" class="dato"></p>
-
-  <h3>Linograma <span class="mono">perfil a lo largo del paciente</span></h3>
-  <canvas id="lino" class="ancho"></canvas>
-  <dl class="leyenda">
-   <dt>Qué es</dt>
-   <dd>En cada proyección se suman todos los píxeles de cada fila. Queda una sola columna por vista, que dice cuántos fotones llegaron a cada altura del paciente. Las 64 columnas se colocan una al lado de la otra.</dd>
-   <dt>Qué significa cada eje</dt>
-   <dd>De izquierda a derecha avanzan las vistas. De arriba a abajo está la altura en el paciente, con la cabeza arriba.</dd>
-   <dt>Cómo leerlo</dt>
-   <dd>Un órgano está siempre a la misma altura aunque el detector gire a su alrededor. Por eso aquí cada órgano dibuja una banda horizontal, no una curva.</dd>
-   <dt>Qué buscar</dt>
-   <dd>Bandas horizontales y parejas. Si una banda sube o baja en escalón, el paciente se deslizó a lo largo de la camilla. Si sube de a poco durante todo el examen, puede ser el corazón que cambia de posición mientras la respiración se calma después del esfuerzo.</dd>
-   <dt>Lo que es normal aunque llame la atención</dt>
-   <dd>Un cambio de brillo entre la mitad izquierda y la mitad derecha. Son los dos cabezales: uno estuvo más lejos del paciente que el otro y recibió menos fotones.</dd>
-  </dl>
-  <p id="medida" class="dato"></p>
-
-  <h3>Imagen suma</h3>
-  <canvas id="suma" class="cuadrado"></canvas>
-  <dl class="leyenda">
-   <dt>Qué es</dt>
-   <dd>Las 64 proyecciones sumadas punto por punto en una sola imagen. No es un corte ni una imagen para diagnosticar: mezcla todos los ángulos del giro.</dd>
-   <dt>Para qué sirve</dt>
-   <dd>Para ver de una vez dónde hubo actividad durante toda la adquisición, y para elegir la fila del sinograma. La línea amarilla marca esa fila.</dd>
-   <dt>Qué buscar</dt>
-   <dd>Actividad intensa pegada al corazón, sobre todo por debajo: hígado o intestino. Si está muy cerca puede contaminar la pared inferior del corazón cuando se reconstruya.</dd>
-  </dl>
+  <div class="controles">
+   <div class="fila">
+    <button id="play" type="button" class="boton chico" aria-label="Reproducir el cine">▶</button>
+    <span class="etq celeste">Vista</span>
+    <input id="frame" type="range" min="0" max="63" value="0" aria-label="Vista del cine">
+   </div>
+   <div class="fila">
+    <span class="etq amarilla">Fila</span>
+    <input id="fila" type="range" min="0" max="127" value="64" aria-label="Fila del sinograma">
+   </div>
+   <p class="clave"><span class="amarilla">━</span> fila elegida · <span class="celeste">┃</span> vista que muestra el cine. También puedes tocar o arrastrar sobre las imágenes.</p>
+  </div>
+  <p id="resumen" class="dato"></p>
+  <button type="button" class="vermas ancho" data-dialogo="dGeneral">Ver más sobre las proyecciones y estos números</button>
  </section>
 </main>
 <footer><p>Uso educativo · Los DICOM no salen del teléfono · Paso 1 de la versión móvil</p></footer>
+
+<dialog id="dCarga">
+ <h2>Qué archivo se carga</h2>
+ <dl class="leyenda">
+  <dt>El ZIP de U-Cursos</dt>
+  <dd>Es el mismo que descargaste para el computador. No hace falta descomprimirlo en el teléfono: la aplicación lo abre, busca <b>NM_estres.dcm</b> en la carpeta Caso 1 › Estres y lee solo ese archivo. También puedes elegir ese archivo suelto.</dd>
+  <dt>Qué quiere decir «sin corregir»</dt>
+  <dd>Tal como salieron de la gammacámara. El ZIP trae además una copia que el equipo corrigió por movimiento y una adquisición sincronizada con el electrocardiograma; en este paso no se usan.</dd>
+  <dt>Privacidad</dt>
+  <dd>El archivo se lee dentro del teléfono. No se envía a ningún servidor.</dd>
+ </dl>
+ <details id="antecedente" hidden>
+  <summary>Antecedente clínico del caso</summary>
+  <p id="antecedenteTexto"></p>
+  <p id="procedimientoTexto"></p>
+ </details>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
+<dialog id="dGeneral">
+ <h2>Las proyecciones</h2>
+ <dl class="leyenda">
+  <dt>Qué es una proyección</dt>
+  <dd>La gammacámara giró alrededor del pecho del paciente y se detuvo a tomar una imagen plana cada 2,8 grados. Cada una de esas imágenes es una proyección, o vista: muestra todo lo que el detector tenía enfrente desde ese ángulo, superpuesto, igual que una radiografía superpone lo que atraviesa.</dd>
+  <dt>Por qué se miran antes de reconstruir</dt>
+  <dd>Los cortes del corazón todavía no existen: se calculan después, a partir de estas imágenes. Si el paciente se movió o si hay algo raro en las proyecciones, el cálculo lo convierte en un defecto falso. Por eso primero se revisan. Eso es el control de calidad.</dd>
+  <dt>Cómo están conectadas las cuatro imágenes</dt>
+  <dd>La línea amarilla horizontal es la fila elegida: está a la misma altura en el cine, en la imagen suma y en el linograma, y es la fila con que se arma el sinograma. La línea celeste vertical es la vista que muestra el cine: marca esa misma vista en el sinograma y en el linograma. Al reproducir el cine, la línea celeste avanza.</dd>
+ </dl>
+ <p id="cuentas" class="dato"></p>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
+<dialog id="dCine">
+ <h2>Cine</h2>
+ <dl class="leyenda">
+  <dt>Qué es</dt>
+  <dd>Las proyecciones mostradas una tras otra, en el orden en que giró el detector. Es la película de lo que vio la cámara. Con el deslizador «Vista» avanzas a mano.</dd>
+  <dt>Cómo orientarte</dt>
+  <dd>Arriba de la imagen es hacia la cabeza del paciente y abajo hacia los pies. El color indica cuántos fotones llegaron a cada punto: negro es ninguno, rojo pocos, amarillo y blanco muchos. El corazón es la estructura pequeña, en forma de anillo o herradura. Lo que brilla más abajo suele ser el hígado y, a veces, intestino o vesícula.</dd>
+  <dt>Qué buscar</dt>
+  <dd>Al avanzar, el corazón debe desplazarse hacia el lado de forma suave y mantenerse a la misma altura. La línea amarilla ayuda: si el corazón sube o baja respecto de ella de una vista a la siguiente, el paciente se movió.</dd>
+  <dt>Tocar la imagen</dt>
+  <dd>Al tocar o arrastrar hacia arriba y abajo se mueve la fila amarilla.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
+<dialog id="dSino">
+ <h2>Sinograma</h2>
+ <dl class="leyenda">
+  <dt>Qué es</dt>
+  <dd>De cada proyección se toma una sola fila horizontal de píxeles, siempre a la misma altura, y las 64 filas se colocan una al lado de la otra. Esa altura es la línea amarilla del cine y de la imagen suma.</dd>
+  <dt>Qué significa cada eje</dt>
+  <dd>De izquierda a derecha avanzan las vistas, es decir, el giro del detector. De arriba a abajo está la posición a lo ancho del detector.</dd>
+  <dt>Cómo leerlo</dt>
+  <dd>Un órgano que capta aparece como una banda que se curva suavemente, porque a medida que el detector gira lo ve correrse hacia un lado. En una vuelta completa esa curva sería una onda, una sinusoide, y de ahí viene el nombre. Aquí el giro fue de media vuelta, así que se ve media onda.</dd>
+  <dt>Qué buscar</dt>
+  <dd>La banda debe ser continua. Un quiebre o un escalón en la curva indica que el paciente se movió hacia el lado en ese momento del giro. Toca el sinograma en ese punto: la línea celeste salta a esa vista y el cine la muestra.</dd>
+ </dl>
+ <dl class="leyenda aviso">
+  <dt>La zona negra de borde neto no es el paciente</dt>
+  <dd>Es una parte de la imagen donde el detector no pudo medir. Se explica en cuatro pasos:</dd>
+  <dd>1. La cámara tiene dos detectores, llamados cabezales, puestos en ángulo recto, en forma de L. Cada uno toma 32 de las 64 vistas. En el sinograma, una mitad viene de un cabezal y la otra mitad del otro. El escalón vertical del medio es el punto donde se pasa de uno al otro.</dd>
+  <dd>2. Durante el giro, cada cabezal se acerca al cuerpo todo lo que puede, para ver mejor. Como el cuerpo no es redondo, esa distancia cambia de una vista a otra.</dd>
+  <dd>3. Los cabezales están unidos por la esquina de la L. Cuando uno se aleja, empuja al otro hacia el lado, y una parte de la imagen de ese otro queda fuera de su zona sensible.</dd>
+  <dd>4. En esa parte no hay medición. El equipo la guarda con valor cero y por eso se ve negra pareja, con un borde recto o curvo muy definido.</dd>
+  <dt>Cómo distinguirla del aire fuera del paciente</dt>
+  <dd>Fuera del cuerpo la imagen es oscura pero granulada, porque siempre llegan algunos fotones desviados. La zona sin medición es negro absoluto, sin un solo punto. Negro absoluto quiere decir «no se midió», no «aquí no hay actividad».</dd>
+ </dl>
+ <p id="franja" class="dato"></p>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
+<dialog id="dLino">
+ <h2>Linograma</h2>
+ <dl class="leyenda">
+  <dt>Qué es</dt>
+  <dd>En cada proyección se suman todos los píxeles de cada fila. Queda una sola columna por vista, que dice cuántos fotones llegaron a cada altura del paciente. Las 64 columnas se colocan una al lado de la otra.</dd>
+  <dt>Qué significa cada eje</dt>
+  <dd>De izquierda a derecha avanzan las vistas. De arriba a abajo está la altura en el paciente, con la cabeza arriba.</dd>
+  <dt>Cómo leerlo</dt>
+  <dd>Un órgano está siempre a la misma altura aunque el detector gire a su alrededor. Por eso aquí cada órgano dibuja una banda horizontal, no una curva.</dd>
+  <dt>Qué buscar</dt>
+  <dd>Bandas horizontales y parejas. Si una banda sube o baja en escalón, el paciente se deslizó a lo largo de la camilla. Si sube de a poco durante todo el examen, puede ser el corazón que cambia de posición mientras la respiración se calma después del esfuerzo.</dd>
+  <dt>Lo que es normal aunque llame la atención</dt>
+  <dd>Un cambio de brillo entre la mitad izquierda y la mitad derecha. Son los dos cabezales: uno estuvo más lejos del paciente que el otro y recibió menos fotones.</dd>
+  <dt>Tocar la imagen</dt>
+  <dd>Hacia los lados cambia la vista (línea celeste); hacia arriba y abajo cambia la fila (línea amarilla).</dd>
+ </dl>
+ <p id="medida" class="dato"></p>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
+<dialog id="dSuma">
+ <h2>Imagen suma</h2>
+ <dl class="leyenda">
+  <dt>Qué es</dt>
+  <dd>Las 64 proyecciones sumadas punto por punto en una sola imagen. No es un corte ni una imagen para diagnosticar: mezcla todos los ángulos del giro.</dd>
+  <dt>Para qué sirve</dt>
+  <dd>Para ver de una vez dónde hubo actividad durante toda la adquisición, y para elegir la fila del sinograma tocando la imagen a la altura que interesa.</dd>
+  <dt>Qué buscar</dt>
+  <dd>Actividad intensa pegada al corazón, sobre todo por debajo: hígado o intestino. Si está muy cerca puede contaminar la pared inferior del corazón cuando se reconstruya.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
-<script src="movil.js?v=3"></script>
+<script src="movil.js?v=4"></script>
 </body>
 </html>
