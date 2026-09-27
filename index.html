@@ -41,6 +41,8 @@
   <canvas id="sino" class="ancho"></canvas>
   <input id="fila" type="range" min="0" max="127" value="64">
   <p class="nota">Eje horizontal: las 64 vistas en orden angular. Eje vertical: la posición transaxial en la fila elegida. Cada estructura dibuja media sinusoide en una órbita de 180°; un salto brusco entre columnas vecinas es movimiento transversal. La línea amarilla de la imagen suma marca la fila.</p>
+  <p class="nota"><b>La zona negra de borde recto no es el paciente.</b> Son píxeles sin dato: los dos cabezales van en L, unidos por la esquina, y siguen el contorno corporal. Cuando un cabezal se aleja arrastra al otro hacia el lado; el equipo guarda la imagen centrada en el eje de rotación y rellena con ceros la parte que quedó fuera del cristal. El borde curvo es el perfil de radios del otro cabezal, y el escalón vertical del medio es el cambio de cabezal.</p>
+  <p id="franja" class="dato"></p>
 
   <h3>Linograma <span class="mono">perfil axial</span></h3>
   <canvas id="lino" class="ancho"></canvas>
@@ -56,6 +58,6 @@
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
-<script src="movil.js?v=1"></script>
+<script src="movil.js?v=2"></script>
 </body>
 </html>

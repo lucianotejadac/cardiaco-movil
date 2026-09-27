@@ -18,3 +18,13 @@ Participantes: Luciano Tejada (docente) y Claude (Claude Code).
 **Validación.** Prueba sin interfaz con `cdp_run.cjs --movil` (emulación de 390 × 844, dpr 3, táctil) cargando el ZIP real «Cardiaco Juan.zip»: 27,1 MB leídos y la cruda extraída y parseada en 0,6 s; 64 vistas, 4,52 M cuentas, 71 k por vista; los cuatro lienzos pintados; el deslizador de fila redibuja el sinograma; el cine avanza al reproducir; ancho de página igual al del dispositivo.
 
 **Pendiente.** Los pasos siguientes (reposo, preguntas de control de calidad, CT, reconstrucción) se decidirán uno por uno con el docente. Probar en un teléfono Android real, además de la emulación.
+
+## 2026-09-27 · La zona negra del sinograma: truncación por los cabezales en L
+
+**Contexto.** El docente marcó en el sinograma del caso 1 una zona negra de borde curvo con un escalón vertical en el medio y pidió averiguar qué era. La primera explicación (aire fuera del paciente) era una hipótesis sin comprobar y resultó falsa.
+
+**Hallazgo.** Son columnas completas con cero cuentas exactas en el borde de cada proyección. Medidas en el DICOM, el ancho de la franja de un cabezal crece un milímetro por cada milímetro que se aleja el otro: pendiente 0,99 y correlación 1,000 en el estrés del caso 1 (cabezal 1 frente al radio del cabezal 2, de 30 a 122 mm), y lo mismo en el reposo del caso 1 y el estrés del caso 2. Los cabezales van en L, unidos por la esquina, con órbita de contorno corporal: al alejarse uno arrastra lateralmente al otro, el equipo guarda la imagen centrada en el eje de rotación y rellena con ceros lo que quedó fuera del cristal. El escalón vertical es el cambio de cabezal (vista 32 a 33).
+
+**Decisión.** Nota fija bajo el sinograma que lo explica y una línea calculada sobre el archivo cargado: cuántas vistas tienen columnas en cero y el ancho máximo en columnas y milímetros. El mismo texto se corrigió en el tutorial de escritorio de `spect-lab-95`.
+
+**Pendiente.** La OSEM de `spect-lab-95` trata esos píxeles como ceros medidos y no como dato ausente; excluirlos del cálculo cambiaría la periferia de la reconstrucción y obliga a revalidar los seis casos. No se tocó.

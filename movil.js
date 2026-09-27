@@ -84,6 +84,10 @@ function prepararQc(s){
  let salto=0,deriva=0,prev=perfil(0);
  for(let k=1;k<fr.length;k++){const cur=perfil(k);let mejor=Infinity,mdy=0;for(let dy=-6;dy<=6;dy++){let ssd=0;for(let y=8;y<n-8;y++){const q=cur[y]-prev[y+dy];ssd+=q*q;}if(ssd<mejor){mejor=ssd;mdy=dy;}}salto=Math.max(salto,Math.abs(mdy));deriva+=mdy;prev=cur;}
  $('medida').textContent=`Medida automática: salto axial máximo entre vistas vecinas de ${salto} vóxel(es) (${(salto*s.spacing).toFixed(1)} mm) y deriva acumulada de ${(Math.abs(deriva)*s.spacing).toFixed(1)} mm. Un vóxel son ${s.spacing.toFixed(1)} mm. Júzgalo junto con el cine y el linograma.`;
+ // Franja sin dato: columnas completas con cero cuentas exactas en el borde de cada vista.
+ let anchoMax=0,afectadas=0;const anchos=fr.map(v=>{const a=s.data.subarray(v.source*p,(v.source+1)*p);const vacia=x=>{for(let y=0;y<n;y++)if(a[y*n+x]>0)return false;return true;};let izq=0;while(izq<n&&vacia(izq))izq++;let der=0;while(der<n-izq&&vacia(n-1-der))der++;return izq+der;});
+ anchos.forEach(w=>{if(w>0)afectadas++;if(w>anchoMax)anchoMax=w;});estado.franja=anchos;
+ $('franja').textContent=afectadas?`En este archivo: ${afectadas} de ${fr.length} vistas tienen columnas completas en cero; la franja más ancha mide ${anchoMax} columnas (${(anchoMax*s.spacing).toFixed(0)} mm). Es truncación: «sin dato», no «sin actividad».`:'En este archivo ninguna vista tiene columnas completas en cero.';
  dibujarCine();dibujarSino();
 }
 function dibujarCine(){
