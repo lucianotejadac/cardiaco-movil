@@ -60,7 +60,7 @@ const Reorientar=(()=>{
   r.Cv=x.centro.slice();r.L=x.largo;r.t=0;r.techo=1;r.equipo=x;r.marcoFijo=x.marco;
   r.az=Math.max(-30,Math.min(120,Math.round(x.azimut)));r.el=Math.max(-40,Math.min(60,Math.round(x.elevacion)));
   const aviso=$('reoEstado');aviso.className='estado ok';
-  aviso.textContent=`Eje del equipo («${x.descripcion}»). Arriba, el simulador con la misma receta; abajo, el equipo. Mismo centro, mismo marco, mismo zoom y misma escala de color.`;
+  aviso.textContent=`Imagen del equipo: «${x.descripcion}». Arriba, el simulador (${x.modo==='receta'?'reconstruido con la receta del equipo':'tu reconstrucción «'+x.nombre+'»'}); abajo, el equipo. Mismo centro, mismo marco, mismo zoom y misma escala de color.`;
   pintar();
  }
  function ejeExacto(){if(!r.equipo)return;r.marcoFijo=r.equipo.marco;r.Cv=r.equipo.centro.slice();r.t=0;r.az=Math.round(r.equipo.azimut);r.el=Math.round(r.equipo.elevacion);pintar();}
@@ -110,8 +110,9 @@ const Reorientar=(()=>{
   const ref=r.referencia,q=r.equipo;
   if(q){
    txt=r.marcoFijo?`Eje exacto del equipo: azimut ${dec(q.azimut,1)}°, elevación ${dec(q.elevacion,1)}°.`:`Moviste el eje: azimut ${r.az}°, elevación ${r.el}° (el equipo usó ${dec(q.azimut,1)}° y ${dec(q.elevacion,1)}°).`;
-   txt+=` Simulador: ${q.nombre}, sobre proyecciones ${q.fuente||'sin corregir'}; tomó ${dec(q.segundos,0)} s. Se enmascaró con la máscara del equipo (${q.voxeles.toLocaleString('es-CL')} vóxeles) y se multiplicó por ${dec(q.factor,3)} para igualar la suma dentro de la máscara. Las dos filas usan la misma escala de color, de 0 a ${dec(q.max,0)}. Dentro de la región con actividad: correlación r = ${dec(q.correlacion,3)} y diferencia media ${dec(q.diferencia,1)} %.`;
-   txt+=` Diferencias que quedan: la OSEM del equipo es 3D y la del simulador es por cortes, sin recuperación de resolución${q.receta.dispersion?(q.dispersion?'; la dispersión se corrigió por doble ventana con k = 0,5, que puede no ser el método del equipo':'; el equipo corrigió dispersión y aquí no se pudo'):''}.`;
+   txt+=` Equipo: ${q.recetaEquipo}. Simulador: ${q.modo==='receta'?`${q.nombre}, sobre proyecciones ${q.fuente||'sin corregir'}; tomó ${dec(q.segundos,0)} s`:`tu reconstrucción «${q.nombre}», sin reconstruir de nuevo`}. Se enmascaró con la máscara del equipo (${q.voxeles.toLocaleString('es-CL')} vóxeles) y se multiplicó por ${dec(q.factor,3)} para igualar la suma dentro de la máscara. Las dos filas usan la misma escala de color, de 0 a ${dec(q.max,0)}. Dentro de la región con actividad: correlación r = ${dec(q.correlacion,3)} y diferencia media ${dec(q.diferencia,1)} %.`;
+   if(q.modo==='propia')txt+=' Tu reconstrucción puede tener otra receta que la del equipo: para igualarla usa «Reconstruir con la receta del equipo y comparar».';
+   else txt+=` Diferencias que quedan: la OSEM del equipo es 3D y la del simulador es por cortes, sin recuperación de resolución${q.receta.dispersion?(q.dispersion?'; la dispersión se corrigió por doble ventana con k = 0,5, que puede no ser el método del equipo':'; el equipo corrigió dispersión y aquí no se pudo'):''}.`;
   }
   else if(ref)txt+=` El equipo usó azimut ${dec(ref.azimut,1)}° y elevación ${dec(ref.elevacion,1)}°: te separan ${dec(Math.abs(r.az-ref.azimut),0)}° y ${dec(Math.abs(r.el-ref.elevacion),0)}° (tolerancia ${CARDIACO_TOLERANCIA.angulo}°).`;
   else txt+=' Este caso no trae el eje del equipo para comparar: guíate por las imágenes.';

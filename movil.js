@@ -394,7 +394,7 @@ async function aEquipo(i=0){
 // Comparador: la reconstruccion de Siemens frente a la del simulador con las mismas proyecciones.
 function aComparar(i){const q=estado.equipo[i];if(!q)return;mostrarSolo('cmp');Comparador.abrir(q);}
 function aReorientar(){
- mostrarSolo('reo');$('reoEquipo').hidden=!(EjeEquipo.disponible()&&segunda.origen==='osem');
+ mostrarSolo('reo');botonesEquipo();
  Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
 }
 function aOsemDesdeCaja(){if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
@@ -414,12 +414,28 @@ $('aCaja').addEventListener('click',aCaja);
 $('aGatillado').addEventListener('click',aGatillado);
 $('volverOsemGat').addEventListener('click',()=>mostrarSolo('osem'));
 $('aReorientar').addEventListener('click',aReorientar);
-// Eje y receta del equipo: reconstruye con su receta, enmascara, iguala la escala y reorienta.
-$('reoEquipo').addEventListener('click',async()=>{
- const o=OsemMovil.estado,b=$('reoEquipo'),aviso=$('reoEstado');if(!o.s)return;b.disabled=true;
- try{const fuente=o.fuente||'sin corregir',x=await EjeEquipo.ejecutar({s:o.s,reg:Registro.estado,fuente});if(x){x.fuente=fuente;Reorientar.usarEquipo(x,o.s);window.scrollTo(0,0);}}
- catch(err){const detenida=EjeEquipo.estado.detenido;aviso.className=detenida?'estado':'estado error';aviso.textContent=detenida?'Reconstrucción detenida.':'No se pudo usar el eje del equipo: '+(err.message||err);if(!detenida)console.error(err);}
- finally{b.disabled=false;}
+// Imagen del equipo en la reorientacion. Dos usos: compararla con la reconstruccion que el
+// simulador ya hizo (sin recalcular) o reconstruir con la receta del equipo y comparar.
+function botonesEquipo(texto,clase){
+ const hay=EjeEquipo.disponible(),propia=segunda.origen==='osem';
+ document.querySelector('#reo .otra.equipo').hidden=!propia;$('reoPropia').hidden=!hay;$('reoEquipo').hidden=!hay;
+ const e=$('reoEquipoEstado');if(texto!==undefined){e.textContent=texto;e.className='estado'+(clase?' '+clase:'');}
+ else if(!e.textContent)e.textContent=hay?'Hay una imagen del equipo cargada con la carpeta.':'';
+}
+async function conEquipo(f){
+ const o=OsemMovil.estado,aviso=$('reoEstado');if(!o.s)return;
+ for(const id of ['reoPropia','reoEquipo'])$(id).disabled=true;
+ try{const x=await f(o);if(x){Reorientar.usarEquipo(x,o.s);window.scrollTo(0,0);}}
+ catch(err){const detenida=EjeEquipo.estado.detenido;aviso.className=detenida?'estado':'estado error';aviso.textContent=detenida?'Reconstrucción detenida.':'No se pudo comparar con el equipo: '+(err.message||err);if(!detenida)console.error(err);window.scrollTo(0,0);}
+ finally{for(const id of ['reoPropia','reoEquipo'])$(id).disabled=false;}
+}
+const compararPropia=()=>conEquipo(async o=>{const en=Caja.estado.entrada;return EjeEquipo.comparar({s:o.s,volumen:Reorientar.volumen(en,o.s.n),etiqueta:en.etiqueta});});
+$('reoPropia').addEventListener('click',compararPropia);
+$('reoEquipo').addEventListener('click',()=>conEquipo(async o=>{const fuente=o.fuente||'sin corregir',x=await EjeEquipo.ejecutar({s:o.s,reg:Registro.estado,fuente});if(x)x.fuente=fuente;return x;}));
+$('reoArchivoEquipo').addEventListener('change',async ev=>{
+ const f=ev.target.files&&ev.target.files[0];ev.target.value='';if(!f)return;
+ try{botonesEquipo('Leyendo la imagen del equipo…');const q=await EjeEquipo.agregar(new Uint8Array(await f.arrayBuffer()));botonesEquipo(`Imagen del equipo cargada: «${q.descripcion}».`,'ok');await compararPropia();}
+ catch(err){botonesEquipo(err.message||String(err),'error');console.error(err);}
 });
 $('volverOsem').addEventListener('click',aOsemDesdeCaja);
 $('volverCaja').addEventListener('click',aCajaDesdeReo);

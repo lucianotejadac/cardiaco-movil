@@ -393,3 +393,16 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 
 **Diferencias que quedan.** La OSEM del equipo es 3D y trae recuperación de resolución; la del simulador es por cortes y sin ella. La imagen del simulador se ve más granulada. El factor de escala no tiene significado físico: el DICOM del equipo no declara unidades.
 
+## 2026-09-28 · Cargar la imagen del equipo en la reorientación
+
+**Contexto.** El docente pidió poder cargar la imagen de Siemens para compararla con lo que hace el simulador. La entrada anterior solo tomaba la imagen del equipo si venía en la carpeta, y siempre reconstruía de nuevo con la receta del equipo.
+
+**Decisiones.**
+- **Botón «Cargar imagen del equipo…» en la pantalla de reorientación.** Acepta un DICOM de medicina nuclear reconstruido con OSEM, en eje corto (cortes oblicuos) y no gatillado. Si no comparte marco de referencia con las proyecciones, avisa que es de otro estudio o de otra fase.
+- **Al cargarla se compara de inmediato con la reconstrucción que el simulador ya hizo** (la que se estaba reorientando), sin reconstruir: adopta el eje, el centro y el zoom del equipo, se enmascara con su máscara y se lleva a su escala de valores.
+- **Dos botones quedan disponibles:** «Comparar con mi reconstrucción» y «Reconstruir con la receta del equipo y comparar». La imagen cargada a mano tiene prioridad sobre las que vinieron con la carpeta.
+- **Disponible con cualquier forma de carga**, también con el ZIP. El docente lo pidió así; quien tenga una imagen del equipo puede ver su eje.
+- **La comparación se separó de la reconstrucción** en `eje-equipo.js` (`alinear`), para que los dos usos compartan grilla, máscara, escala y medidas.
+
+**Validación.** En local, emulación de teléfono, ZIP del caso 4 de la entrega y su `Recon_eje_corto_AC.dcm` cargado a mano. Frente a la reconstrucción propia 1 × 1 sin correcciones: r = 0,615 y diferencia media 43,9 %, en 0,5 s. Con la receta del equipo: r = 0,911 y 20,3 %, en 28 s. En los dos casos las dos filas muestran el corazón en el mismo lugar y con el mismo tamaño.
+

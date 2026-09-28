@@ -124,7 +124,8 @@ dialog.progreso h2{font-size:1rem;margin-bottom:10px}
 .rejilla.reo.tres{grid-template-columns:1fr 1fr 1fr;gap:6px}
 .rejilla.reo figcaption{font-size:.75rem}
 .columna.eq{margin-top:8px}
-#reo .boton.otro{margin:8px 0 0}
+#reo .boton.otro{margin:8px 0 0;display:block;text-align:center;width:100%}
+#reo .otra.equipo{margin-top:10px}
 #reo canvas{image-rendering:pixelated;touch-action:none;cursor:move}
 #reo .etq{width:70px}
 #reo .fila .paso{flex:none;width:36px;height:36px;border-radius:8px;border:1px solid var(--linea);background:#0d1114;color:var(--texto);font-size:1.1rem;touch-action:none}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=23">
+<link rel="stylesheet" href="movil.css?v=24">
 </head>
 <body>
 <header class="barra">
@@ -259,7 +259,15 @@
    <p id="reoTTexto" class="clave"></p>
    <div class="fila"><span class="etq">Techo</span><input id="reoTecho" type="range" min="20" max="100" step="1" value="100" aria-label="Techo de la escala de color"></div>
    <div class="recetas"><button id="reoBuscar" type="button" class="mini">Buscar el centro con este eje</button><button id="reoCero" type="button" class="mini">Volver a 0° y 0°</button><button id="reoEjeExacto" type="button" class="mini" hidden>Volver al eje exacto del equipo</button></div>
-   <button id="reoEquipo" type="button" class="boton ancho otro" hidden>Usar el eje y la receta del equipo (provisional)</button>
+   <div class="otra equipo">
+    <h3>Comparar con la imagen del equipo (provisional)</h3>
+    <p>Carga el eje corto que reconstruyó el equipo. El simulador adopta su eje, su posición y su zoom, se enmascara igual y se lleva a su escala de valores.</p>
+    <label class="boton ancho otro" for="reoArchivoEquipo">Cargar imagen del equipo…</label>
+    <input id="reoArchivoEquipo" type="file">
+    <p id="reoEquipoEstado" class="estado"></p>
+    <button id="reoPropia" type="button" class="boton ancho otro" hidden>Comparar con mi reconstrucción</button>
+    <button id="reoEquipo" type="button" class="boton ancho otro" hidden>Reconstruir con la receta del equipo y comparar</button>
+   </div>
   </div>
   <div class="refProy" hidden>
    <p class="clave">Referencia en la adquisición: dos proyecciones del estudio, con el centro del ventrículo (amarillo) y el eje hacia el ápex (celeste). Si la marca no cae sobre el corazón, la ubicación está mal.</p>
@@ -540,12 +548,12 @@
 <script src="simulador95-pool.js?v=1"></script>
 <script src="osem-movil.js?v=4"></script>
 <script src="cardiaco-core.js?v=1"></script>
-<script src="reorientar.js?v=5"></script>
+<script src="reorientar.js?v=6"></script>
 <script src="referencia.js?v=1"></script>
 <script src="caja.js?v=3"></script>
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="eje-equipo.js?v=1"></script>
-<script src="movil.js?v=23"></script>
+<script src="eje-equipo.js?v=2"></script>
+<script src="movil.js?v=24"></script>
 </body>
 </html>

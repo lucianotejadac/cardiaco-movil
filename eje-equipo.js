@@ -15,11 +15,11 @@
 const EjeEquipo=(()=>{
  const C=CardiacoCore;
  const K_DISPERSION=.5,FWHM_DISPERSION=10;
- const e={dispersion:true,series:[],leidas:null,resultado:null,clave:'',tarea:null,rechazo:null,ocupado:false,detenido:false};
+ const e={dispersion:true,manual:false,series:[],leidas:null,resultado:null,clave:'',tarea:null,rechazo:null,ocupado:false,detenido:false};
  const cruz=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
  const punto=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 
- function configurar(series){cancelar();e.series=Array.isArray(series)?series:[];e.leidas=null;e.resultado=null;e.clave='';}
+ function configurar(series){cancelar();e.series=Array.isArray(series)?series:[];e.leidas=null;e.resultado=null;e.clave='';e.manual=false;}
  const disponible=()=>e.series.length>0;
 
  // Una serie reconstruida: grilla y receta. Devuelve null si no es un eje corto (cortes oblicuos).
@@ -74,18 +74,59 @@ const EjeEquipo=(()=>{
   return {vol,mascara};
  }
 
+ /* Lo comun a los dos usos: lleva la reconstruccion del equipo a la grilla del simulador,
+    enmascara el volumen del simulador (sim, z hacia la cabeza; se modifica), iguala la escala de
+    valores y devuelve centro, marco y medidas de parecido. */
+ function alinear(D,s,sim){
+  const n=s.n,p=n*n,R=D.receta,G=equipoEnGrilla(D,s);
+  // Mascara del equipo y misma escala de valores: misma suma dentro de la mascara.
+  let se=0,ss=0,nm=0,cx=0,cy=0,cz=0;
+  for(let z=0;z<n;z++)for(let y=0;y<n;y++)for(let x=0;x<n;x++){const o=z*p+y*n+x;if(!G.mascara[o]){sim[o]=0;continue;}se+=G.vol[o];ss+=Math.max(0,sim[o]);nm++;cx+=x;cy+=y;cz+=z;}
+  if(!nm)throw Error('La imagen del equipo queda fuera de la matriz del simulador: no parece del mismo estudio.');
+  if(!(ss>0))throw Error('La reconstrucción del simulador no tiene datos en la zona que cubre la imagen del equipo.');
+  const factor=se/ss;for(let o=0;o<sim.length;o++)sim[o]=G.mascara[o]?Math.max(0,sim[o])*factor:0;
+  // Marco exacto del equipo: a hacia el apex (anterior, izquierda, abajo), v = columnas, u = a x v.
+  let a=D.n.slice();if(punto(a,[.5,-.7,-.3])<0)a=a.map(q=>-q);const v=D.c.slice(),u=cruz(a,v),centro=[cx/nm,cy/nm,cz/nm];
+  let tmin=0,tmax=0;for(let z=0;z<n;z++)for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(G.mascara[z*p+y*n+x]){const t=(x-centro[0])*a[0]+(y-centro[1])*a[1]+(z-centro[2])*a[2];if(t<tmin)tmin=t;if(t>tmax)tmax=t;}
+  // Parecido dentro de la region con actividad del equipo (sobre el 10 % de su maximo).
+  let max=0;for(let o=0;o<G.vol.length;o++)if(G.vol[o]>max)max=G.vol[o];
+  let sa=0,sb=0,k=0;for(let o=0;o<sim.length;o++)if(G.vol[o]>.1*max){sa+=G.vol[o];sb+=sim[o];k++;}
+  const ma=sa/k,mb=sb/k;let sab=0,saa=0,sbb=0,dif=0;for(let o=0;o<sim.length;o++)if(G.vol[o]>.1*max){const x=G.vol[o]-ma,y=sim[o]-mb;sab+=x*y;saa+=x*x;sbb+=y*y;dif+=Math.abs(G.vol[o]-sim[o]);}
+  const ang=C.angulosDe(a[0],a[1],a[2]);
+  const recetaEquipo=`OSEM 3D ${R.it} × ${R.sub}${R.ac?' con atenuación':' sin atenuación'}${R.dispersion?' y dispersión':''}${R.fwhm?`, gaussiano ${String(R.fwhm).replace('.',',')} mm`:''}`;
+  return {sim,equipo:G.vol,max,centro,largo:Math.max(12,Math.round(2*Math.min(-tmin,tmax))),marco:{a,u,v},azimut:ang.azimut,elevacion:ang.elevacion,factor,voxeles:nm,
+   correlacion:sab/Math.sqrt(saa*sbb||1),diferencia:100*dif/(sa||1),descripcion:D.descripcion,receta:R,recetaEquipo,
+   entrada:{tipo:'osem',zArriba:true,data:sim,etiqueta:''}};
+ }
+ // Elige la serie del equipo: la ultima cargada a mano si la hay; si no, de preferencia la que
+ // tiene atenuacion cuando hay CT.
+ async function elegir(s,hayCt){
+  const lista=await series(s.frame);
+  if(!lista.length){const otras=await series(null);throw Error(otras.length?'La imagen del equipo no comparte marco de referencia con estas proyecciones: es de otro estudio o de otra fase (estrés o reposo).':'No hay una imagen del equipo en eje corto reconstruida con OSEM. Cárgala con «Cargar imagen del equipo».');}
+  if(e.manual){const m=lista.filter(q=>q.manual);if(m.length)return m[m.length-1];}
+  return lista.slice().sort((a,b)=>(b.receta.ac&&hayCt?1:0)-(a.receta.ac&&hayCt?1:0)||(a.receta.ac?1:0)-(b.receta.ac?1:0))[0];
+ }
+ // Carga a mano una imagen del equipo (bytes de un DICOM). Devuelve su descripcion.
+ async function agregar(bytes){
+  const q=await leer(bytes);if(!q)throw Error('Ese archivo no es un eje corto reconstruido con OSEM por el equipo (medicina nuclear, cortes oblicuos, no gatillado).');
+  q.manual=true;await series(null);e.leidas.push(q);e.series.push(bytes);e.manual=true;e.resultado=null;e.clave='';return q;
+ }
+ /* Compara la imagen del equipo con una reconstruccion que el simulador ya hizo (volumen con z
+    hacia la cabeza), sin reconstruir de nuevo. */
+ async function comparar({s,volumen,etiqueta}){
+  const D=await elegir(s,true),sim=Float32Array.from(volumen),r={...alinear(D,s,sim),modo:'propia',nombre:etiqueta,dispersion:false,segundos:0};
+  r.entrada.etiqueta=`${etiqueta} · frente al equipo`;return r;
+ }
+
  /* s: proyecciones (Lab95.spect). reg: estado del registro (ct preparado y desplazamiento).
     Devuelve lo que necesita la reorientacion, o lanza un Error con el motivo. */
  async function ejecutar({s,reg,fuente}){
   if(e.ocupado)return null;
-  const lista=await series(s.frame);
-  if(!lista.length)throw Error('La carpeta no trae un eje corto reconstruido por el equipo con OSEM para estas proyecciones.');
   const hayCt=!!(reg&&reg.ct);
-  // De preferencia la que tiene atenuacion, si hay CT para repetirla.
-  const D=lista.slice().sort((a,b)=>(b.receta.ac&&hayCt?1:0)-(a.receta.ac&&hayCt?1:0)||(a.receta.ac?1:0)-(b.receta.ac?1:0))[0],R=D.receta;
+  const D=await elegir(s,hayCt),R=D.receta;
   if(R.ac&&!hayCt)throw Error('El eje corto del equipo tiene corrección de atenuación y no hay CT cargado para repetirla.');
   if(s.views.filter(v=>v.window===1).length%R.sub)throw Error(`El equipo usó ${R.sub} subconjuntos y el número de vistas no es divisible.`);
-  const clave=[D.descripcion,s.frame,s.data.length,fuente,hayCt?reg.off.join(','):'',e.dispersion].join('|');
+  const clave=[D.descripcion,e.series.length,s.frame,s.data.length,fuente,hayCt?reg.off.join(','):'',e.dispersion].join('|');
   if(e.resultado&&e.clave===clave)return e.resultado;
   const hayVentana=s.views.some(v=>v.window===2),disp=R.dispersion&&hayVentana&&e.dispersion,w=s.windows||[];
   const escalaVentana=disp&&w[0]&&w[1]&&w[1].high>w[1].low?(w[0].high-w[0].low)/(w[1].high-w[1].low):1;
@@ -101,29 +142,13 @@ const EjeEquipo=(()=>{
    const settings={scatter:disp,scatterSmoothing:disp,scatterFwhm:disp?FWHM_DISPERSION:0,scatterWeight:disp?K_DISPERSION:0,scatterWindowScale:disp?escalaVentana:0,resolutionRecovery:false,distanceDependent:false,axialRecovery:false,initialization:'uniform',iterations:R.it,subsets:R.sub,attenuationCorrection:!!mu,postFilter:false,postFilterFWHMmm:0};
    let vol=await osem(s,settings,mu,filas,f=>Progreso.avance(.05+f*.8,`${mu?'Atenuación y ':''}OSEM ${Math.round(f*100)} %`));
    if(R.fwhm){Progreso.avance(.87,'Gaussiano final…');vol=await Lab95.gaussian3D(vol,n,R.fwhm/s.spacing/2.354820045,()=>e.detenido);if(!vol)throw Error('detenida');}
-   Progreso.avance(.92,'Llevando la reconstrucción del equipo a la misma grilla…');await pausa();
    const sim=new Float32Array(n*p);for(let z=0;z<n;z++)sim.set(vol.subarray((n-1-z)*p,(n-z)*p),z*p); // z hacia la cabeza
-   const G=equipoEnGrilla(D,s);
-   // Mascara del equipo y misma escala de valores: misma suma dentro de la mascara.
-   Progreso.avance(.96,'Máscara y escala de valores…');await pausa();
-   let se=0,ss=0,nm=0,cx=0,cy=0,cz=0;
-   for(let z=0;z<n;z++)for(let y=0;y<n;y++)for(let x=0;x<n;x++){const o=z*p+y*n+x;if(!G.mascara[o]){sim[o]=0;continue;}se+=G.vol[o];ss+=Math.max(0,sim[o]);nm++;cx+=x;cy+=y;cz+=z;}
-   if(!nm||!(ss>0))throw Error('La máscara del equipo queda fuera de lo reconstruido.');
-   const factor=se/ss;for(let o=0;o<sim.length;o++)sim[o]=G.mascara[o]?Math.max(0,sim[o])*factor:0;
-   // Marco exacto del equipo: a hacia el apex (anterior, izquierda, abajo), v = columnas, u = a x v.
-   let a=D.n.slice();if(punto(a,[.5,-.7,-.3])<0)a=a.map(q=>-q);const v=D.c.slice(),u=cruz(a,v),centro=[cx/nm,cy/nm,cz/nm];
-   let tmin=0,tmax=0;for(let z=0;z<n;z++)for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(G.mascara[z*p+y*n+x]){const t=(x-centro[0])*a[0]+(y-centro[1])*a[1]+(z-centro[2])*a[2];if(t<tmin)tmin=t;if(t>tmax)tmax=t;}
-   // Parecido dentro de la region con actividad del equipo (sobre el 10 % de su maximo).
-   let max=0;for(let o=0;o<G.vol.length;o++)if(G.vol[o]>max)max=G.vol[o];
-   let sa=0,sb=0,k=0;for(let o=0;o<sim.length;o++)if(G.vol[o]>.1*max){sa+=G.vol[o];sb+=sim[o];k++;}
-   const ma=sa/k,mb=sb/k;let sab=0,saa=0,sbb=0,dif=0;for(let o=0;o<sim.length;o++)if(G.vol[o]>.1*max){const x=G.vol[o]-ma,y=sim[o]-mb;sab+=x*y;saa+=x*x;sbb+=y*y;dif+=Math.abs(G.vol[o]-sim[o]);}
-   const ang=C.angulosDe(a[0],a[1],a[2]);
-   e.clave=clave;e.resultado={sim,equipo:G.vol,max,centro,largo:Math.max(12,Math.round(2*Math.min(-tmin,tmax))),marco:{a,u,v},azimut:ang.azimut,elevacion:ang.elevacion,factor,voxeles:nm,
-    correlacion:sab/Math.sqrt(saa*sbb||1),diferencia:100*dif/(sa||1),nombre,descripcion:D.descripcion,receta:R,dispersion:disp,segundos:(performance.now()-t0)/1000,
-    entrada:{tipo:'osem',zArriba:true,data:sim,etiqueta:`receta del equipo · ${nombre}`}};
+   Progreso.avance(.92,'Misma grilla, máscara y escala de valores…');await pausa();
+   e.clave=clave;e.resultado={...alinear(D,s,sim),modo:'receta',nombre,dispersion:disp,segundos:(performance.now()-t0)/1000};
+   e.resultado.entrada.etiqueta=`receta del equipo · ${nombre}`;
    return e.resultado;
   }finally{e.ocupado=false;e.tarea=null;e.rechazo=null;Progreso.cerrar();}
  }
- return {configurar,disponible,ejecutar,cancelar,estado:e};
+ return {configurar,disponible,agregar,comparar,ejecutar,cancelar,estado:e};
 })();
 window.EjeEquipo=EjeEquipo;
