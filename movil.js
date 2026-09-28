@@ -73,7 +73,13 @@ function elegirEntradas(lista){
  const equipo=[];
  for(const rec of lista.filter(e=>/(^|\/)caso\s*\d+\/(estres|reposo)\/referencia equipo\/recon_transversal_noac\.dcm$/i.test(e.name))){
   const m=rec.name.match(/caso\s*(\d+)\/(estres|reposo)\//i),fase=m[2].toLowerCase(),dir=rec.name.slice(0,rec.name.toLowerCase().indexOf('referencia equipo/')).toLowerCase();
-  const proy=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'.dcm'),proyQC=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'_qc_corregido.dcm')||null;if(proy)equipo.push({rec,proy,proyQC,caso:+m[1],fase});}
+  const f=nombre=>lista.find(e=>e.name.toLowerCase()===dir+nombre)||null,ref=nombre=>f('referencia equipo/'+nombre);
+  const proy=f('nm_'+fase+'.dcm');
+  // Tambien los ejes cortos y el gatillado de Siemens, la gatillada de esa fase y su CT (para AC).
+  const cts=lista.filter(e=>{const q=e.name.toLowerCase();return q.startsWith(dir)&&/^ct[^/]*\/[^/]+\.dcm$/.test(q.slice(dir.length));});
+  const cc=[...new Set(cts.map(e=>e.name.toLowerCase().slice(dir.length).split('/')[0]))].sort(),c512=cc.find(c=>/^ct\s*512$/.test(c))||cc[0];
+  if(proy)equipo.push({rec,proy,proyQC:f('nm_'+fase+'_qc_corregido.dcm'),saNoAC:ref('recon_eje_corto_noac.dcm'),saAC:ref('recon_eje_corto_ac.dcm'),saGat:ref('recon_gatillado_eje_corto.dcm'),proyGat:f('nm_'+fase+'_gatillado.dcm'),
+   ct:cts.filter(e=>e.name.toLowerCase().slice(dir.length).split('/')[0]===c512).sort((a,b)=>a.name.localeCompare(b.name)),caso:+m[1],fase});}
  equipo.sort((a,b)=>a.fase.localeCompare(b.fase));
  return {cruda,ct,gat,equipo};
 }
@@ -112,7 +118,7 @@ async function cargar(file){
    bytes=await extraer(buf,e.cruda);
    if(e.ct.length){mensaje('Descomprimiendo el CT…');ct=[];for(const q of e.ct)ct.push(await extraer(buf,q));}
    if(e.gat){mensaje('Descomprimiendo la adquisición gatillada…');gat=await extraer(buf,e.gat);}
-   if(e.equipo.length){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo=[];for(const q of e.equipo)equipo.push({recon:await extraer(buf,q.rec),proy:await extraer(buf,q.proy),proyQC:q.proyQC?await extraer(buf,q.proyQC):null,caso:q.caso,fase:q.fase});}
+   if(e.equipo.length){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo=[];const x=async q=>q?await extraer(buf,q):null;for(const q of e.equipo){const ct=[];for(const c of q.ct)ct.push(await extraer(buf,c));equipo.push({recon:await x(q.rec),proy:await x(q.proy),proyQC:await x(q.proyQC),saNoAC:await x(q.saNoAC),saAC:await x(q.saAC),saGat:await x(q.saGat),proyGat:await x(q.proyGat),ct,caso:q.caso,fase:q.fase});}}
   }else bytes=new Uint8Array(await file.arrayBuffer());
   if(await mostrar(bytes,origen,false,ct,gat,equipo))await guardar(bytes,origen,ct,gat,equipo);
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
