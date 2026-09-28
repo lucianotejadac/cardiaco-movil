@@ -91,3 +91,17 @@ body.comparar .clave{display:none}
 #osem .clave .mini{margin-left:6px;padding:3px 8px}
 #osem canvas{image-rendering:pixelated;cursor:crosshair}
 [hidden]{display:none!important}
+/* OSEM: dos reconstrucciones lado a lado y la tarjeta de nueva reconstruccion */
+.rejilla.osem figure select{width:100%;background:#0d1114;color:var(--texto);border:1px solid var(--linea);border-radius:6px;padding:5px;font-size:.8rem;margin-bottom:4px}
+#osem canvas{image-rendering:pixelated;cursor:crosshair;touch-action:none}
+#osemNueva h2{margin-bottom:6px}
+.recetas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.opciones{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;font-size:.9rem}
+.opciones label{display:flex;flex-direction:column;gap:3px;color:var(--texto2)}
+.opciones label.check{grid-column:1/-1;flex-direction:row;align-items:center;gap:8px;color:var(--texto)}
+.opciones input[type=number],.opciones select{background:#0d1114;color:var(--texto);border:1px solid var(--linea);border-radius:6px;padding:8px;font-size:1rem}
+.opciones input[type=checkbox]{width:22px;height:22px;accent-color:var(--acento)}
+.opciones input:disabled{opacity:.4}
+.check.propia{display:flex;align-items:center;gap:8px;font-size:.85rem;margin:4px 0 6px}
+.check.propia input{width:20px;height:20px;accent-color:var(--acento)}
+#osemDetener{margin-top:8px}

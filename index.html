@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=10">
+<link rel="stylesheet" href="movil.css?v=12">
 </head>
 <body>
 <header class="barra">
@@ -80,12 +80,13 @@
 
  <section class="oculta" id="osem">
   <button id="volverReg" type="button" class="cambio">← Volver al registro</button>
-  <div class="columna">OSEM 1 × 1 · sin atenuación, sin dispersión, sin filtro</div>
+  <div class="columna">Reconstrucción OSEM</div>
   <p id="osemEstado" class="estado"></p>
-  <figure class="fusion">
-   <figcaption><span id="osemPlanoTexto">Axial</span> <span class="mono">corte <span id="osemCorte"></span></span></figcaption>
-   <canvas id="osemVista" aria-label="Reconstrucción OSEM. Toca para elegir los cortes de los otros planos."></canvas>
-  </figure>
+  <div id="osemRejilla" class="rejilla osem">
+   <figure><select id="osemA" aria-label="Reconstrucción de la izquierda"></select><canvas id="osemVistaA" aria-label="Reconstrucción. Toca para elegir los cortes de los otros planos."></canvas></figure>
+   <figure class="derecha"><select id="osemB" aria-label="Reconstrucción para comparar"></select><canvas id="osemVistaB" aria-label="Reconstrucción para comparar."></canvas></figure>
+  </div>
+  <p class="clave"><span id="osemPlanoTexto">Axial</span> · corte <span id="osemCorte"></span> · toca una imagen para elegir dónde cortan los otros planos (<span class="celeste">┃</span> <span class="amarilla">━</span>).</p>
   <div class="segmento" role="group" aria-label="Plano">
    <button type="button" data-oplano="axial" aria-pressed="true">Axial</button>
    <button type="button" data-oplano="coronal" aria-pressed="false">Coronal</button>
@@ -96,9 +97,28 @@
    <p class="clave">Ventana · <span id="osemVentana"></span> <button id="osemInicial" type="button" class="mini">Restablecer</button></p>
    <div class="fila"><span class="etq">Nivel</span><input id="osemNivel" type="range" min="0" max="150" value="50" aria-label="Nivel de la ventana"></div>
    <div class="fila"><span class="etq">Ancho</span><input id="osemAncho" type="range" min="1" max="200" value="100" aria-label="Ancho de la ventana"></div>
-   <p class="clave">Toca la imagen para elegir dónde cortan los otros dos planos: <span class="celeste">┃</span> y <span class="amarilla">━</span>.</p>
+   <label class="check propia"><input id="osemPropia" type="checkbox"> Cada imagen a su propio máximo</label>
   </div>
+  <p id="osemResumen" class="dato"></p>
   <p id="osemCursor" class="dato"></p>
+
+  <section class="tarjeta" id="osemNueva">
+   <h2>Nueva reconstrucción</h2>
+   <div class="recetas">
+    <button id="osemRecetaSin" type="button" class="mini">Receta del caso sin atenuación</button>
+    <button id="osemRecetaCon" type="button" class="mini">Receta del caso con atenuación</button>
+   </div>
+   <div class="opciones">
+    <label>Iteraciones <input id="osemIter" type="number" min="1" max="20" step="1" value="2" inputmode="numeric"></label>
+    <label>Subconjuntos <select id="osemSub"><option>1</option><option>2</option><option>4</option><option selected>8</option><option>16</option></select></label>
+    <label class="check"><input id="osemAC" type="checkbox"> Corrección de atenuación con el CT registrado</label>
+    <label class="check"><input id="osemFiltro" type="checkbox" checked> Filtro gaussiano final</label>
+    <label>FWHM (mm) <input id="osemFwhm" type="number" min="1" max="25" step="0.1" value="8.4" inputmode="decimal"></label>
+   </div>
+   <button id="osemCorrer" type="button" class="boton ancho">Reconstruir</button>
+   <p id="osemAviso" class="clave"></p>
+   <button id="osemDetener" type="button" class="cambio" hidden>Detener</button>
+  </section>
   <button type="button" class="vermas ancho" data-dialogo="dOsem">Ver más sobre la OSEM</button>
  </section>
 </main>
@@ -260,18 +280,20 @@
 </dialog>
 
 <dialog id="dOsem">
- <h2>La OSEM de referencia</h2>
+ <h2>La OSEM</h2>
  <dl class="leyenda">
   <dt>Qué es</dt>
-  <dd>OSEM (maximización de la expectativa con subconjuntos ordenados) es una reconstrucción iterativa. Parte de una imagen uniforme, calcula qué proyecciones produciría, las compara con las medidas y corrige la imagen en proporción a la diferencia. Cada vuelta por todas las vistas es una iteración; los subconjuntos dividen las vistas para corregir más seguido.</dd>
-  <dt>Por qué 1 × 1 y sin correcciones</dt>
-  <dd>Es la reconstrucción de referencia del simulador SPECT 95: una iteración, un subconjunto con las 64 vistas, sin corrección de atenuación, sin dispersión, sin recuperación de resolución y sin filtro final. Sirve de punto de partida para comparar después qué cambia cada corrección y cada iteración. Con una sola iteración la imagen todavía es borrosa: la OSEM no ha convergido.</dd>
+  <dd>OSEM (maximización de la expectativa con subconjuntos ordenados) es una reconstrucción iterativa. Parte de una imagen uniforme, calcula qué proyecciones produciría, las compara con las medidas y corrige la imagen en proporción a la diferencia. Cada vuelta por todas las vistas es una iteración; los subconjuntos dividen las 64 vistas en grupos, y la imagen se corrige después de cada grupo. Iteraciones por subconjuntos es, más o menos, cuántas correcciones recibe la imagen: 2 × 8 son 16.</dd>
+  <dt>La referencia 1 × 1</dt>
+  <dd>Al entrar, la aplicación hace la reconstrucción de referencia del simulador SPECT 95: una iteración, un subconjunto, sin corrección de atenuación, sin dispersión, sin recuperación de resolución y sin filtro final. Con una sola corrección la imagen todavía es borrosa: la OSEM no ha convergido. Sirve para ver qué cambia con más iteraciones y con cada corrección.</dd>
+  <dt>La receta del caso</dt>
+  <dd>OSEM 2 × 8 con un filtro gaussiano final de 8,4 mm, primero sin y después con corrección de atenuación. Los dos botones de receta dejan listas esas opciones; después pulsa «Reconstruir». Puedes probar otras: más iteraciones afinan la imagen pero suben el ruido, y el filtro final lo baja a costa de resolución.</dd>
+  <dt>La corrección de atenuación</dt>
+  <dd>Los fotones que salen de las paredes profundas del corazón (la inferior, sobre todo) atraviesan más tejido y llegan menos al detector: sin corrección esas paredes se ven más apagadas de lo que están. Con el CT registrado se arma un mapa μ (cuánto atenúa cada vóxel, a partir de las unidades Hounsfield), y la OSEM tiene en cuenta, para cada vista, cuánto tejido atraviesa cada punto. Solo se reconstruyen los cortes que el CT cubre; fuera de su campo transversal se asume aire. El mapa μ aparece en el historial y se puede mirar. Si el registro quedó corrido, el mapa corrige de más una pared y de menos la opuesta.</dd>
+  <dt>Comparar</dt>
+  <dd>Cada reconstrucción queda en el historial (hasta seis, más la referencia y el mapa μ). La nueva aparece a la izquierda y la que estabas mirando pasa a la derecha; con los selectores de arriba de cada imagen eliges otras. Las dos comparten escala, así una diferencia de brillo es una diferencia de actividad reconstruida. Con corrección de atenuación la actividad reconstruida es varias veces mayor y la otra se ve casi negra: marca «Cada imagen a su propio máximo» para comparar la forma, por ejemplo cuánto se recupera la pared inferior. El plano, el corte y la ventana son los mismos en las dos. Las filas en azul oscuro no se reconstruyeron.</dd>
   <dt>Qué se reconstruye</dt>
   <dd>Las mismas proyecciones de la FBP: las corregidas por la aplicación si pulsaste «Corregir», o las sin corregir. Como en el escritorio, la franja sin medición entra como ceros medidos.</dd>
-  <dt>Cómo verla</dt>
-  <dd>Axial, coronal y sagital, con la misma escala de colores. Tocar la imagen elige dónde cortan los otros dos planos (líneas celeste y amarilla). El nivel y el ancho eligen qué parte de la escala se pinta, en porcentaje del máximo de la reconstrucción; «Restablecer» vuelve a mostrar de 0 % a 100 %. Las filas en azul oscuro no se reconstruyeron.</dd>
-  <dt>Sin atenuación</dt>
-  <dd>Sin el mapa del CT, los fotones que salen de las paredes profundas (la inferior, sobre todo) llegan menos al detector y esas paredes se ven más apagadas de lo que están. Es lo que corregirá el paso con atenuación.</dd>
  </dl>
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
@@ -285,7 +307,7 @@
 <script src="simulador95-psf.js?v=1"></script>
 <script src="simulador95-osem.js?v=1"></script>
 <script src="simulador95-pool.js?v=1"></script>
-<script src="osem-movil.js?v=1"></script>
-<script src="movil.js?v=10"></script>
+<script src="osem-movil.js?v=3"></script>
+<script src="movil.js?v=11"></script>
 </body>
 </html>

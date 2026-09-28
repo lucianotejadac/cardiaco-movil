@@ -178,3 +178,20 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Validación.** Emulación de teléfono (Pixel 7) con el ZIP del caso 1 modificado y corregido: el botón no se ve antes de confirmar, aparece al confirmar y se oculta al mover el CT; la OSEM de 128 cortes tomó 2,5 s con 2 trabajadores, sin valores negativos; la imagen es la esperable de una sola iteración (borrosa, con hígado y corazón reconocibles en el coronal); el toque mueve los cortes de los otros planos; «Volver al registro» funciona.
 
 **Pendiente.** Mapa de atenuación desde el CT registrado y OSEM con atenuación; más iteraciones y subconjuntos para comparar.
+
+## 2026-09-28 · Paso 4: OSEM con atenuación, iteraciones y comparación
+
+**Contexto.** Tras la OSEM 1 × 1, el docente pidió seguir con lo pendiente: el mapa de atenuación desde el CT registrado, la OSEM con atenuación y la posibilidad de cambiar iteraciones y subconjuntos para comparar.
+
+**Decisiones.**
+- **Tarjeta «Nueva reconstrucción»** en la pantalla OSEM: iteraciones (1 a 20), subconjuntos (1, 2, 4, 8, 16), corrección de atenuación, filtro gaussiano final con su FWHM. Dos botones dejan lista la receta del caso de `cardiaco-casos.js` (`CARDIACO_RECETA`: 2 × 8, 8,4 mm), sin y con atenuación, como «Aplicar la receta» del escritorio. Por omisión quedan las opciones de la receta sin atenuación.
+- **Mapa μ como en `confirmRegistration` del escritorio:** cada vóxel del SPECT se muestrea en el CT con el desplazamiento del registro confirmado, se acota a −1000…3000 HU y se convierte a μ (cm⁻¹) con `h ≤ 0 ? 0,15·(1 + h/1000) : 0,15 + 0,0001·h`; sin CT queda NaN. Se calcula al pedir la primera reconstrucción con atenuación y se rehace si el registro cambió. Aparece en el historial y se puede mirar en grises.
+- **OSEM con atenuación con el mismo worker del escritorio**, con `outsideAir` activado (aire fuera del campo transversal del CT, como el valor por omisión oculto del escritorio). Solo se reconstruyen los cortes que el CT cubre (61 de 128 en el caso 1); el resto queda en azul.
+- **Historial y comparación lado a lado:** la nueva reconstrucción va a la izquierda y la que se estaba mirando pasa a la derecha; un selector sobre cada imagen elige cualquiera del historial (hasta seis reconstrucciones, más la referencia 1 × 1 y el mapa μ). Plano, corte, cruz y ventana son comunes. Como en el escritorio, las dos OSEM comparten escala; se agregó «Cada imagen a su propio máximo» porque con atenuación la actividad reconstruida es unas 8,5 veces mayor y la otra se veía casi negra.
+- **Tiempo:** la atenuación precalcula, para las 64 vistas y cada punto, la integral de μ hasta el detector, con el `attenuationWeights` del escritorio; es la parte lenta. Hay un aviso de que puede tardar minutos en el teléfono y un botón «Detener».
+
+**Validación.** Emulación de teléfono (Pixel 7), caso 1 modificado: referencia 1 × 1 en 2,4 s; receta sin atenuación, 128 cortes en 6,1 s; receta con atenuación, 61 cortes en unos 90 s con 2 trabajadores; suma de actividad en los cortes con CT 8,5 veces la de sin atenuación; «Detener» corta, informa y deja reconstruir de nuevo; la escala propia deja ver las dos; el mapa μ muestra pulmón, corazón e hígado; sin errores en la consola.
+
+**Pendiente.**
+- Con atenuación, una zona muy intensa en el borde lateral derecho del paciente domina la escala en los cortes del corazón. No se investigó si es el hígado reforzado por la corrección o un efecto de la franja sin medición (ceros medidos) combinada con la atenuación.
+- Probar el tiempo de la atenuación en un teléfono real.

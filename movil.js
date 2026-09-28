@@ -265,7 +265,7 @@ async function aOsem(){
  if(!Registro.estado.confirmado)return;Registro.cancelar();
  $('reg').classList.add('oculta');$('osem').classList.remove('oculta');window.scrollTo(0,0);
  const r=Registro.estado;
- await OsemMovil.abrir({s:r.s,fuente:r.fuente,cortes:r.corte});
+ await OsemMovil.abrir({s:r.s,fuente:r.fuente,cortes:r.corte,registro:r});
 }
 function aReg(){OsemMovil.cancelar();$('osem').classList.add('oculta');$('reg').classList.remove('oculta');window.scrollTo(0,0);}
 function aQc(){Registro.cancelar();$('reg').classList.add('oculta');$('qc').classList.remove('oculta');armar();window.scrollTo(0,0);}
