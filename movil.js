@@ -1,8 +1,9 @@
 /* Version movil del tutorial cardiaco, paso 1. Carga el ZIP de U-Cursos, saca las proyecciones
-   de estres del caso 1 (la cruda y la copia corregida por el equipo) y muestra cine, sinograma,
-   linograma e imagen suma. Dos vistas: «una columna» (las cuatro imagenes de la cruda en una
-   pantalla) y «vista corregido» (dos columnas: sin corregir a la izquierda, corregido a la
-   derecha; proyecciones y sinograma arriba, suma y linograma bajando). Todas las imagenes
+   de estres sin corregir del caso 1 y muestra cine, sinograma, linograma e imagen suma. Dos
+   vistas: «una columna» (las cuatro imagenes en una pantalla) y «vista corregido» (dos columnas:
+   sin corregir a la izquierda y, a la derecha, la correccion automatica de movimiento que hace
+   la propia aplicacion, en correccion.js; proyecciones y sinograma arriba, suma y linograma
+   bajando). Todas las imagenes
    comparten dos cursores: la fila (linea amarilla) y la vista (linea celeste). Reutiliza el motor
    de spect-lab-95 (Lab95.read / Lab95.spect) y la logica del control de calidad de escritorio. */
 'use strict';
@@ -14,7 +15,7 @@ const paleta=v=>{v=Math.max(0,Math.min(1,v));return [255*Math.min(1,v*3),255*Mat
 const TIPOS={cine:'Cine',sino:'Sinograma',suma:'Imagen suma',lino:'Linograma'};
 const DIALOGO={cine:'dCine',sino:'dSino',suma:'dSuma',lino:'dLino'};
 const EJES={cine:'y',suma:'y',sino:'k',lino:'ky'};
-const estado={crudo:null,corr:null,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
+const estado={crudo:null,corr:null,cuadros:null,correccion:null,ocupado:false,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
 
 function imagen(img,w,h,max){
  const id=new ImageData(w,h);for(let i=0;i<w*h;i++){const c=paleta(Math.max(0,img[i])/(max||1));id.data[i*4]=c[0];id.data[i*4+1]=c[1];id.data[i*4+2]=c[2];id.data[i*4+3]=255;}
@@ -49,39 +50,38 @@ async function extraer(buf,entrada){
  }
  throw Error('Método de compresión no admitido ('+entrada.method+').');
 }
-// La cruda de estres (NM_estres.dcm, de preferencia en una carpeta «Caso 1») y, en la misma
-// carpeta, la copia corregida por el equipo (NM_estres_QC_corregido.dcm).
+// La cruda de estres: NM_estres.dcm, de preferencia en una carpeta «Caso 1». La copia corregida
+// por el equipo, si el ZIP la trae, no se usa: la correccion la hace la aplicacion.
 function elegirEntradas(lista){
  const crudas=lista.filter(e=>/(^|\/)NM_estres\.dcm$/i.test(e.name));
  if(!crudas.length)return null;
  const cruda=crudas.find(e=>/caso\s*1(\/|$)/i.test(e.name.replace(/\\/g,'/')))||crudas[0];
- const carpeta=cruda.name.slice(0,cruda.name.length-'NM_estres.dcm'.length);
- const corregida=lista.find(e=>e.name.toLowerCase()===(carpeta+'NM_estres_QC_corregido.dcm').toLowerCase())||null;
- return {cruda,corregida};
+ return {cruda};
 }
 
 /* ---------- carga ---------- */
 async function cargar(file){
  try{
   mensaje('Leyendo '+file.name+'…');
-  let crudo,corr=null,origen=file.name;
+  let d,origen=file.name;
   if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){
    const buf=await file.arrayBuffer();const lista=await entradasZip(buf);const e=elegirEntradas(lista);
    if(!e)throw Error('Dentro del ZIP no hay NM_estres.dcm. Revisa que sea el ZIP «Cardiaco …» de U-Cursos.');
    mensaje('Descomprimiendo las proyecciones…');origen=e.cruda.name;
-   crudo=Lab95.spect(await Lab95.read(new Blob([await extraer(buf,e.cruda)])));
-   if(e.corregida){try{corr=Lab95.spect(await Lab95.read(new Blob([await extraer(buf,e.corregida)])));}catch(err){corr=null;console.warn('copia corregida no legible',err);}}
-  }else crudo=Lab95.spect(await Lab95.read(file));
+   d=await Lab95.read(new Blob([await extraer(buf,e.cruda)]));
+  }else d=await Lab95.read(file);
+  const crudo=Lab95.spect(d);
+  // De que cabezal y de que paso del giro es cada cuadro: lo necesita la correccion.
+  estado.cuadros=Array.from({length:crudo.frames},(_,i)=>({cabezal:d.uint16('x00540020',i),ventana:d.uint16('x00540010',i),paso:d.uint16('x00540090',i)}));
   const marco=CARDIACO_CASOS[CASO].fases[FASE].marco,esDelCaso=cardiacoHash(crudo.frame)===marco;
-  if(corr&&(corr.frame!==crudo.frame||corr.n!==crudo.n))corr=null;
   estado.aviso=esDelCaso?'':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
   mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+origen,esDelCaso?'ok':'error');
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
   detener();estado.k=0;
-  estado.crudo=preparar(crudo,null);estado.corr=corr?preparar(corr,estado.crudo):null;
+  estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
   estado.y=estado.crudo.filaInicial;
   textos();
-  const b=$('modo');b.disabled=!estado.corr;if(!estado.corr)estado.modo='uno';
+  $('modo').disabled=false;
   $('qc').classList.remove('oculta');$('carga').classList.add('oculta');$('cambiar').hidden=false;
   armar();window.scrollTo(0,0);
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
@@ -119,25 +119,25 @@ function textos(){
  fr.forEach(v=>{const a=s.data.subarray(v.source*p,(v.source+1)*p);const vacia=x=>{for(let y=0;y<n;y++)if(a[y*n+x]>0)return false;return true;};let izq=0;while(izq<n&&vacia(izq))izq++;let der=0;while(der<n-izq&&vacia(n-1-der))der++;const w=izq+der;if(w>0)afectadas++;if(w>anchoMax)anchoMax=w;});
  $('franja').textContent=afectadas?`En este archivo, ${afectadas} de las ${fr.length} vistas tienen una franja sin medición en un borde. La más ancha ocupa ${anchoMax} píxeles, es decir ${dec(anchoMax*s.spacing,0)} mm de los ${dec(n*s.spacing,0)} mm que mide la imagen de lado a lado.`:'En este archivo ninguna vista tiene franjas sin medición.';
  estado.resumen=`${estado.aviso}${fr.length} vistas en ${s.arc}° · ${dec(f.total/1e6,2)} millones de cuentas · franja sin medición de hasta ${dec(anchoMax*s.spacing,0)} mm · salto máximo medido a lo largo de la camilla: ${salto} ${salto===1?'píxel':'píxeles'}.`;
- // Comparacion con la copia corregida, vista por vista.
- const c=estado.corr;
- if(!c){estado.comparacion='El ZIP no trae una copia corregida de esta adquisición, o no se pudo leer.';}
- else{
-  let distintas=0,maxY=0,maxX=0;const m=Math.min(fr.length,c.frames.length);
-  for(let k=0;k<m;k++){
-   const a=s.data.subarray(fr[k].source*p,(fr[k].source+1)*p),b=c.s.data.subarray(c.frames[k].source*p,(c.frames[k].source+1)*p);
-   let igual=true;for(let i=0;i<p;i++)if(a[i]!==b[i]){igual=false;break;}
-   if(igual)continue;distintas++;
-   const ay=new Float64Array(n),by=new Float64Array(n),ax=new Float64Array(n),bx=new Float64Array(n);
-   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const q=a[y*n+x],r=b[y*n+x];ay[y]+=q;by[y]+=r;ax[x]+=q;bx[x]+=r;}
-   maxY=Math.max(maxY,Math.abs(corrimiento(by,ay,n)));maxX=Math.max(maxX,Math.abs(corrimiento(bx,ax,n)));
-  }
-  estado.comparacion=distintas===0
-   ?`En este archivo la copia corregida es idéntica a la original: las ${m} vistas tienen exactamente las mismas cuentas, píxel por píxel. El equipo guardó la copia pero no desplazó ninguna proyección, así que las dos columnas se ven iguales. Eso también es un resultado: el equipo no encontró movimiento que corregir, o no se le pidió corregir.`
-   :`En este archivo, ${distintas} de las ${m} vistas de la copia corregida son distintas de la original. El mayor desplazamiento que el equipo aplicó fue de ${maxY} ${maxY===1?'píxel':'píxeles'} a lo largo de la camilla (${dec(maxY*s.spacing,1)} mm) y de ${maxX} ${maxX===1?'píxel':'píxeles'} hacia el lado (${dec(maxX*s.spacing,1)} mm). Si el programa mide 0 píxeles en una dirección, el desplazamiento fue menor que un píxel.`;
-  estado.difieren=distintas;
- }
+ estado.comparacion='Todavía no se ha corregido. Pulsa «Vista corregido».';
  $('comparacion').textContent=estado.comparacion;
+}
+
+/* ---------- correccion automatica de movimiento ---------- */
+const plural=(n,uno,varios)=>`${n} ${n===1?uno:varios}`;
+async function corregir(){
+ const f=estado.crudo,s=f.s,b=$('modo');estado.ocupado=true;detener();const t0=performance.now();
+ b.textContent='Buscando movimiento… 0 %';
+ const est=await Correccion.estimar(s,estado.cuadros,q=>{b.textContent=`Buscando movimiento… ${Math.round(q*100)} %`;});
+ const r=Correccion.aplicar(s,estado.cuadros,est);
+ estado.corr=preparar(r.s,f);
+ const frases=est.saltos.map(j=>j.tipo==='camilla'
+  ?`a lo largo de la camilla, ${plural(Math.abs(j.pixeles),'píxel','píxeles')} (${dec(Math.abs(j.pixeles)*s.spacing,1)} mm) hacia ${j.pixeles>0?'los pies':'la cabeza'}, desde el paso ${j.paso} de ${est.pasos}`
+  :`hacia el lado, ${plural(j.pixeles,'píxel','píxeles')} (${dec(j.pixeles*s.spacing,1)} mm), desde el paso ${j.paso} de ${est.pasos}`);
+ const resumen=est.saltos.length?`La aplicación encontró ${plural(est.saltos.length,'salto','saltos')} y ${est.saltos.length===1?'lo':'los'} corrigió: ${frases.join('; ')}.`:'La aplicación no encontró saltos: la columna corregida es igual a la original.';
+ estado.correccion={...est,movidos:r.movidos,resumen,segundos:(performance.now()-t0)/1000};
+ estado.comparacion=resumen+(est.saltos.length?` Se desplazaron ${r.movidos} de los ${s.frames} cuadros del archivo para devolverlos a su lugar. Cada salto se mantiene hasta el final del giro, así que se corrigen todas las vistas desde ese paso, en los dos cabezales.`:'')+` El cálculo tomó ${dec(estado.correccion.segundos,1)} segundos.`;
+ $('comparacion').textContent=estado.comparacion;estado.ocupado=false;
 }
 
 /* ---------- la rejilla se arma segun la vista ---------- */
@@ -153,16 +153,15 @@ function armar(){
  const r=$('rejilla'),dos=estado.modo==='dos'&&!!estado.corr;r.replaceChildren();
  document.body.classList.toggle('comparar',dos);
  const b=$('modo');b.setAttribute('aria-pressed',String(dos));b.textContent=dos?'Volver a una columna':'Vista corregido';
- b.title=estado.corr?'':'El ZIP no trae copia corregida';
  if(!dos){
   for(const tipo of ['cine','suma','sino','lino']){const f=figura(tipo,'',TIPOS[tipo]);f.append(verMas(DIALOGO[tipo],'Ver más'));r.append(f);}
-  $('resumen').textContent=estado.resumen+(estado.corr?'':' El ZIP no trae copia corregida.');
+  $('resumen').textContent=estado.resumen;
  }else{
   const t1=document.createElement('div'),t2=document.createElement('div');t1.className=t2.className='columna';t1.textContent='Sin corregir';t2.textContent='Corregido';r.append(t1,t2);
   // Primera fila las proyecciones, segunda el sinograma; bajando, suma y linograma.
   for(const tipo of ['cine','sino','suma','lino']){r.append(figura(tipo,'',TIPOS[tipo]),figura(tipo,'C',TIPOS[tipo]),verMas(DIALOGO[tipo],'Ver más sobre '+TIPOS[tipo].toLowerCase().replace('imagen suma','la imagen suma').replace(/^(cine|sinograma|linograma)$/,'el $1'),'doble'));}
-  r.append(verMas('dCorregido','Ver más sobre la comparación','doble'));
-  $('resumen').textContent=estado.aviso+(estado.difieren?`La copia corregida difiere de la original en ${estado.difieren} vistas.`:'La copia corregida es idéntica a la original: el equipo no desplazó ninguna proyección.')+' Toca «Ver más sobre la comparación».';
+  r.append(verMas('dCorregido','Ver más sobre la corrección','doble'));
+  $('resumen').textContent=estado.aviso+estado.correccion.resumen+' Toca «Ver más sobre la corrección».';
  }
  const f=estado.crudo;$('frame').max=f.frames.length-1;$('fila').max=f.n-1;
  redibujar();
@@ -209,11 +208,15 @@ function abrir(id){const d=$(id);if(d&&!d.open){d.showModal();d.scrollTop=0;}}
 
 $('archivo').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)cargar(f);});
 $('cambiar').addEventListener('click',()=>{$('archivo').value='';$('archivo').click();});
-$('modo').addEventListener('click',()=>{if(!estado.corr)return;estado.modo=estado.modo==='dos'?'uno':'dos';armar();window.scrollTo(0,0);});
+$('modo').addEventListener('click',async()=>{
+ if(!estado.crudo||estado.ocupado)return;
+ if(!estado.corr){try{await corregir();}catch(err){$('resumen').textContent='No se pudo corregir: '+(err.message||err);console.error(err);$('modo').textContent='Vista corregido';estado.ocupado=false;return;}}
+ estado.modo=estado.modo==='dos'?'uno':'dos';armar();window.scrollTo(0,0);
+});
 $('frame').addEventListener('input',()=>{detener();estado.k=+$('frame').value;redibujar();});
 $('fila').addEventListener('input',()=>{estado.y=+$('fila').value;redibujar();});
 $('play').addEventListener('click',reproducir);
 // Explicaciones en dialogos: «Ver mas» abre, «Cerrar» o tocar fuera cierra.
 document.querySelectorAll('[data-dialogo]').forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.dialogo)));
 document.querySelectorAll('dialog').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
-window.MovilCardiaco={estado,cargar,redibujar,armar};
+window.MovilCardiaco={estado,cargar,redibujar,armar,corregir};

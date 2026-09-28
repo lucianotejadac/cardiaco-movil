@@ -87,3 +87,31 @@ Participantes: Luciano Tejada (docente) y Claude (Claude Code).
 **Validación.** Verificación exacta sin fallas en los diez archivos y los cinco ZIP. En la versión móvil el linograma muestra los escalones a simple vista y la medida automática pasa de 3 a 5 píxeles. Como el ZIP ya no trae copia corregida, el botón «Vista corregido» queda deshabilitado y el resumen lo dice.
 
 **Pendiente.** La corrección de movimiento hecha por la aplicación, que devolverá la columna «Corregido» al caso 1.
+
+## 2026-09-28 · Corrección automática de movimiento hecha por la aplicación
+
+**Contexto.** El caso 1 quedó sin copia corregida del equipo y con dos saltos simulados de 4 píxeles. El docente eligió que la corrección sea automática: la columna «Corregido» de la vista de dos columnas la produce la propia aplicación.
+
+**Decisiones.**
+- **El movimiento es una función del paso del giro, no de la vista.** Los dos cabezales adquieren a la vez: un salto del paciente aparece en los dos, en el mismo paso. El algoritmo trabaja con los 32 pasos y usa los dos cabezales juntos.
+- **Registro en dos dimensiones entre pasos vecinos.** Para cada cabezal, la vista t se registra contra la t−1 sobre imágenes suavizadas (gaussiana de 1,5 píxeles) y solo en la zona medida común, para que la franja sin medición no engañe. El giro produce entre vecinas un corrimiento lateral suave, que se quita con una mediana móvil de 7 pasos; un salto queda como un pico. Umbral adaptativo: mediana más seis desviaciones robustas, con un mínimo de 1,2 píxeles.
+- **A lo largo de la camilla** el pico es el mismo en los dos cabezales y se promedia. El registro entre dos vistas ubica bien el salto pero mide su tamaño con medio píxel de error cuando hay pocas cuentas (dio 3,5 donde había 4), así que el tamaño se afina comparando el perfil a lo largo de la camilla de cinco pasos antes y cinco después, con los dos cabezales juntos.
+- **Hacia el lado**, los dos cabezales están a 90° y ven dos proyecciones del mismo desplazamiento: juntas dan el vector en el plano del paciente, cuyo módulo se redondea a píxeles enteros y que después se proyecta en cada vista según su ángulo.
+- **La corrección desplaza, no interpola.** Corrimientos enteros, y lo que entra por el borde queda en cero: es «sin dato».
+- **Descartado: comparar perfiles de una dimensión contra una referencia global.** Fue el primer prototipo: subestimaba el salto (3 en vez de 4) y en los datos originales inventaba una deriva que no se pudo distinguir del cambio normal del perfil con el ángulo.
+- **La copia corregida del equipo ya no se usa**, aunque el ZIP la traiga.
+- **Lo que la aplicación informa es lo que encontró**, no la respuesta: cuántos saltos, de cuánto, hacia dónde y desde qué paso.
+
+**Validación.** Primero en un prototipo en Python contra los diez archivos (cinco modificados y cinco originales), después en la aplicación en emulación de teléfono, comparando lo corregido con la cruda original sin movimiento:
+
+| Archivo | Lo que encontró | Vistas que quedan exactas |
+|---|---|---|
+| Caso 1 con saltos de 4 px | camilla 4 px desde el paso 10; lado 4 px desde el paso 21 (lo simulado) | 60 de 64; las otras 4 con 1 px de error lateral |
+| Caso 1 original | nada | 64 de 64 |
+| Caso 2 con saltos de 2 px | camilla 2 px desde el paso 11; lado 2 px desde el paso 22 (lo simulado) | 55 de 64; las otras 9 con 1 px |
+| Caso 3 con saltos de 2 px | solo el lateral | falla |
+| Casos 4 y 5 con saltos de 2 px | nada | falla |
+
+El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no inventa movimiento.
+
+**Límites conocidos.** Con saltos de 2 píxeles falla en los casos 3, 4 y 5: en sus datos originales el registro entre vistas vecinas ya oscila entre 1 y 4 píxeles a lo largo de la camilla (ruido, o movimiento real del paciente), y el umbral adaptativo sube hasta tapar un salto de 2. No corrige derivas lentas. Antes de habilitar otros casos hay que decidir si se agrandan sus saltos o se mejora la detección.
