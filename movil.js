@@ -112,7 +112,7 @@ async function mostrar(bytes,origen,recuperado,ct){
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
-  estado.ct=ct&&ct.length?ct:null;Registro.olvidar();$('reg').classList.add('oculta');
+  estado.ct=ct&&ct.length?ct:null;Registro.olvidar();OsemMovil.olvidar();$('reg').classList.add('oculta');$('osem').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
   textos();
   $('modo').disabled=false;
@@ -261,16 +261,26 @@ async function aRegistro(){
  const f=estado.corr||estado.crudo;
  await Registro.abrir({s:f.s,fuente:estado.corr?'corregidas por la aplicación':'sin corregir',ctBytes:estado.ct,filaCorazon:estado.crudo.filaInicial});
 }
+async function aOsem(){
+ if(!Registro.estado.confirmado)return;Registro.cancelar();
+ $('reg').classList.add('oculta');$('osem').classList.remove('oculta');window.scrollTo(0,0);
+ const r=Registro.estado;
+ await OsemMovil.abrir({s:r.s,fuente:r.fuente,cortes:r.corte});
+}
+function aReg(){OsemMovil.cancelar();$('osem').classList.add('oculta');$('reg').classList.remove('oculta');window.scrollTo(0,0);}
 function aQc(){Registro.cancelar();$('reg').classList.add('oculta');$('qc').classList.remove('oculta');armar();window.scrollTo(0,0);}
 $('aRegistro').addEventListener('click',aRegistro);
 $('volverQc').addEventListener('click',aQc);
+$('aOsem').addEventListener('click',aOsem);
+$('volverReg').addEventListener('click',aReg);
 Registro.iniciar();
+OsemMovil.iniciar();
 $('frame').addEventListener('input',()=>{detener();estado.k=+$('frame').value;redibujar();});
 $('fila').addEventListener('input',()=>{estado.y=+$('fila').value;redibujar();});
 $('play').addEventListener('click',reproducir);
 // Explicaciones en dialogos: «Ver mas» abre, «Cerrar» o tocar fuera cierra.
 document.querySelectorAll('[data-dialogo]').forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.dialogo)));
 document.querySelectorAll('dialog').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
-window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc};
+window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();

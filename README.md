@@ -12,6 +12,9 @@ Caso 1, fase de estrés, fijo. Carga las proyecciones sin corregir (`NM_estres.d
 - `cardiaco-casos.js`: el manifiesto compartido con `spect-lab-95` y `simulador-cardiaco` (textos del caso y marcos de referencia).
 - `movil.js`: lector ZIP mínimo (directorio central y `DecompressionStream('deflate-raw')`), carga y las cuatro imágenes de control de calidad, con la misma lógica que el bloque de escritorio.
 - `movil.css`: una columna, controles táctiles, lienzos al ancho de la pantalla.
+- `correccion.js`: corrección automática de movimiento de las proyecciones.
+- `registro.js`: FBP y registro SPECT/CT sobre el CT del mismo ZIP.
+- `osem-movil.js`: OSEM de referencia 1 × 1 sin correcciones. Usa, copiados tal cual de `spect-lab-95`, `algorithm.js`, `simulador95-osem.js`, `simulador95-psf.js` y `simulador95-pool.js`.
 
 ## Pruebas
 
