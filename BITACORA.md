@@ -163,3 +163,18 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Decisión.** Se quita el desfase al azar de 35 a 70 mm que venía del ejercicio de escritorio. El CT parte en la posición del equipo (mismo marco de referencia, desfase cero). El estudiante revisa la fusión en los tres planos; si lo mueve, «Confirmar registro» sigue diciendo a cuántos milímetros quedó (hasta 3 mm dentro de un vóxel, hasta 8 mm aceptable, más no calza). El desplazamiento se conserva al volver al control de calidad y vuelve a cero al cargar otro archivo. Se actualizaron el comentario del módulo y «Ver más sobre el registro».
 
 **Validación.** Emulación de teléfono: al entrar el desfase es 0, 0, 0; confirmar sin mover da «dentro de un vóxel»; tras mover 12 mm con la flecha, «todavía no calza»; al volver y entrar se conservan los 12 mm; al cargar otro ZIP vuelve a 0.
+
+## 2026-09-28 · Paso 3: OSEM 1 × 1 sin correcciones
+
+**Contexto.** El docente pidió pasar, después del registro, a la OSEM 1 × 1 sin filtro ni atenuación, como en el simulador SPECT 95.
+
+**Decisiones.**
+- **El mismo código del escritorio, copiado tal cual:** `algorithm.js` (proyector y retroproyector emparejados), `simulador95-osem.js` (worker OSEM 2D por cortes), `simulador95-psf.js` (funciones que el worker necesita definidas) y `simulador95-pool.js` (reparte los cortes entre trabajadores). Copiados de `spect-lab-95` en eef24fe; no ejecutan nada al cargarse.
+- **La receta es la de `prepareBaselineOptions` del escritorio:** 1 iteración, 1 subconjunto (64 vistas), sin corrección de atenuación, sin dispersión, sin recuperación de resolución, sin filtro final e inicio uniforme; fotopico.
+- **Se reconstruyen las mismas proyecciones de la FBP:** las corregidas por la aplicación si se corrigió, o las sin corregir. Como en el escritorio, la franja sin medición entra como ceros medidos (el relleno se usa solo en la FBP del registro).
+- **Solo con el registro confirmado:** el botón «Siguiente: OSEM 1 × 1 sin correcciones →» aparece al confirmar, y desaparece si el CT se mueve después. Así se respeta el orden del escritorio, aunque en este paso la atenuación todavía no se usa.
+- **Visor:** axial, coronal y sagital; parte en los cortes del registro. Tocar la imagen elige dónde cortan los otros dos planos, con una cruz celeste y amarilla. Nivel y ancho en porcentaje del percentil 99,5, con «Restablecer» a 0–100 %. «Ver más sobre la OSEM» explica qué es, por qué 1 × 1 y qué hace la falta de atenuación.
+
+**Validación.** Emulación de teléfono (Pixel 7) con el ZIP del caso 1 modificado y corregido: el botón no se ve antes de confirmar, aparece al confirmar y se oculta al mover el CT; la OSEM de 128 cortes tomó 2,5 s con 2 trabajadores, sin valores negativos; la imagen es la esperable de una sola iteración (borrosa, con hígado y corazón reconocibles en el coronal); el toque mueve los cortes de los otros planos; «Volver al registro» funciona.
+
+**Pendiente.** Mapa de atenuación desde el CT registrado y OSEM con atenuación; más iteraciones y subconjuntos para comparar.

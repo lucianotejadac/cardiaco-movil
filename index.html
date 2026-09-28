@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=9">
+<link rel="stylesheet" href="movil.css?v=10">
 </head>
 <body>
 <header class="barra">
@@ -74,7 +74,32 @@
   </div>
   <button id="regConfirmar" type="button" class="boton ancho">Confirmar registro</button>
   <p id="regResultado" class="dato"></p>
+  <button id="aOsem" type="button" class="boton ancho" hidden>Siguiente: OSEM 1 × 1 sin correcciones →</button>
   <button type="button" class="vermas ancho" data-dialogo="dRegistro">Ver más sobre el registro</button>
+ </section>
+
+ <section class="oculta" id="osem">
+  <button id="volverReg" type="button" class="cambio">← Volver al registro</button>
+  <div class="columna">OSEM 1 × 1 · sin atenuación, sin dispersión, sin filtro</div>
+  <p id="osemEstado" class="estado"></p>
+  <figure class="fusion">
+   <figcaption><span id="osemPlanoTexto">Axial</span> <span class="mono">corte <span id="osemCorte"></span></span></figcaption>
+   <canvas id="osemVista" aria-label="Reconstrucción OSEM. Toca para elegir los cortes de los otros planos."></canvas>
+  </figure>
+  <div class="segmento" role="group" aria-label="Plano">
+   <button type="button" data-oplano="axial" aria-pressed="true">Axial</button>
+   <button type="button" data-oplano="coronal" aria-pressed="false">Coronal</button>
+   <button type="button" data-oplano="sagital" aria-pressed="false">Sagital</button>
+  </div>
+  <div class="controles">
+   <div class="fila"><span class="etq">Corte</span><input id="osemCorteRango" type="range" min="0" max="127" value="64" aria-label="Corte"></div>
+   <p class="clave">Ventana · <span id="osemVentana"></span> <button id="osemInicial" type="button" class="mini">Restablecer</button></p>
+   <div class="fila"><span class="etq">Nivel</span><input id="osemNivel" type="range" min="0" max="150" value="50" aria-label="Nivel de la ventana"></div>
+   <div class="fila"><span class="etq">Ancho</span><input id="osemAncho" type="range" min="1" max="200" value="100" aria-label="Ancho de la ventana"></div>
+   <p class="clave">Toca la imagen para elegir dónde cortan los otros dos planos: <span class="celeste">┃</span> y <span class="amarilla">━</span>.</p>
+  </div>
+  <p id="osemCursor" class="dato"></p>
+  <button type="button" class="vermas ancho" data-dialogo="dOsem">Ver más sobre la OSEM</button>
  </section>
 </main>
 <footer><p>Uso educativo · Los DICOM no salen del teléfono · Versión móvil</p></footer>
@@ -234,11 +259,33 @@
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
 
+<dialog id="dOsem">
+ <h2>La OSEM de referencia</h2>
+ <dl class="leyenda">
+  <dt>Qué es</dt>
+  <dd>OSEM (maximización de la expectativa con subconjuntos ordenados) es una reconstrucción iterativa. Parte de una imagen uniforme, calcula qué proyecciones produciría, las compara con las medidas y corrige la imagen en proporción a la diferencia. Cada vuelta por todas las vistas es una iteración; los subconjuntos dividen las vistas para corregir más seguido.</dd>
+  <dt>Por qué 1 × 1 y sin correcciones</dt>
+  <dd>Es la reconstrucción de referencia del simulador SPECT 95: una iteración, un subconjunto con las 64 vistas, sin corrección de atenuación, sin dispersión, sin recuperación de resolución y sin filtro final. Sirve de punto de partida para comparar después qué cambia cada corrección y cada iteración. Con una sola iteración la imagen todavía es borrosa: la OSEM no ha convergido.</dd>
+  <dt>Qué se reconstruye</dt>
+  <dd>Las mismas proyecciones de la FBP: las corregidas por la aplicación si pulsaste «Corregir», o las sin corregir. Como en el escritorio, la franja sin medición entra como ceros medidos.</dd>
+  <dt>Cómo verla</dt>
+  <dd>Axial, coronal y sagital, con la misma escala de colores. Tocar la imagen elige dónde cortan los otros dos planos (líneas celeste y amarilla). El nivel y el ancho eligen qué parte de la escala se pinta, en porcentaje del máximo de la reconstrucción; «Restablecer» vuelve a mostrar de 0 % a 100 %. Las filas en azul oscuro no se reconstruyeron.</dd>
+  <dt>Sin atenuación</dt>
+  <dd>Sin el mapa del CT, los fotones que salen de las paredes profundas (la inferior, sobre todo) llegan menos al detector y esas paredes se ven más apagadas de lo que están. Es lo que corregirá el paso con atenuación.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
 <script src="correccion.js?v=1"></script>
-<script src="registro.js?v=4"></script>
-<script src="movil.js?v=9"></script>
+<script src="registro.js?v=5"></script>
+<script src="algorithm.js?v=1"></script>
+<script src="simulador95-psf.js?v=1"></script>
+<script src="simulador95-osem.js?v=1"></script>
+<script src="simulador95-pool.js?v=1"></script>
+<script src="osem-movil.js?v=1"></script>
+<script src="movil.js?v=10"></script>
 </body>
 </html>

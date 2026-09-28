@@ -87,3 +87,7 @@ body.comparar .clave{display:none}
 .dato.mal{border-left-color:#ff8a80}
 #reg .etq{width:58px}
 #reg .clave .mini{margin-left:6px;padding:3px 8px}
+#osem .etq{width:58px}
+#osem .clave .mini{margin-left:6px;padding:3px 8px}
+#osem canvas{image-rendering:pixelated;cursor:crosshair}
+[hidden]{display:none!important}
