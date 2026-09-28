@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=13">
+<link rel="stylesheet" href="movil.css?v=14">
 </head>
 <body>
 <header class="barra">
@@ -117,7 +117,34 @@
    </div>
    <button id="osemCorrer" type="button" class="boton ancho">Reconstruir</button>
   </section>
+  <button id="aReorientar" type="button" class="boton ancho">Siguiente: reorientar los ejes con la reconstrucción de la izquierda →</button>
   <button type="button" class="vermas ancho" data-dialogo="dOsem">Ver más sobre la OSEM</button>
+ </section>
+
+ <section class="oculta" id="reo">
+  <button id="volverOsem" type="button" class="cambio">← Volver a la OSEM</button>
+  <div class="columna">Segunda parte · reorientación de los ejes</div>
+  <p id="reoEstado" class="estado"></p>
+  <div class="rejilla reo">
+   <figure><figcaption>Transaxial</figcaption><canvas id="reoAxial" aria-label="Corte transaxial con el eje del ventrículo. Arrastra para mover el centro."></canvas></figure>
+   <figure><figcaption>Plano vertical del eje</figcaption><canvas id="reoVertical" aria-label="Plano vertical que contiene el eje. Arrastra para mover el centro."></canvas></figure>
+  </div>
+  <div class="rejilla reo tres">
+   <figure><figcaption>Eje corto</figcaption><canvas id="reoCorto" aria-label="Eje corto."></canvas></figure>
+   <figure><figcaption>Largo vertical</figcaption><canvas id="reoVla" aria-label="Eje largo vertical."></canvas></figure>
+   <figure><figcaption>Largo horizontal</figcaption><canvas id="reoHla" aria-label="Eje largo horizontal."></canvas></figure>
+  </div>
+  <p class="clave"><span class="celeste">━●</span> eje hacia el ápex · <span class="amarilla">●</span> centro del ventrículo (arrástralo sobre cualquier imagen) · <span class="amarilla">━</span> corte de eje corto que se muestra.</p>
+  <div class="controles">
+   <div class="fila"><span class="etq">Azimut</span><button id="reoAzMenos" type="button" class="paso" aria-label="Azimut menos 1°">−</button><input id="reoAz" type="range" min="-30" max="120" step="1" value="0" aria-label="Azimut"><button id="reoAzMas" type="button" class="paso" aria-label="Azimut más 1°">+</button><span id="reoAzTexto" class="valor"></span></div>
+   <div class="fila"><span class="etq">Elevación</span><button id="reoElMenos" type="button" class="paso" aria-label="Elevación menos 1°">−</button><input id="reoEl" type="range" min="-40" max="60" step="1" value="0" aria-label="Elevación"><button id="reoElMas" type="button" class="paso" aria-label="Elevación más 1°">+</button><span id="reoElTexto" class="valor"></span></div>
+   <div class="fila"><span class="etq">Eje corto</span><input id="reoT" type="range" min="-12" max="12" step="1" value="0" aria-label="Posición del corte de eje corto, de la base al ápex"></div>
+   <p id="reoTTexto" class="clave"></p>
+   <div class="fila"><span class="etq">Techo</span><input id="reoTecho" type="range" min="20" max="100" step="1" value="100" aria-label="Techo de la escala de color"></div>
+   <div class="recetas"><button id="reoBuscar" type="button" class="mini">Buscar el centro con este eje</button><button id="reoCero" type="button" class="mini">Volver a 0° y 0°</button></div>
+  </div>
+  <p id="reoResumen" class="dato"></p>
+  <button type="button" class="vermas ancho" data-dialogo="dReo">Ver más sobre la reorientación</button>
  </section>
 </main>
 <footer><p>Uso educativo · Los DICOM no salen del teléfono · Versión móvil</p></footer>
@@ -305,6 +332,25 @@
  <button id="progDetener" type="button" class="cambio">Detener</button>
 </dialog>
 
+<dialog id="dReo">
+ <h2>Reorientar los ejes del corazón</h2>
+ <dl class="leyenda">
+  <dt>Por qué se reorienta</dt>
+  <dd>El corazón no está alineado con el cuerpo: su eje largo va de la base (arriba, atrás y a la derecha) al ápex (abajo, adelante y a la izquierda). Los cortes transaxiales lo cortan oblicuo. Para comparar las paredes entre pacientes y entre estrés y reposo, la imagen se vuelve a cortar a lo largo del eje del ventrículo izquierdo: eje corto, eje largo vertical y eje largo horizontal.</dd>
+  <dt>Azimut y elevación</dt>
+  <dd>El azimut es el giro del eje en el corte transaxial, medido desde adelante del paciente hacia su izquierda. La elevación es cuánto baja el ápex respecto del plano transaxial. En el simulador de escritorio se marcan la base y el ápex con clics y los ángulos salen solos; aquí los mueves tú con los deslizadores, o con − y + de a 1°.</dd>
+  <dt>Cómo hacerlo</dt>
+  <dd>El eje parte sin girar (0° y 0°). Primero, en el transaxial, sube el azimut hasta que la línea celeste pase por el medio del ventrículo, de la base al ápex. Después, en el plano vertical del eje, ajusta la elevación hasta que la línea siga el ventrículo hacia el ápex. Si el punto amarillo no está en el centro de la cavidad, arrástralo sobre cualquier imagen, o pulsa «Buscar el centro con este eje».</dd>
+  <dt>Cómo saber que quedó bien</dt>
+  <dd>Un anillo parejo en el eje corto, una «C» abierta hacia la derecha en el largo vertical y una «U» invertida en el largo horizontal. Si el eje corto sale ovalado o el anillo se abre hacia un lado, el azimut o la elevación están mal. El deslizador «Eje corto» recorre los cortes de la base al ápex; la línea amarilla en los ejes largos muestra dónde estás.</dd>
+  <dt>La escala</dt>
+  <dd>Colores de la paleta cardíaca del simulador de escritorio. El techo baja el máximo de la escala: útil cuando el hígado o el intestino brillan más que el corazón.</dd>
+  <dt>Qué reconstrucción se usa</dt>
+  <dd>La que está a la izquierda en la pantalla OSEM. Para el informe se usa la receta del caso (2 × 8, gaussiano de 8,4 mm), sin y con atenuación. Con atenuación solo existen los cortes que cubrió el CT.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
@@ -316,6 +362,8 @@
 <script src="simulador95-osem.js?v=1"></script>
 <script src="simulador95-pool.js?v=1"></script>
 <script src="osem-movil.js?v=4"></script>
-<script src="movil.js?v=12"></script>
+<script src="cardiaco-core.js?v=1"></script>
+<script src="reorientar.js?v=1"></script>
+<script src="movil.js?v=13"></script>
 </body>
 </html>

@@ -115,3 +115,13 @@ dialog.progreso h2{font-size:1rem;margin-bottom:10px}
 #progTexto{min-height:2.6em;margin:4px 0}
 #progNota{color:var(--texto2)}
 #progDetener{margin:6px 0 0}
+/* Segunda parte: reorientacion */
+.rejilla.reo{margin-top:6px}
+.rejilla.reo.tres{grid-template-columns:1fr 1fr 1fr;gap:6px}
+.rejilla.reo figcaption{font-size:.75rem}
+#reo canvas{image-rendering:pixelated;touch-action:none;cursor:move}
+#reo .etq{width:70px}
+#reo .fila .paso{flex:none;width:36px;height:36px;border-radius:8px;border:1px solid var(--linea);background:#0d1114;color:var(--texto);font-size:1.1rem;touch-action:none}
+#reo .fila .valor{flex:none;width:40px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+#reo .fila{gap:6px}
+#reo .recetas{margin-top:6px}

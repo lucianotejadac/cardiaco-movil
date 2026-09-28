@@ -207,3 +207,21 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 - Se quitaron el aviso y el botón «Detener» que había en la tarjeta de la OSEM: están en la ventana.
 
 **Validación.** Emulación de teléfono: la ventana aparece en la FBP (36 % en el corte 54 de 128) y se detiene; al volver a entrar la FBP termina; en la OSEM 1 × 1 la tecla atrás no la cierra; en la receta con atenuación la barra avanza pareja (3, 17, 25 … 87 % cada 8 s, en 87 s) con la etapa «Atenuación de cada vista: corte 15 de 30, vista 8 de 64»; al detenerla se puede reconstruir otra (sin atenuación, 6,0 s).
+
+## 2026-09-28 · Segunda parte sin cambiar de simulador: reorientación con deslizadores
+
+**Contexto.** El docente pidió pasar directo a la segunda parte, dentro de la misma aplicación. En la reorientación de los ejes no se marcan base y ápex, como en `simulador-cardiaco`: el eje se gira con deslizadores.
+
+**Decisiones.**
+- **El mismo núcleo que la segunda parte de escritorio:** `cardiaco-core.js`, copiado tal cual de `simulador-cardiaco` (2480686). Aporta el marco del ventrículo a partir de azimut y elevación, los cortes oblicuos de 56 × 56 vóxeles (eje corto, largo vertical, largo horizontal), el buscador de anillo y la paleta cardíaca. Solo define funciones.
+- **Orden de los cortes.** El núcleo espera z hacia la cabeza, como la exportación de SPECT Lab 95, que invierte las filas. La OSEM móvil tiene la fila 0 en la cabeza, así que el volumen se invierte una vez al entrar. X hacia la izquierda del paciente e Y hacia posterior coinciden.
+- **Botón «Siguiente: reorientar los ejes con la reconstrucción de la izquierda →»** en la pantalla OSEM: se usa la que está a la izquierda. Si es el mapa μ, lo avisa.
+- **El eje parte sin girar (0° y 0°)** y el estudiante lo gira con deslizadores de azimut (−30 a 120°) y elevación (−40 a 60°), con − y + de a 1°. «Volver a 0° y 0°» reinicia. Si el caso trae el eje del equipo (`cardiaco-casos.js`), el resumen dice cuánto se separa, con la tolerancia de 12°; el caso 1 no lo trae y lo dice.
+- **Cinco imágenes:** transaxial por el centro con el eje proyectado; plano vertical del eje, el mismo que el escritorio usa para el ápex, donde se ve la elevación; eje corto, largo vertical y largo horizontal. Un deslizador recorre el eje corto de la base al ápex y una línea amarilla marca ese corte en los ejes largos. Techo de la escala.
+- **Centro del ventrículo:** lo propone la aplicación con `buscarVentriculo` y el eje típico del escritorio (35° y 12°). Se puede arrastrar sobre cualquier imagen, en el plano de esa imagen, y «Buscar el centro con este eje» lo recalcula. La búsqueda se acota a ±15 cortes alrededor de la fila del máximo de la imagen suma: sin eso, en el estrés del caso 1 ganó un anillo falso del abdomen (fila 87), el mismo problema que la bitácora de `spect-lab-95` registró el 24-09 para el gatillado.
+
+**Validación.** Emulación de teléfono con la OSEM 2 × 8 sin atenuación del caso 1: entra con 0° y 0°; un arrastre de 1/8 del ancho del transaxial mueve el centro 16 vóxeles, lo esperado; − y + cambian de a 1°; el deslizador de eje corto llega a «20 mm hacia el ápex»; buscar, reiniciar y volver a la OSEM funcionan; sin errores en la consola.
+
+**Límites conocidos.** En el estrés del caso 1 (9 mCi) el corazón apenas se distingue en la OSEM, y el centro propuesto quedó por delante del foco más probable del ventrículo: es solo un punto de partida y hay que llevarlo a mano. No se verificó con un caso que traiga el eje del equipo que el azimut y la elevación de referencia den el anillo esperado en esta aplicación.
+
+**Pendiente.** Mapa polar, cavidad y función ventricular.
