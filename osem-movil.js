@@ -122,8 +122,8 @@ const OsemMovil=(()=>{
   // actividad total es muy distinta (con y sin atenuacion).
   dibujar($('osemVistaA'),a,o.propia&&a.tipo==='osem'?a.escala:escala);
   if(b)dibujar($('osemVistaB'),b,o.propia&&b.tipo==='osem'?b.escala:escala);
-  $('osemPropia').checked=o.propia;
   else{const c=$('osemVistaB'),n=o.s.n;c.width=n*2;c.height=n*2;const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,n*2,n*2);x.fillStyle='#aab3bd';x.font='15px system-ui';x.textAlign='center';x.fillText('Elige arriba una',n,n-10);x.fillText('para comparar',n,n+12);}
+  $('osemPropia').checked=o.propia;
   const n=o.s.n,i=o.corte[o.plano];
   $('osemPlanoTexto').textContent={axial:'Axial',coronal:'Coronal',sagital:'Sagital'}[o.plano];
   $('osemCorte').textContent=`${i+1}/${n}`;$('osemCorteRango').max=n-1;$('osemCorteRango').value=i;
