@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=16">
+<link rel="stylesheet" href="movil.css?v=17">
 </head>
 <body>
 <header class="barra">
@@ -117,8 +117,37 @@
    </div>
    <button id="osemCorrer" type="button" class="boton ancho">Reconstruir</button>
   </section>
-  <button id="aCaja" type="button" class="boton ancho">Siguiente: ubicar el corazón en la reconstrucción de la izquierda →</button>
+  <button id="aGatillado" type="button" class="boton ancho">Siguiente: gatillado →</button>
+  <!-- Segunda parte (caja y reorientación): en pausa, el recorrido llega por ahora hasta la reconstrucción. -->
+  <button id="aCaja" type="button" class="boton ancho" hidden>Siguiente: ubicar el corazón en la reconstrucción de la izquierda →</button>
   <button type="button" class="vermas ancho" data-dialogo="dOsem">Ver más sobre la OSEM</button>
+ </section>
+
+ <section class="oculta" id="gat">
+  <button id="volverOsemGat" type="button" class="cambio">← Volver a la OSEM</button>
+  <div class="columna">Gatillado · el corazón latiendo</div>
+  <p id="gatEstado" class="estado"></p>
+  <figure class="rango">
+   <figcaption>Rango de cortes del corazón <span class="mono">(proyección coronal de la OSEM de la izquierda)</span></figcaption>
+   <canvas id="gatRango" aria-label="Proyección coronal con dos líneas verdes que marcan el rango de cortes. Arrastra una línea para moverla."></canvas>
+  </figure>
+  <p id="gatRangoTexto" class="clave"></p>
+  <button id="gatCorrer" type="button" class="boton ancho">Reconstruir los 8 intervalos</button>
+  <div id="gatCine" hidden>
+   <div class="rejilla">
+    <figure><figcaption>Transaxial</figcaption><canvas id="gatAxial" aria-label="Transaxial animado. Toca para elegir por dónde pasa el coronal."></canvas></figure>
+    <figure><figcaption>Coronal</figcaption><canvas id="gatCoronal" aria-label="Coronal animado del rango. Toca para elegir el corte transaxial."></canvas></figure>
+   </div>
+   <div class="gatBarra" id="gatBarra" aria-hidden="true"></div>
+   <p class="clave"><span id="gatIntervalo"></span> · <span class="celeste">━</span> coronal en el transaxial · <span class="amarilla">━</span> transaxial en el coronal. Toca una imagen para mover la otra.</p>
+   <div class="controles">
+    <div class="fila"><button id="gatAnt" type="button" class="paso" aria-label="Intervalo anterior">◀</button><button id="gatPlay" type="button" class="boton chico ancho2">▶ Latir</button><button id="gatSig" type="button" class="paso" aria-label="Intervalo siguiente">▶</button></div>
+    <div class="fila"><span class="etq">Corte</span><input id="gatCorteRango" type="range" min="0" max="127" value="60" aria-label="Corte transaxial"><span id="gatCorteTexto" class="valor"></span></div>
+    <div class="fila"><span class="etq">Velocidad</span><input id="gatVel" type="range" min="2" max="16" value="8" aria-label="Cuadros por segundo"><span id="gatVelTexto" class="valor"></span></div>
+    <div class="fila"><span class="etq">Techo</span><input id="gatTecho" type="range" min="20" max="100" value="100" aria-label="Techo de la escala de color"></div>
+   </div>
+  </div>
+  <button type="button" class="vermas ancho" data-dialogo="dGat">Ver más sobre el gatillado</button>
  </section>
 
  <section class="oculta" id="caja">
@@ -352,6 +381,21 @@
  <button id="progDetener" type="button" class="cambio">Detener</button>
 </dialog>
 
+<dialog id="dGat">
+ <h2>La adquisición gatillada</h2>
+ <dl class="leyenda">
+  <dt>Qué es</dt>
+  <dd>Durante la adquisición, el equipo sigue el electrocardiograma y reparte las cuentas de cada vista en 8 intervalos del ciclo cardíaco, desde una onda R hasta la siguiente. Cada intervalo es una adquisición completa del corazón en un momento del latido, pero con la octava parte de las cuentas.</dd>
+  <dt>Cómo se reconstruye</dt>
+  <dd>Como en el simulador SPECT 95: cada intervalo por separado, con OSEM 2 × 8, sin corrección de atenuación, partiendo de una imagen uniforme, y después un filtro gaussiano 3D de 8,4 mm. Solo se reconstruyen los cortes del rango que eliges: con tan pocas cuentas, reconstruir todo el cuerpo ocho veces sería lento y no aporta. Si corregiste el movimiento, cada intervalo se corrige con los mismos saltos que la aplicación encontró en la adquisición no gatillada, porque las dos se adquieren a la vez.</dd>
+  <dt>El rango</dt>
+  <dd>La imagen de arriba es una proyección de máxima intensidad de la OSEM de la izquierda, vista de frente: el corazón aparece aunque no se sepa a qué profundidad está. Arrastra las líneas verdes para dejar el corazón entero adentro, con dos o tres cortes de margen, de 5 a 70 cortes.</dd>
+  <dt>El cine</dt>
+  <dd>«Latir» recorre los 8 intervalos en bucle. Fíjate en que la cavidad se achica y la pared se engruesa y brilla más en sístole: el brillo de la pared crece con su grosor (volumen parcial). La escala es la misma en los 8 intervalos, para que ese cambio se vea. Con ◀ y ▶ avanzas de a un intervalo. Tocar el transaxial elige por dónde pasa el coronal, y tocar el coronal elige el corte transaxial. Las dos imágenes muestran un recorte de unos 21 cm centrado en el corazón, que la aplicación ubica al terminar: el máximo de actividad adelante y a la izquierda del paciente.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
 <dialog id="dCaja">
  <h2>Ubicar el corazón</h2>
  <dl class="leyenda">
@@ -401,6 +445,7 @@
 <script src="cardiaco-core.js?v=1"></script>
 <script src="reorientar.js?v=3"></script>
 <script src="caja.js?v=2"></script>
-<script src="movil.js?v=15"></script>
+<script src="gatillado.js?v=2"></script>
+<script src="movil.js?v=16"></script>
 </body>
 </html>

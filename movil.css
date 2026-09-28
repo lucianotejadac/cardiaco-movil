@@ -137,3 +137,15 @@ html.fijo main,html.fijo header{touch-action:none}
 html.fijo main input[type=range]{touch-action:none}
 /* Que el boton no tape lo ultimo de la pagina */
 footer{padding-bottom:76px}
+/* Gatillado */
+#gat canvas{image-rendering:pixelated;touch-action:none}
+.rango canvas{max-width:360px;margin:0 auto;cursor:ns-resize}
+#gat .etq{width:70px}
+#gat .fila{gap:6px}
+#gat .fila .paso{flex:none;width:44px;height:44px;border-radius:8px;border:1px solid var(--linea);background:#0d1114;color:var(--texto);font-size:1rem}
+#gat .fila .valor{flex:none;width:92px;text-align:right;font-size:.8rem;color:var(--texto2)}
+.boton.chico.ancho2{flex:1;width:auto;height:44px;font-size:1rem}
+#gatCoronal{aspect-ratio:auto}
+.gatBarra{display:flex;gap:4px;margin:6px 0 2px}
+.gatBarra span{flex:1;height:6px;border-radius:3px;background:var(--linea)}
+.gatBarra span.activo{background:var(--acento)}
