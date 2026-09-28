@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=18">
+<link rel="stylesheet" href="movil.css?v=20">
 </head>
 <body>
 <header class="barra">
@@ -149,6 +149,43 @@
    </div>
   </div>
   <button type="button" class="vermas ancho" data-dialogo="dGat">Ver más sobre el gatillado</button>
+ </section>
+
+ <section class="oculta" id="cmp">
+  <button id="volverQcCmp" type="button" class="cambio">← Volver al control de calidad</button>
+  <div class="columna">Siemens frente al simulador</div>
+  <p id="cmpEstado" class="estado"></p>
+  <div class="segmento" role="group" aria-label="Cómo reconstruye el simulador">
+   <button type="button" data-cmetodo="btw" aria-pressed="true">Como el equipo</button>
+   <button type="button" data-cmetodo="osem" aria-pressed="false">OSEM 2 × 8</button>
+   <button type="button" data-cmetodo="rampa" aria-pressed="false">FBP rampa</button>
+  </div>
+  <div id="cmpBtw" class="controles">
+   <div class="fila"><span class="etq">Corte</span><input id="cmpCorteBtw" type="range" min="10" max="150" value="50" aria-label="Frecuencia de corte del Butterworth en ciclos por centímetro"><span id="cmpCorteBtwTexto" class="valor"></span></div>
+   <p id="cmpNyquist" class="clave"></p>
+   <div class="fila"><span class="etq">Orden</span><input id="cmpOrden" type="range" min="1" max="10" value="5" aria-label="Orden del Butterworth"><span id="cmpOrdenTexto" class="valor"></span></div>
+  </div>
+  <button id="cmpCorrer" type="button" class="boton ancho">Reconstruir con el simulador</button>
+  <div class="rejilla">
+   <figure><figcaption>Siemens</figcaption><canvas id="cmpSie" aria-label="Reconstrucción de Siemens. Toca para elegir los cortes de los otros planos."></canvas></figure>
+   <figure><figcaption id="cmpSimTitulo">Simulador</figcaption><canvas id="cmpSim" aria-label="Reconstrucción del simulador o diferencia."></canvas></figure>
+  </div>
+  <div class="segmento" role="group" aria-label="Qué mostrar a la derecha">
+   <button type="button" data-cvista="lado" aria-pressed="true">Lado a lado</button>
+   <button type="button" data-cvista="dif" aria-pressed="false">Diferencia</button>
+  </div>
+  <div class="segmento" role="group" aria-label="Plano">
+   <button type="button" data-cplano="axial" aria-pressed="true">Axial</button>
+   <button type="button" data-cplano="coronal" aria-pressed="false">Coronal</button>
+   <button type="button" data-cplano="sagital" aria-pressed="false">Sagital</button>
+  </div>
+  <div class="controles">
+   <div class="fila"><span class="etq">Corte</span><input id="cmpCorteRango" type="range" min="0" max="127" value="64" aria-label="Corte"><span id="cmpCorte" class="valor"></span></div>
+   <div class="fila"><span class="etq">Techo</span><input id="cmpTecho" type="range" min="20" max="100" value="100" aria-label="Techo de la escala"></div>
+  </div>
+  <p id="cmpCruz" class="clave"></p>
+  <p id="cmpMetricas" class="dato"></p>
+  <button type="button" class="vermas ancho" data-dialogo="dCmp">Ver más sobre la comparación</button>
  </section>
 
  <section class="oculta" id="caja">
@@ -411,6 +448,21 @@
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
 
+<dialog id="dCmp">
+ <h2>Siemens frente al simulador</h2>
+ <dl class="leyenda">
+  <dt>Qué se compara</dt>
+  <dd>A la izquierda, la reconstrucción transversal que hizo el equipo (Siemens, «Recon – NoAC»). A la derecha, la que hace el simulador con las mismas proyecciones. Las dos quedan en la misma grilla, corte por corte, para compararlas vóxel a vóxel.</dd>
+  <dt>Cómo la hizo el equipo</dt>
+  <dd>Su DICOM lo dice: retroproyección filtrada (FBP) con un filtro Butterworth de corte 0,50 y orden 5, y proyecciones con uniformidad y movimiento corregidos. Por eso el simulador usa las proyecciones corregidas por el equipo cuando el ZIP las trae. El DICOM no dice en qué unidad está el corte. El simulador lo toma en ciclos por centímetro: 0,50 ciclos/cm, con píxeles de 3,3 mm, es un tercio de la frecuencia de Nyquist. Leído así se parece más a Siemens que como fracción de Nyquist; en los casos 3 y 4 la correlación es máxima entre 0,40 y 0,50 ciclos/cm. Puedes moverlo y ver cómo cambia.</dd>
+  <dt>Los métodos del simulador</dt>
+  <dd>«Como el equipo»: FBP con el filtro rampa por un Butterworth 2D aplicado a cada proyección; el corte y el orden se pueden cambiar. «OSEM 2 × 8»: la receta del caso, con gaussiano de 8,4 mm. «FBP rampa»: sin ventana, para ver cuánto ruido quita el Butterworth.</dd>
+  <dt>Cómo leer la comparación</dt>
+  <dd>Cada imagen va a su propio máximo, porque las unidades del equipo y del simulador son distintas. La diferencia muestra, con los dos volúmenes a la misma suma dentro del cuerpo, dónde el simulador da más (rojo) o menos (azul) que el equipo. La correlación r mide cuánto se parecen dentro del cuerpo: 1 es idéntico.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
 <dialog id="dCaja">
  <h2>Ubicar el corazón</h2>
  <dl class="leyenda">
@@ -461,7 +513,8 @@
 <script src="reorientar.js?v=4"></script>
 <script src="referencia.js?v=1"></script>
 <script src="caja.js?v=3"></script>
+<script src="comparador.js?v=2"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="movil.js?v=18"></script>
+<script src="movil.js?v=19"></script>
 </body>
 </html>

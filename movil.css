@@ -152,3 +152,10 @@ footer{padding-bottom:76px}
 .refProy{margin-top:8px}
 .refProy canvas{image-rendering:pixelated}
 .boton.secundario{background:var(--tarjeta);color:var(--texto);border:1px solid var(--acento)}
+/* Comparador Siemens / simulador */
+#cmp canvas{image-rendering:pixelated;touch-action:none}
+#cmp .etq{width:58px}
+#cmp .fila .valor{flex:none;width:52px;text-align:right;font-size:.85rem}
+#cmp .segmento{margin:6px 0}
+#cmp .segmento button:disabled{opacity:.4}
+#cmp .fila .valor{width:64px}

@@ -73,7 +73,7 @@ function elegirEntradas(lista){
  const equipo=[];
  for(const rec of lista.filter(e=>/(^|\/)caso\s*\d+\/(estres|reposo)\/referencia equipo\/recon_transversal_noac\.dcm$/i.test(e.name))){
   const m=rec.name.match(/caso\s*(\d+)\/(estres|reposo)\//i),fase=m[2].toLowerCase(),dir=rec.name.slice(0,rec.name.toLowerCase().indexOf('referencia equipo/')).toLowerCase();
-  const proy=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'.dcm');if(proy)equipo.push({rec,proy,caso:+m[1],fase});}
+  const proy=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'.dcm'),proyQC=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'_qc_corregido.dcm')||null;if(proy)equipo.push({rec,proy,proyQC,caso:+m[1],fase});}
  equipo.sort((a,b)=>a.fase.localeCompare(b.fase));
  return {cruda,ct,gat,equipo};
 }
@@ -112,7 +112,7 @@ async function cargar(file){
    bytes=await extraer(buf,e.cruda);
    if(e.ct.length){mensaje('Descomprimiendo el CT…');ct=[];for(const q of e.ct)ct.push(await extraer(buf,q));}
    if(e.gat){mensaje('Descomprimiendo la adquisición gatillada…');gat=await extraer(buf,e.gat);}
-   if(e.equipo.length){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo=[];for(const q of e.equipo)equipo.push({recon:await extraer(buf,q.rec),proy:await extraer(buf,q.proy),caso:q.caso,fase:q.fase});}
+   if(e.equipo.length){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo=[];for(const q of e.equipo)equipo.push({recon:await extraer(buf,q.rec),proy:await extraer(buf,q.proy),proyQC:q.proyQC?await extraer(buf,q.proyQC):null,caso:q.caso,fase:q.fase});}
   }else bytes=new Uint8Array(await file.arrayBuffer());
   if(await mostrar(bytes,origen,false,ct,gat,equipo))await guardar(bytes,origen,ct,gat,equipo);
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
@@ -132,7 +132,8 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo){
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
   estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;// Lo guardado antes de este cambio traia una sola reconstruccion (objeto): se pasa a lista.
   estado.equipo=equipo?(Array.isArray(equipo)?equipo:[equipo]):[];
-  $('equipoBotones').replaceChildren(...estado.equipo.map((q,i)=>{const b=document.createElement('button');b.type='button';b.className='boton ancho secundario';b.textContent=`Reorientar con la reconstrucción del equipo (caso ${q.caso}, ${q.fase==='reposo'?'reposo':'estrés'}) →`;b.addEventListener('click',()=>aEquipo(i));return b;}));Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
+  $('equipoBotones').replaceChildren(...estado.equipo.flatMap((q,i)=>{const fase=q.fase==='reposo'?'reposo':'estrés',boton=(texto,f)=>{const b=document.createElement('button');b.type='button';b.className='boton ancho secundario';b.textContent=texto;b.addEventListener('click',f);return b;};
+   return [boton(`Comparar Siemens con el simulador (caso ${q.caso}, ${fase}) →`,()=>aComparar(i)),boton(`Reorientar con la reconstrucción del equipo (caso ${q.caso}, ${fase}) →`,()=>aEquipo(i))];}));Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
   textos();
   $('modo').disabled=false;
@@ -289,7 +290,7 @@ async function aOsem(){
 }
 // Segunda parte, sin cambiar de simulador: reorientar sobre la reconstruccion de la izquierda.
 // Primero se ubica el corazon con una caja en coronal y sagital; despues se reorienta.
-const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();for(const q of ['qc','reg','osem','gat','caja','reo'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
+const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();if(id!=='cmp')Comparador.salir();for(const q of ['qc','reg','osem','gat','caja','reo','cmp'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
 const entradaIzquierda=()=>{const o=OsemMovil.estado;return o.historial.find(h=>h.id===o.a);};
 // De donde se vino a la caja (la OSEM o el control de calidad) y con que volumen se trabaja.
 const segunda={origen:'osem',s:null,referencia:null};
@@ -320,6 +321,8 @@ async function aEquipo(i=0){
   mostrarSolo('caja');Caja.abrir({entrada,s:segunda.s});
  }catch(err){$('resumen').textContent='No se pudo abrir la reconstrucción del equipo: '+(err.message||err);console.error(err);}
 }
+// Comparador: la reconstruccion de Siemens frente a la del simulador con las mismas proyecciones.
+function aComparar(i){const q=estado.equipo[i];if(!q)return;mostrarSolo('cmp');Comparador.abrir(q);}
 function aReorientar(){
  mostrarSolo('reo');
  Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
@@ -348,6 +351,8 @@ Registro.iniciar();
 OsemMovil.iniciar();
 Reorientar.iniciar();
 Caja.iniciar();
+Comparador.iniciar();
+$('volverQcCmp').addEventListener('click',()=>{mostrarSolo('qc');armar();});
 Gatillado.iniciar();
 $('frame').addEventListener('input',()=>{detener();estado.k=+$('frame').value;redibujar();});
 $('fila').addEventListener('input',()=>{estado.y=+$('fila').value;redibujar();});
@@ -368,6 +373,6 @@ function candado(cerrado,avisar){
 }
 $('candado').addEventListener('click',()=>candado(!document.documentElement.classList.contains('bloqueado'),true));
 candado(false,false);
-window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo};
+window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo,aComparar};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();
