@@ -13,6 +13,16 @@ const Caja=(()=>{
  const LADO_MM=110,MIN_MM=40;
  const k={entrada:null,vol:null,n:0,sp:1,max:1,techo:1,x0:0,x1:0,y0:0,y1:0,z0:0,z1:0,movida:false};
 
+ // Escala de color segun el contenido de la caja: percentil 99,9 de los voxeles de adentro (no el
+ // maximo, para que un voxel suelto no apague el resto). Con la caja sobre el corazon, el higado
+ // y el intestino dejan de fijar la escala. Se muestrea con paso para que sea inmediato al arrastrar.
+ function maxEnCaja(vol,n,q){
+  const p=n*n,lo=a=>Math.max(0,Math.floor(q[a+'0'])),hi=a=>Math.min(n-1,Math.ceil(q[a+'1']));
+  const total=(hi('x')-lo('x')+1)*(hi('y')-lo('y')+1)*(hi('z')-lo('z')+1),paso=Math.max(1,Math.round(Math.cbrt(total/60000)));
+  const v=[];for(let z=lo('z');z<=hi('z');z+=paso)for(let y=lo('y');y<=hi('y');y+=paso)for(let x=lo('x');x<=hi('x');x+=paso){const a=vol[z*p+y*n+x];if(a>0)v.push(a);}
+  if(!v.length)return C.percentil(vol,.999)||1;
+  v.sort((a,b)=>a-b);return v[Math.min(v.length-1,Math.floor(v.length*.999))]||1;
+ }
  function abrir({entrada,s}){
   const aviso=$('cajaEstado');
   if(!entrada||entrada.tipo!=='osem'){aviso.className='estado error';aviso.textContent='Elige a la izquierda una reconstrucción OSEM (no el mapa μ) antes de seguir.';return false;}
@@ -36,6 +46,7 @@ const Caja=(()=>{
  function rect(id,c){const n=k.n,e=c.width/n,a=VISTAS[id].h;return {x:k[a+'0']*e,y:(n-1-k.z1)*e,w:(k[a+'1']-k[a+'0'])*e,h:(k.z1-k.z0)*e,e};}
  function pintar(){
   if(!k.vol)return;
+  k.max=maxEnCaja(k.vol,k.n,k);
   for(const id of Object.keys(VISTAS)){
    const c=$(id);if(c.width!==k.n*3){c.width=k.n*3;c.height=k.n*3;}
    C.pintar(c,imagen(id),k.n,{paleta:'cardiaca',techo:k.techo,max:k.max});
@@ -47,7 +58,7 @@ const Caja=(()=>{
   }
   const mm=a=>dec((k[a+'1']-k[a+'0'])*k.sp/10,1);
   const [cx,cy,cz]=centro();
-  $('cajaResumen').textContent=`Caja de ${mm('x')} cm de lado a lado, ${mm('y')} cm de adelante hacia atrás y ${mm('z')} cm de alto. El coronal pasa por el corte ${Math.round(cy)+1} y el sagital por el ${Math.round(cx)+1}.`;
+  $('cajaResumen').textContent=`Caja de ${mm('x')} cm de lado a lado, ${mm('y')} cm de adelante hacia atrás y ${mm('z')} cm de alto. El coronal pasa por el corte ${Math.round(cy)+1} y el sagital por el ${Math.round(cx)+1}. La escala de color se ajusta a lo que hay dentro de la caja.`;
   $('cajaTecho').value=Math.round(k.techo*100);
  }
  // Arrastre: dentro mueve, en una esquina redimensiona, fuera centra la caja en el punto.
@@ -85,6 +96,6 @@ const Caja=(()=>{
  }
  function caja(){return {x0:k.x0,x1:k.x1,y0:k.y0,y1:k.y1,z0:k.z0,z1:k.z1};}
  function olvidar(){k.entrada=null;k.vol=null;}
- return {iniciar,abrir,olvidar,caja,estado:k};
+ return {iniciar,abrir,olvidar,caja,maxEnCaja,estado:k};
 })();
 window.Caja=Caja;
