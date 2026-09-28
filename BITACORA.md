@@ -155,3 +155,11 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Decisión.** El umbral se reemplaza por dos deslizadores, **nivel** (0 a 150 %) y **ancho** (1 a 200 %), en porcentaje del percentil 99,5 de la reconstrucción, con la misma fórmula del escritorio: `(valor/escala − nivel)/ancho + 0,5`. Lo que queda bajo la ventana no se pinta y deja ver el CT; lo que queda sobre ella sale blanco. Parte en nivel 65 % y ancho 70 % (muestra de 30 % a 100 %), lo mismo que el umbral anterior. Una línea dice qué rango se está mostrando y «Restablecer» vuelve a los valores iniciales. La explicación de «Ver más sobre el registro» se actualizó.
 
 **Validación.** Emulación de teléfono: al entrar, «muestra de 30 % a 100 %» y el 18 % de los píxeles de la fusión con color; con nivel 30 y ancho 60, de 0 % a 60 % y el 45 %; con nivel 110 y ancho 40, de 90 % a 130 % y el 1 %; «Restablecer» vuelve a 65 y 70.
+
+## 2026-09-28 · El CT parte fusionado, sin desfase
+
+**Contexto.** El docente pidió no mostrar el CT desfasado: la fusión debe aparecer alineada desde el principio.
+
+**Decisión.** Se quita el desfase al azar de 35 a 70 mm que venía del ejercicio de escritorio. El CT parte en la posición del equipo (mismo marco de referencia, desfase cero). El estudiante revisa la fusión en los tres planos; si lo mueve, «Confirmar registro» sigue diciendo a cuántos milímetros quedó (hasta 3 mm dentro de un vóxel, hasta 8 mm aceptable, más no calza). El desplazamiento se conserva al volver al control de calidad y vuelve a cero al cargar otro archivo. Se actualizaron el comentario del módulo y «Ver más sobre el registro».
+
+**Validación.** Emulación de teléfono: al entrar el desfase es 0, 0, 0; confirmar sin mover da «dentro de un vóxel»; tras mover 12 mm con la flecha, «todavía no calza»; al volver y entrar se conservan los 12 mm; al cargar otro ZIP vuelve a 0.
