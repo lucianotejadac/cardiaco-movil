@@ -15,6 +15,8 @@ Caso 1, fase de estrés, fijo. Carga las proyecciones sin corregir (`NM_estres.d
 - `correccion.js`: corrección automática de movimiento de las proyecciones.
 - `registro.js`: FBP y registro SPECT/CT sobre el CT del mismo ZIP.
 - `osem-movil.js`: OSEM de referencia 1 × 1 sin correcciones. Usa, copiados tal cual de `spect-lab-95`, `algorithm.js`, `simulador95-osem.js`, `simulador95-psf.js` y `simulador95-pool.js`.
+- `progreso.js`: ventana emergente de progreso de las reconstrucciones.
+- `reorientar.js`: segunda parte, reorientación de los ejes con deslizadores. Usa `cardiaco-core.js`, copiado tal cual de `simulador-cardiaco`.
 
 ## Pruebas
 

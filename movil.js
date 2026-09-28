@@ -112,7 +112,7 @@ async function mostrar(bytes,origen,recuperado,ct){
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
-  estado.ct=ct&&ct.length?ct:null;Registro.olvidar();OsemMovil.olvidar();$('reg').classList.add('oculta');$('osem').classList.add('oculta');
+  estado.ct=ct&&ct.length?ct:null;Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('reo').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
   textos();
   $('modo').disabled=false;
@@ -267,15 +267,26 @@ async function aOsem(){
  const r=Registro.estado;
  await OsemMovil.abrir({s:r.s,fuente:r.fuente,cortes:r.corte,registro:r});
 }
+// Segunda parte, sin cambiar de simulador: reorientar sobre la reconstruccion de la izquierda.
+function aReorientar(){
+ const o=OsemMovil.estado,e=o.historial.find(h=>h.id===o.a);
+ const ref=CARDIACO_CASOS[CASO]?.fases?.[FASE]?.eje||null;
+ $('osem').classList.add('oculta');$('reo').classList.remove('oculta');window.scrollTo(0,0);
+ Reorientar.abrir({entrada:e,s:o.s,referencia:ref,filaCorazon:estado.crudo.filaInicial});
+}
+function aOsemDesdeReo(){$('reo').classList.add('oculta');$('osem').classList.remove('oculta');window.scrollTo(0,0);}
 function aReg(){OsemMovil.cancelar();$('osem').classList.add('oculta');$('reg').classList.remove('oculta');window.scrollTo(0,0);}
 function aQc(){Registro.cancelar();$('reg').classList.add('oculta');$('qc').classList.remove('oculta');armar();window.scrollTo(0,0);}
 $('aRegistro').addEventListener('click',aRegistro);
 $('volverQc').addEventListener('click',aQc);
 $('aOsem').addEventListener('click',aOsem);
 $('volverReg').addEventListener('click',aReg);
+$('aReorientar').addEventListener('click',aReorientar);
+$('volverOsem').addEventListener('click',aOsemDesdeReo);
 Progreso.iniciar();
 Registro.iniciar();
 OsemMovil.iniciar();
+Reorientar.iniciar();
 $('frame').addEventListener('input',()=>{detener();estado.k=+$('frame').value;redibujar();});
 $('fila').addEventListener('input',()=>{estado.y=+$('fila').value;redibujar();});
 $('play').addEventListener('click',reproducir);
@@ -283,6 +294,6 @@ $('play').addEventListener('click',reproducir);
 document.querySelectorAll('[data-dialogo]').forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.dialogo)));
 // La ventana de progreso no se cierra tocando fuera: solo al terminar o con «Detener».
 document.querySelectorAll('dialog:not(#dProgreso)').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
-window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg};
+window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aReorientar};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();
