@@ -250,3 +250,11 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 - La aplicación parte con el candado abierto, como se comportaba antes en los controles. Se agregó margen al pie para que el botón no tape lo último de la página.
 
 **Validación.** Emulación de teléfono con eventos táctiles de bajo nivel (`Input.dispatchTouchEvent`). El gesto sintético de desplazamiento no mueve la página en este navegador ni sin candado, así que no sirve para probar. Con el candado cerrado, un deslizamiento sobre el texto o sobre una imagen desplaza la página unos 340 px, y tocar un botón o una imagen no hace nada. Con el candado abierto, el mismo deslizamiento no la mueve y los botones responden. Los avisos cambian con el modo.
+
+## 2026-09-28 · La escala de color sigue al contenido de la caja
+
+**Contexto.** El docente pidió que, al poner la caja, la ventana cambie según lo que hay dentro de ella.
+
+**Decisión.** En «Ubicar el corazón» el máximo de la escala es el percentil 99,9 de los vóxeles que están dentro de la caja, no el de todo el volumen; se usa el percentil y no el máximo para que un vóxel suelto no apague el resto. Se recalcula en cada movimiento, con un muestreo con paso que deja unos 60 000 vóxeles, en unos 28 ms. Con la caja sobre el corazón, el ventrículo usa todo el rango de colores y lo que brilla más fuera de la caja (hígado, intestino) sale blanco. La reorientación toma la misma escala, calculada con la caja con que se entra. El techo sigue bajando ese máximo. «Ver más sobre la caja» lo explica.
+
+**Validación.** Emulación de teléfono, OSEM 2 × 8 sin atenuación del caso 1: con la caja al centro el máximo es 0,62 y con todo el volumen 0,54; con la caja sobre la herradura del coronal (x 58–96, y 30–64, z 55–90) baja a 0,45 y el ventrículo se ve con toda la escala; la reorientación usa 0,45.

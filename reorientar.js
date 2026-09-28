@@ -38,7 +38,7 @@ const Reorientar=(()=>{
   const clave=JSON.stringify(caja);
   if(r.origen!==entrada){r.az=0;r.el=0;}
   if(r.origen!==entrada||r.claveCaja!==clave){
-   r.origen=entrada;r.claveCaja=clave;r.caja={...caja};r.n=s.n;r.sp=s.spacing;r.vol=volumen(entrada,s.n);r.max=C.percentil(r.vol,.999)||1;r.etiqueta=entrada.etiqueta;
+   r.origen=entrada;r.claveCaja=clave;r.caja={...caja};r.n=s.n;r.sp=s.spacing;r.vol=volumen(entrada,s.n);r.max=Caja.maxEnCaja(r.vol,r.n,caja);r.etiqueta=entrada.etiqueta;
    r.Cv=[(caja.x0+caja.x1)/2,(caja.y0+caja.y1)/2,(caja.z0+caja.z1)/2];
    r.L=Math.max(12,Math.round(.7*Math.min(caja.x1-caja.x0,caja.y1-caja.y0,caja.z1-caja.z0)));r.t=0;
    aviso.className='estado ok';
