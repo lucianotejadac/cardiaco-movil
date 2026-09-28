@@ -69,3 +69,20 @@ footer p{margin:0}
 body.comparar canvas{touch-action:pan-y}
 body.comparar .controles{position:sticky;bottom:0;z-index:5;box-shadow:0 -6px 14px rgba(0,0,0,.55)}
 body.comparar .clave{display:none}
+
+/* Paso de registro SPECT/CT */
+.boton.ancho{display:block;width:100%;margin:10px 0 0}
+#reg .columna{margin-bottom:4px}
+.fusion canvas{touch-action:none;cursor:grab;image-rendering:auto}
+.segmento{display:flex;gap:6px;margin:6px 0 0}
+.segmento button{flex:1;background:var(--tarjeta);color:var(--texto);border:1px solid var(--linea);border-radius:8px;padding:8px 0;font-size:.85rem;font-weight:600}
+.segmento button[aria-pressed=true]{background:var(--acento);color:#111;border-color:var(--acento)}
+#reg select{flex:1;background:#0d1114;color:var(--texto);border:1px solid var(--linea);border-radius:6px;padding:8px;font-size:.9rem}
+#reg .fila{min-height:44px}
+.flechas{display:flex;gap:8px;margin:6px 0 2px}
+.flechas button{flex:1;height:44px;background:#0d1114;color:var(--texto);border:1px solid var(--linea);border-radius:8px;font-size:1.2rem;touch-action:none}
+.flechas button:disabled{opacity:.35}
+.dato:empty{display:none}
+.dato.bien{border-left-color:#9be7a0}
+.dato.mal{border-left-color:#ff8a80}
+#reg .etq{width:58px}

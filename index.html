@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=6">
+<link rel="stylesheet" href="movil.css?v=8">
 </head>
 <body>
 <header class="barra">
@@ -39,9 +39,43 @@
   </div>
   <p id="resumen" class="dato"></p>
   <button type="button" class="vermas ancho" data-dialogo="dGeneral">Ver más sobre las proyecciones y estos números</button>
+  <button id="aRegistro" type="button" class="boton ancho">Siguiente: registro FBP con el CT →</button>
+ </section>
+
+ <section class="oculta" id="reg">
+  <button id="volverQc" type="button" class="cambio">← Volver al control de calidad</button>
+  <div class="columna">Registro SPECT/CT · FBP</div>
+  <p id="regEstado" class="estado"></p>
+  <figure class="fusion">
+   <figcaption><span id="regPlanoTexto">Fusión</span> <span class="mono">corte <span id="regCorte"></span></span></figcaption>
+   <canvas id="regFusion" aria-label="Fusión del SPECT sobre el CT. Arrastra para mover el CT."></canvas>
+  </figure>
+  <div class="segmento" role="group" aria-label="Plano">
+   <button type="button" data-plano="axial" aria-pressed="true">Axial</button>
+   <button type="button" data-plano="coronal" aria-pressed="false">Coronal</button>
+   <button type="button" data-plano="sagital" aria-pressed="false">Sagital</button>
+  </div>
+  <div class="controles">
+   <div class="fila"><span class="etq">Corte</span><input id="regCorteRango" type="range" min="0" max="127" value="64" aria-label="Corte"></div>
+   <div class="fila"><span class="etq">SPECT</span><input id="regMezcla" type="range" min="0" max="100" value="60" aria-label="Mezcla del SPECT sobre el CT"></div>
+   <div class="fila"><span class="etq">Umbral</span><input id="regUmbral" type="range" min="0" max="80" value="30" aria-label="Umbral del SPECT: oculta la emisión más débil"></div>
+   <div class="fila"><span class="etq">CT</span>
+    <select id="regVentana" aria-label="Ventana del CT"><option value="contorno">Contorno externo</option><option value="blando">Tejido blando</option><option value="hueso">Hueso</option></select>
+   </div>
+   <div class="flechas" aria-label="Mover el CT 1 mm">
+    <button id="regIzq" type="button" aria-label="Mover el CT a la izquierda">←</button>
+    <button id="regArriba" type="button" aria-label="Mover el CT hacia arriba">↑</button>
+    <button id="regAbajo" type="button" aria-label="Mover el CT hacia abajo">↓</button>
+    <button id="regDer" type="button" aria-label="Mover el CT a la derecha">→</button>
+   </div>
+   <p class="clave">Arrastra sobre la imagen para mover el CT; las flechas lo mueven de a 1 mm.</p>
+  </div>
+  <button id="regConfirmar" type="button" class="boton ancho">Confirmar registro</button>
+  <p id="regResultado" class="dato"></p>
+  <button type="button" class="vermas ancho" data-dialogo="dRegistro">Ver más sobre el registro</button>
  </section>
 </main>
-<footer><p>Uso educativo · Los DICOM no salen del teléfono · Paso 1 de la versión móvil</p></footer>
+<footer><p>Uso educativo · Los DICOM no salen del teléfono · Versión móvil</p></footer>
 
 <dialog id="dCarga">
  <h2>Qué se carga</h2>
@@ -52,10 +86,12 @@
   <dd>Las proyecciones tal como salieron de la gammacámara, sin ninguna corrección.</dd>
   <dt>La corrección la hace la aplicación</dt>
   <dd>Con el botón «Corregir» la aplicación busca si el paciente se movió y corrige las proyecciones. No usa ninguna copia corregida por el equipo.</dd>
-  <dt>Lo que no se usa en este paso</dt>
-  <dd>El ZIP trae además una adquisición sincronizada con el electrocardiograma y las imágenes de tomografía computada. Aquí no se abren.</dd>
+  <dt>El CT, para el registro</dt>
+  <dd>La aplicación saca también los cortes de tomografía computada de la carpeta Caso 1 › Estres › CT. Se usan en el paso de registro.</dd>
+  <dt>Lo que no se usa todavía</dt>
+  <dd>El ZIP trae además una adquisición sincronizada con el electrocardiograma y el reposo. Aquí no se abren.</dd>
   <dt>Privacidad</dt>
-  <dd>El archivo se lee dentro del teléfono y no se envía a ningún servidor. Las proyecciones que la aplicación saca del ZIP quedan guardadas en el navegador de este teléfono, así no hay que volver a elegir el ZIP cada vez que se abre la página o se publica una versión nueva. Para usar otro archivo, toca «Cambiar archivo».</dd>
+  <dd>El archivo se lee dentro del teléfono y no se envía a ningún servidor. Las proyecciones y el CT que la aplicación saca del ZIP quedan guardados en el navegador de este teléfono, así no hay que volver a elegir el ZIP cada vez que se abre la página o se publica una versión nueva. Para usar otro archivo, toca «Cambiar archivo».</dd>
  </dl>
  <details id="antecedente" hidden>
   <summary>Antecedente clínico del caso</summary>
@@ -175,10 +211,32 @@
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
 
+<dialog id="dRegistro">
+ <h2>El registro SPECT/CT</h2>
+ <dl class="leyenda">
+  <dt>Qué es la FBP</dt>
+  <dd>La retroproyección filtrada: cada proyección se filtra con el filtro rampa y se «devuelve» a través del volumen en la dirección desde la que se tomó. Sumando las 64 vistas aparece la distribución del trazador en tres dimensiones. Es rápida y sirve como reconstrucción preliminar; tiene ruido en estrella y la pared inferior apagada por la atenuación. Aquí se suaviza con un gaussiano de 8,4 mm para ver mejor los contornos.</dd>
+  <dt>La franja sin medición, rellenada</dt>
+  <dd>Las columnas en cero del borde de las proyecciones (la franja que se ve en el sinograma) no son actividad cero: el cristal no midió ahí. Si se reconstruyen como ceros, el filtro rampa convierte ese borde en un pico y aparece una banda que atraviesa el cuerpo y sale de él. Para esta reconstrucción preliminar, la aplicación rellena la franja con el valor del borde medido, bajando suavemente a cero. Las proyecciones que ves en el control de calidad no cambian.</dd>
+  <dt>Qué proyecciones se reconstruyen</dt>
+  <dd>Si pulsaste «Corregir», las corregidas por la aplicación; si no, las que salieron del equipo. Si el paciente se movió y no corregiste, la reconstrucción sale borrosa o con el corazón deformado.</dd>
+  <dt>Para qué se registra</dt>
+  <dd>El CT se usará para corregir la atenuación: dice cuánto tejido atravesó cada fotón. Para eso tiene que estar exactamente donde está la emisión. Si queda corrido, el mapa de atenuación corrige de más una pared del corazón y de menos la opuesta.</dd>
+  <dt>El ejercicio</dt>
+  <dd>El CT parte corrido varios centímetros hacia el lado y hacia adelante o atrás (no a lo largo de la camilla). Arrástralo sobre la imagen hasta que la piel del tórax del CT coincida con el borde de la emisión y el corazón del SPECT caiga sobre el corazón del CT. Revisa también los cortes coronal y sagital. La ventana «Contorno externo» muestra bien la piel.</dd>
+  <dt>Cómo leer la fusión</dt>
+  <dd>El CT va en grises y el SPECT encima, en colores de negro a rojo, amarillo y blanco. El deslizador SPECT cambia cuánto se ve la emisión sobre el CT, y el umbral oculta la emisión más débil: súbelo para ver solo los órganos que más captan (corazón, hígado, intestino) y bájalo para ver el contorno del cuerpo. El azul oscuro marca dónde no hay CT: el CT cubre menos que el SPECT a lo largo de la camilla.</dd>
+  <dt>Al confirmar</dt>
+  <dd>La aplicación dice a cuántos milímetros quedaste de la posición correcta. Hasta 3 mm está dentro de un vóxel; hasta 8 mm, unos dos vóxeles, es aceptable. Con más, todavía no calza y hay que seguir moviéndolo. Mientras no confirmas, la aplicación no dice cuánto falta.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
 <script src="correccion.js?v=1"></script>
-<script src="movil.js?v=8"></script>
+<script src="registro.js?v=2"></script>
+<script src="movil.js?v=9"></script>
 </body>
 </html>
