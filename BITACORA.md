@@ -303,3 +303,27 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Validación.**
 - El eje corto de Siemens del caso 4, pasado por `angulosDe`, da estrés 25,4°/13,4° y reposo 24,4°/15,4°: exactamente los del manifiesto, igual que el caso 3.
 - Emulación con los tres ZIP: el caso 1 usa 41 cortes de CT y no muestra botones del equipo; el caso 3 usa 37 y muestra el de reposo; el caso 4 usa 33 («CT 512») y muestra los dos. El registro FBP abre en los tres. En el caso 4, estrés y reposo con el eje del equipo dan anillo en el eje corto, «C» en el largo vertical y «U» invertida en el largo horizontal.
+
+## 2026-09-28 · Comparador: reconstrucción de Siemens frente a la del simulador
+
+**Contexto.** El docente pidió comparar las reconstrucciones de Siemens con las del simulador.
+
+**Qué hizo el equipo.** El DICOM de la transversal «Recon – NoAC» lo dice: `ConvolutionKernel = FBP, Btw,0,50,5` (retroproyección filtrada con Butterworth de corte 0,50 y orden 5) y `CorrectedImage = UNIF, MOTN` (uniformidad y movimiento corregidos).
+
+**Decisiones.**
+- **Botón «Comparar Siemens con el simulador (caso N, fase) →»** en el control de calidad, uno por cada reconstrucción del equipo que traiga el ZIP.
+- **Mismas proyecciones que el equipo:** las corregidas por el equipo (`NM_<fase>_QC_corregido.dcm`) si el ZIP las trae, porque el equipo corrigió el movimiento; si no, las originales. La pantalla dice cuáles se usaron.
+- **Tres métodos del simulador:** «Como el equipo» (FBP con rampa por un Butterworth 2D radial, 1/√(1+(f/fc)^2n), aplicado a cada proyección antes de la FBP del motor; corte y orden ajustables), «OSEM 2 × 8» (receta del caso, gaussiano de 8,4 mm) y «FBP rampa».
+- **Unidad del corte:** el DICOM no la dice. Se barrió el corte con orden 5 y se midió la correlación con Siemens: caso 4 estrés, máxima entre 0,25 y 0,30 de Nyquist (0,828), 0,792 en 0,50 de Nyquist; caso 4 reposo y caso 3 reposo, curvas más planas, también mayores bajo 0,50 de Nyquist. Leer 0,50 como **ciclos/cm** da 0,33 de Nyquist con píxeles de 3,3 mm, cerca del máximo. Por eso el control está en ciclos/cm, parte en 0,50 y muestra su equivalencia en fracción de Nyquist.
+- **Comparación vóxel a vóxel:** la reconstrucción del simulador se remuestrea (trilineal) en la grilla de Siemens con las posiciones de los dos DICOM. Cada imagen va a su propio máximo, porque las unidades son distintas. La diferencia (rojo, más en el simulador; azul, menos) y las métricas usan los dos volúmenes normalizados a la misma suma dentro del cuerpo (vóxeles de Siemens sobre el 10 % de su máximo): correlación de Pearson y diferencia media absoluta en porcentaje de la media. Planos axial, coronal y sagital sincronizados, tocar una imagen mueve los otros cortes, techo, ventana de progreso con «Detener».
+
+**Validación.** Emulación de teléfono:
+
+| | Como el equipo (0,50 c/cm) | Butterworth 1,0 c/cm | FBP rampa | OSEM 2 × 8 |
+|---|---|---|---|---|
+| Caso 4, estrés | r 0,826 · dif 32,7 % | 0,744 · 44,2 % | 0,664 · 54,9 % | 0,819 · 32,3 % |
+| Caso 3, reposo | r 0,864 · dif 24,9 % | 0,834 · 29,7 % | 0,804 · 35,4 % | 0,858 · 28,1 % |
+
+Cada reconstrucción toma de 3,5 a 7 s. En las imágenes, corazón, hígado e intestino quedan en el mismo lugar en las dos; con los volúmenes a la misma suma, el simulador da más actividad en la pared del ventrículo que Siemens.
+
+**Límites.** No se sabe qué más hizo el equipo: corrección de centro de rotación, uniformidad, si su Butterworth es 2D o por fila, la normalización del filtro. La correlación no llega a 1 y la diferencia en el ventrículo puede venir de eso.

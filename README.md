@@ -19,6 +19,7 @@ Caso 1, fase de estrés, fijo. Carga las proyecciones sin corregir (`NM_estres.d
 - `gatillado.js`: reconstrucción de los 8 intervalos de la adquisición gatillada y cine del corazón latiendo.
 - `caja.js`: segunda parte, ubicar el corazón con una caja en coronal y sagital.
 - `referencia.js`: marca en dos proyecciones de la adquisición (anterior y lateral izquierda) dónde queda la caja o el eje del corazón.
+- `comparador.js`: la reconstrucción transversal de Siemens frente a la del simulador con las mismas proyecciones.
 - `reorientar.js`: segunda parte, reorientación de los ejes con deslizadores. Usa `cardiaco-core.js`, copiado tal cual de `simulador-cardiaco`.
 
 ## Pruebas
