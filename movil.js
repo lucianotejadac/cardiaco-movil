@@ -15,7 +15,7 @@ const paleta=v=>{v=Math.max(0,Math.min(1,v));return [255*Math.min(1,v*3),255*Mat
 const TIPOS={cine:'Cine',sino:'Sinograma',suma:'Imagen suma',lino:'Linograma'};
 const DIALOGO={cine:'dCine',sino:'dSino',suma:'dSuma',lino:'dLino'};
 const EJES={cine:'y',suma:'y',sino:'k',lino:'ky'};
-const estado={crudo:null,corr:null,ct:null,gat:null,cuadros:null,correccion:null,ocupado:false,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
+const estado={crudo:null,corr:null,ct:null,gat:null,equipo:null,cuadros:null,correccion:null,ocupado:false,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
 
 function imagen(img,w,h,max){
  const id=new ImageData(w,h);for(let i=0;i<w*h;i++){const c=paleta(Math.max(0,img[i])/(max||1));id.data[i*4]=c[0];id.data[i*4+1]=c[1];id.data[i*4+2]=c[2];id.data[i*4+3]=255;}
@@ -61,7 +61,14 @@ function elegirEntradas(lista){
  const ct=lista.filter(e=>{const q=e.name.toLowerCase();return q.startsWith(carpeta)&&/^ct[^/]*\/[^/]+\.dcm$/.test(q.slice(carpeta.length));}).sort((a,b)=>a.name.localeCompare(b.name));
  // La adquisicion gatillada de la misma fase, para el paso del gatillado.
  const gat=lista.find(e=>e.name.toLowerCase()===carpeta+'nm_estres_gatillado.dcm')||null;
- return {cruda,ct,gat};
+ // La reconstruccion transaxial del equipo (Siemens), si el ZIP la trae en «Referencia equipo»,
+ // con las proyecciones de esa misma fase: sirve para reorientar sobre la reconstruccion del
+ // equipo y para mostrar en las proyecciones donde esta el corazon.
+ const rec=lista.find(e=>/(^|\/)caso\s*\d+\/(estres|reposo)\/referencia equipo\/recon_transversal_noac\.dcm$/i.test(e.name));
+ let equipo=null;
+ if(rec){const m=rec.name.match(/caso\s*(\d+)\/(estres|reposo)\//i),fase=m[2].toLowerCase(),dir=rec.name.slice(0,rec.name.toLowerCase().indexOf('referencia equipo/')).toLowerCase();
+  const proy=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'.dcm');if(proy)equipo={rec,proy,caso:+m[1],fase};}
+ return {cruda,ct,gat,equipo};
 }
 
 /* ---------- memoria del telefono ---------- */
@@ -77,20 +84,20 @@ async function memoria(modo,valor){
   t.oncomplete=()=>ok(r.result);t.onerror=()=>mal(t.error);});}
  finally{db.close();}
 }
-async function guardar(bytes,origen,ct,gat){
- try{await memoria('guardar',{bytes,origen,ct,gat,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
+async function guardar(bytes,origen,ct,gat,equipo){
+ try{await memoria('guardar',{bytes,origen,ct,gat,equipo,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
  catch(err){console.warn('No se pudo guardar en el teléfono',err);}
 }
 async function recuperar(){
  let m=null;try{m=await memoria('leer');}catch(err){console.warn('No se pudo leer lo guardado',err);}
- if(m&&m.bytes)await mostrar(m.bytes,m.origen,true,m.ct||null,m.gat||null);
+ if(m&&m.bytes)await mostrar(m.bytes,m.origen,true,m.ct||null,m.gat||null,m.equipo||null);
 }
 
 /* ---------- carga ---------- */
 async function cargar(file){
  try{
   mensaje('Leyendo '+file.name+'…');
-  let bytes,origen=file.name,ct=null,gat=null;
+  let bytes,origen=file.name,ct=null,gat=null,equipo=null;
   if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){
    const buf=await file.arrayBuffer();const lista=await entradasZip(buf);const e=elegirEntradas(lista);
    if(!e)throw Error('Dentro del ZIP no hay NM_estres.dcm. Revisa que sea el ZIP «Cardiaco …» de U-Cursos.');
@@ -98,12 +105,13 @@ async function cargar(file){
    bytes=await extraer(buf,e.cruda);
    if(e.ct.length){mensaje('Descomprimiendo el CT…');ct=[];for(const q of e.ct)ct.push(await extraer(buf,q));}
    if(e.gat){mensaje('Descomprimiendo la adquisición gatillada…');gat=await extraer(buf,e.gat);}
+   if(e.equipo){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo={recon:await extraer(buf,e.equipo.rec),proy:await extraer(buf,e.equipo.proy),caso:e.equipo.caso,fase:e.equipo.fase};}
   }else bytes=new Uint8Array(await file.arrayBuffer());
-  if(await mostrar(bytes,origen,false,ct,gat))await guardar(bytes,origen,ct,gat);
+  if(await mostrar(bytes,origen,false,ct,gat,equipo))await guardar(bytes,origen,ct,gat,equipo);
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
 }
 // Muestra un DICOM ya extraido. Devuelve true si se pudo leer.
-async function mostrar(bytes,origen,recuperado,ct,gat){
+async function mostrar(bytes,origen,recuperado,ct,gat,equipo){
  try{
   const d=await Lab95.read(new Blob([bytes]));
   const crudo=Lab95.spect(d);
@@ -115,7 +123,8 @@ async function mostrar(bytes,origen,recuperado,ct,gat){
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
-  estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
+  estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;estado.equipo=equipo||null;
+  $('aEquipo').hidden=!equipo;if(equipo)$('aEquipo').textContent=`Reorientar con la reconstrucción del equipo (caso ${equipo.caso}, ${equipo.fase==='reposo'?'reposo':'estrés'}) →`;Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
   textos();
   $('modo').disabled=false;
@@ -274,13 +283,40 @@ async function aOsem(){
 // Primero se ubica el corazon con una caja en coronal y sagital; despues se reorienta.
 const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();for(const q of ['qc','reg','osem','gat','caja','reo'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
 const entradaIzquierda=()=>{const o=OsemMovil.estado;return o.historial.find(h=>h.id===o.a);};
-function aCaja(){mostrarSolo('caja');Caja.abrir({entrada:entradaIzquierda(),s:OsemMovil.estado.s});}
-function aReorientar(){
- const ref=CARDIACO_CASOS[CASO]?.fases?.[FASE]?.eje||null;
- mostrarSolo('reo');
- Reorientar.abrir({entrada:Caja.estado.entrada,s:OsemMovil.estado.s,referencia:ref,caja:Caja.caja()});
+// De donde se vino a la caja (la OSEM o el control de calidad) y con que volumen se trabaja.
+const segunda={origen:'osem',s:null,referencia:null};
+function aCaja(){
+ // OSEM de la aplicacion: voxel (con z hacia la cabeza) -> paciente, con la geometria de la cruda.
+ const s=estado.crudo.s,n=s.n,c=(n-1)/2;
+ RefProy.configurar(s,(i,j,k)=>[(i-c)*s.spacing+s.origin[0],(j-c)*s.spacing+s.origin[1],s.z0-(n-1-k)*s.spacing]);
+ Object.assign(segunda,{origen:'osem',s:OsemMovil.estado.s,referencia:CARDIACO_CASOS[CASO]?.fases?.[FASE]?.eje||null});
+ $('volverOsem').textContent='← Volver a la OSEM';
+ mostrarSolo('caja');Caja.abrir({entrada:entradaIzquierda(),s:segunda.s});
 }
-function aOsemDesdeCaja(){mostrarSolo('osem');}
+// Reconstruccion transaxial del equipo: se lee con el lector de la segunda parte de escritorio
+// (cardiaco-core), que deja z hacia la cabeza, y las proyecciones de la misma fase dan la referencia.
+let equipoLeido=null;
+async function aEquipo(){
+ const q=estado.equipo;if(!q)return;
+ try{
+  if(!equipoLeido||equipoLeido.bytes!==q.recon){
+   const v=await CardiacoCore.leerVolumen(new File([q.recon],'Recon_transversal_NoAC.dcm'));
+   if(v.nz!==v.n)throw Error(`La reconstrucción tiene ${v.nz} cortes de ${v.n} × ${v.n}; se espera un volumen cúbico.`);
+   const s=Lab95.spect(await Lab95.read(new Blob([q.proy])));
+   equipoLeido={bytes:q.recon,v,s,entrada:{tipo:'equipo',zArriba:true,data:v.data[0],etiqueta:`equipo · ${v.descripcion||'transversal NoAC'}`}};
+  }
+  const {v,s,entrada}=equipoLeido,pos=v.posicion||[0,0,0];
+  RefProy.configurar(s,(i,j,k)=>[pos[0]+i*v.spacing,pos[1]+j*v.spacing,pos[2]+k*v.dz]);
+  Object.assign(segunda,{origen:'qc',s:{n:v.n,spacing:v.spacing},referencia:CARDIACO_CASOS[q.caso]?.fases?.[q.fase]?.eje||null});
+  $('volverOsem').textContent='← Volver al control de calidad';
+  mostrarSolo('caja');Caja.abrir({entrada,s:segunda.s});
+ }catch(err){$('resumen').textContent='No se pudo abrir la reconstrucción del equipo: '+(err.message||err);console.error(err);}
+}
+function aReorientar(){
+ mostrarSolo('reo');
+ Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
+}
+function aOsemDesdeCaja(){if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
 // Gatillado: se reconstruye con la receta del escritorio en el rango que elige el estudiante.
 function aGatillado(){
  mostrarSolo('gat');
@@ -294,6 +330,7 @@ $('volverQc').addEventListener('click',aQc);
 $('aOsem').addEventListener('click',aOsem);
 $('volverReg').addEventListener('click',aReg);
 $('aCaja').addEventListener('click',aCaja);
+$('aEquipo').addEventListener('click',aEquipo);
 $('aGatillado').addEventListener('click',aGatillado);
 $('volverOsemGat').addEventListener('click',()=>mostrarSolo('osem'));
 $('aReorientar').addEventListener('click',aReorientar);
@@ -324,6 +361,6 @@ function candado(cerrado,avisar){
 }
 $('candado').addEventListener('click',()=>candado(!document.documentElement.classList.contains('bloqueado'),true));
 candado(false,false);
-window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado};
+window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();

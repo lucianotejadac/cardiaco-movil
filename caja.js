@@ -25,7 +25,7 @@ const Caja=(()=>{
  }
  function abrir({entrada,s}){
   const aviso=$('cajaEstado');
-  if(!entrada||entrada.tipo!=='osem'){aviso.className='estado error';aviso.textContent='Elige a la izquierda una reconstrucción OSEM (no el mapa μ) antes de seguir.';return false;}
+  if(!entrada||!['osem','equipo'].includes(entrada.tipo)){aviso.className='estado error';aviso.textContent='Elige a la izquierda una reconstrucción OSEM (no el mapa μ) antes de seguir.';return false;}
   if(k.entrada!==entrada){
    k.entrada=entrada;k.n=s.n;k.sp=s.spacing;k.vol=Reorientar.volumen(entrada,s.n);k.max=C.percentil(k.vol,.999)||1;
    const c=(k.n-1)/2,h=LADO_MM/k.sp/2;k.x0=k.y0=k.z0=c-h;k.x1=k.y1=k.z1=c+h;k.movida=false;
@@ -60,6 +60,8 @@ const Caja=(()=>{
   const [cx,cy,cz]=centro();
   $('cajaResumen').textContent=`Caja de ${mm('x')} cm de lado a lado, ${mm('y')} cm de adelante hacia atrás y ${mm('z')} cm de alto. El coronal pasa por el corte ${Math.round(cy)+1} y el sagital por el ${Math.round(cx)+1}. La escala de color se ajusta a lo que hay dentro de la caja.`;
   $('cajaTecho').value=Math.round(k.techo*100);
+  // Referencia en las proyecciones: la caja proyectada y su centro.
+  const m={cajas:[[k.x0,k.x1,k.y0,k.y1,k.z0,k.z1,'#4dd0e1']],puntos:[[cx,cy,cz,'#ffee58']]};RefProy.dibujar('cajaRefAnt','anterior',m);RefProy.dibujar('cajaRefLat','lateral',m);
  }
  // Arrastre: dentro mueve, en una esquina redimensiona, fuera centra la caja en el punto.
  function tactil(id){

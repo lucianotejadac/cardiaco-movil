@@ -275,3 +275,19 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Validación.** Emulación de teléfono con el caso 1 modificado y corregido: lectura de la gatillada en 1,5 s (8 intervalos de 64 vistas); rango ajustado a 41 cortes arrastrando la línea superior; los 8 intervalos en 15 a 16 s, con la corrección aplicada; el máximo del corte central varía entre 0,082 y 0,097 a lo largo del ciclo; el cine avanza solo, se detiene y avanza de a uno; volver a la OSEM funciona.
 
 **Límites.** Cada intervalo del estrés del caso 1 tiene la octava parte de 9 mCi: la imagen es muy ruidosa y el latido se aprecia más en el cambio de brillo que en la forma. Falta probarlo con un reposo o con otro caso de más cuentas, y en un teléfono real (la gatillada ocupa unos 67 MB en memoria mientras se reconstruye).
+
+## 2026-09-28 · Reorientar con la reconstrucción del equipo y referencia en las proyecciones
+
+**Contexto.** El docente pidió usar la reconstrucción axial de Siemens para la reorientación de los ejes y mostrar en las adquisiciones, como referencia, dónde está el corazón. El caso 1 no trae reconstrucciones del equipo: se comprobó en la exportación completa del equipo (`CARDIACOS.rar`), donde su estudio se identificó comparando las cuentas de las proyecciones y no tiene ninguna serie reconstruida, como ya decía el manifiesto. El docente entregó entonces el ZIP del caso 3 («Cardiaco Benjamin»), que en `Reposo/Referencia equipo` trae `Recon_transversal_NoAC.dcm`.
+
+**Decisiones.**
+- **Del ZIP se extraen, si están,** la reconstrucción transversal del equipo (`Referencia equipo/Recon_transversal_NoAC.dcm`, de estrés o de reposo) y las proyecciones de esa misma fase. Se guardan en el teléfono con lo demás. En el control de calidad aparece «Reorientar con la reconstrucción del equipo (caso N, fase) →», que lleva a la caja y a la reorientación con ese volumen; «Volver» regresa al control de calidad.
+- **Se lee con `CardiacoCore.leerVolumen`,** el lector de la segunda parte de escritorio. En el caso 3 son 128 cortes de 3,3 mm con z hacia la cabeza, la convención del núcleo, así que no se invierte; la OSEM de la aplicación sí se invierte. La caja y la reorientación aceptan los dos tipos de volumen.
+- **El eje de referencia sale del manifiesto** según el caso y la fase del ZIP; el caso 3 en reposo trae azimut 19,5° y elevación 6,4°.
+- **Referencia en las proyecciones** (`referencia.js`): la vista anterior y la lateral izquierda de la adquisición (las de detector más alineado con adelante y con la izquierda del paciente). En la caja se dibujan la caja proyectada y su centro; en la reorientación, el centro y el eje hacia el ápex. Cada volumen entrega su función vóxel → paciente: la OSEM, con la geometría de la cruda; la del equipo, con la posición de su primer corte, que en el caso 3 está 1,5 vóxeles corrida en X respecto del centro de las proyecciones. La proyección usa la misma fórmula del motor. Se agregó también a la caja y la reorientación que se abren desde la OSEM.
+
+**Validación.**
+- La orientación del eje corto de Siemens del caso 3 (`Recon_eje_corto_NoAC.dcm`), pasada por `angulosDe` de `cardiaco-core`, da exactamente azimut 19,5° y elevación 6,4°, los del manifiesto: la convención de ángulos de la aplicación es la del equipo.
+- Emulación de teléfono con el ZIP del caso 3: aparece el botón; la reconstrucción del equipo abre; con la caja en el ventrículo que encuentra `buscarVentriculo` con ese eje y los ángulos del equipo, el eje corto es un anillo, el largo vertical una «C» abierta a la derecha y el largo horizontal una «U» invertida; el resumen dice 0° de diferencia; en las proyecciones anterior y lateral el centro y el eje caen sobre el foco del corazón, arriba del hígado y el intestino.
+
+**Pendiente.** El encabezado sigue diciendo «Caso 1 · Estrés» aunque se cargue otro caso, y el control de calidad sigue mostrando el estrés.
