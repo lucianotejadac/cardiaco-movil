@@ -301,6 +301,18 @@ $('play').addEventListener('click',reproducir);
 document.querySelectorAll('[data-dialogo]').forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.dialogo)));
 // La ventana de progreso no se cierra tocando fuera: solo al terminar o con «Detener».
 document.querySelectorAll('dialog:not(#dProgreso)').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
+// Candado: cerrado, solo se desplaza la pagina (nada responde al dedo, para no mover un control
+// sin querer al bajar); abierto, se manejan botones, deslizadores e imagenes y la pagina queda
+// quieta (un arrastre no la mueve). Los dialogos quedan fuera: funcionan en los dos modos.
+let avisoCandado=null;
+function candado(cerrado,avisar){
+ document.documentElement.classList.toggle('bloqueado',cerrado);document.documentElement.classList.toggle('fijo',!cerrado);
+ const b=$('candado');b.setAttribute('aria-pressed',String(cerrado));b.firstElementChild.textContent=cerrado?'🔒':'🔓';
+ b.setAttribute('aria-label',cerrado?'Candado cerrado: solo se desplaza la página. Toca para abrirlo y manejar botones, deslizadores e imágenes.':'Candado abierto: se manejan botones, deslizadores e imágenes y la página no se desplaza. Toca para cerrarlo y solo desplazar la página.');
+ if(avisar){const a=$('candadoAviso');a.textContent=cerrado?'Candado cerrado: solo desplazar la página':'Candado abierto: manejar botones, deslizadores e imágenes';a.classList.add('visible');clearTimeout(avisoCandado);avisoCandado=setTimeout(()=>a.classList.remove('visible'),1800);}
+}
+$('candado').addEventListener('click',()=>candado(!document.documentElement.classList.contains('bloqueado'),true));
+candado(false,false);
 window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();

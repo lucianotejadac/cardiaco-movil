@@ -237,3 +237,16 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 - **Qué hace la caja en la reorientación.** Su centro es el centro del ventrículo con el que parte el eje, y el 70 % de su lado menor es el largo inicial del eje. «Buscar el centro con este eje» busca el anillo solo dentro de la caja. Esto reemplaza la búsqueda automática del paso anterior (franja de ±15 cortes alrededor de la fila del máximo de la imagen suma), que en el estrés del caso 1 dejaba el centro fuera del ventrículo. Si se vuelve a la caja y se cambia, la reorientación toma el nuevo centro y conserva los ángulos.
 
 **Validación.** Emulación de teléfono con la OSEM 2 × 8 sin atenuación del caso 1: la caja parte en 46,8–80,2 vóxeles en los tres ejes; arrastrarla en el coronal 10 vóxeles a la derecha y 10 hacia arriba la mueve eso mismo en x y z; la esquina inferior derecha amplía x1 en 6 y baja z0 en 6; un toque fuera en el sagital la centra en y 40 y z 77; la reorientación parte en el centro de la caja (76,5; 40; 77) con largo 23; la búsqueda dentro de la caja encuentra un anillo; volver a la caja la conserva. En el coronal del caso 1 se ve una herradura en la parte alta del tórax, a la izquierda del paciente, donde se pone la caja.
+
+## 2026-09-28 · Candado: desplazar la página o manejar los controles
+
+**Contexto.** El docente pidió un botón con un candado: cerrado, solo se navega por la página; abierto, solo se manejan botones y deslizadores.
+
+**Decisiones.**
+- **Botón flotante redondo abajo a la derecha**, siempre visible en todas las pantallas, con 🔒 o 🔓. Al tocarlo aparece un aviso breve con el modo.
+- **Cerrado:** `pointer-events: none` en el encabezado y el contenido. El dedo desplaza la página aunque empiece sobre una imagen, y ningún botón, deslizador ni imagen responde, así no se mueve un control sin querer al bajar.
+- **Abierto:** `overflow: hidden` y `touch-action: none` en la página. Botones, deslizadores e imágenes se manejan como antes (arrastrar el CT, la caja, los cursores) y un arrastre no desplaza la página. Los cambios de pantalla que suben al inicio siguen funcionando, porque son programáticos.
+- **Los diálogos quedan fuera del candado** («Ver más», la ventana de progreso con su «Detener»): funcionan en los dos modos.
+- La aplicación parte con el candado abierto, como se comportaba antes en los controles. Se agregó margen al pie para que el botón no tape lo último de la página.
+
+**Validación.** Emulación de teléfono con eventos táctiles de bajo nivel (`Input.dispatchTouchEvent`). El gesto sintético de desplazamiento no mueve la página en este navegador ni sin candado, así que no sirve para probar. Con el candado cerrado, un deslizamiento sobre el texto o sobre una imagen desplaza la página unos 340 px, y tocar un botón o una imagen no hace nada. Con el candado abierto, el mismo deslizamiento no la mueve y los botones responden. Los avisos cambian con el modo.

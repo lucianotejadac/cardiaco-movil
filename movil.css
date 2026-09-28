@@ -126,3 +126,14 @@ dialog.progreso h2{font-size:1rem;margin-bottom:10px}
 #reo .fila{gap:6px}
 #reo .recetas{margin-top:6px}
 #caja canvas{image-rendering:pixelated;touch-action:none;cursor:move}
+/* Candado: cerrado solo desplaza la pagina; abierto solo maneja los controles */
+.candado{position:fixed;right:12px;bottom:14px;z-index:30;width:54px;height:54px;border-radius:50%;border:2px solid var(--acento);background:var(--tarjeta);font-size:1.6rem;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.6);cursor:pointer;touch-action:manipulation;pointer-events:auto}
+.candado[aria-pressed=true]{background:var(--acento)}
+.candadoAviso{position:fixed;right:74px;bottom:24px;z-index:30;max-width:calc(100vw - 96px);background:#0d1114;color:var(--texto);border:1px solid var(--linea);border-radius:8px;padding:7px 10px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.candadoAviso.visible{opacity:1}
+html.bloqueado main,html.bloqueado header{pointer-events:none}
+html.fijo,html.fijo body{overflow:hidden;overscroll-behavior:none}
+html.fijo main,html.fijo header{touch-action:none}
+html.fijo main input[type=range]{touch-action:none}
+/* Que el boton no tape lo ultimo de la pagina */
+footer{padding-bottom:76px}
