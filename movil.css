@@ -86,3 +86,4 @@ body.comparar .clave{display:none}
 .dato.bien{border-left-color:#9be7a0}
 .dato.mal{border-left-color:#ff8a80}
 #reg .etq{width:58px}
+#reg .clave .mini{margin-left:6px;padding:3px 8px}

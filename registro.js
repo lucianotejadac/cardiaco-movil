@@ -12,7 +12,7 @@ const Registro=(()=>{
  const dec=(x,d)=>Number(x).toFixed(d).replace('.',',');
  const paleta=v=>{v=Math.max(0,Math.min(1,v));return [255*Math.min(1,v*3),255*Math.max(0,Math.min(1,v*3-1)),255*Math.max(0,v*3-2)];};
  const r={s:null,fuente:'',ct:null,ctBytes:null,vol:null,escala:1,off:[0,0,0],plano:'axial',corte:{axial:64,coronal:64,sagital:64},
-  mezcla:.6,umbral:.3,ventana:'contorno',trabajador:null,cache:null,confirmado:null,listo:false,ejercicio:false};
+  mezcla:.6,nivel:.65,ancho:.7,ventana:'contorno',trabajador:null,cache:null,confirmado:null,listo:false,ejercicio:false};
 
  function azar(min,max){const m=Math.round(min+Math.random()*(max-min));return (Math.random()<.5?-1:1)*m;}
  function nuevoEjercicio(){r.off=[azar(35,70),azar(35,70),0];r.confirmado=null;r.cache=null;}
@@ -104,7 +104,7 @@ const Registro=(()=>{
   if(c.width!==TAM){c.width=TAM;c.height=TAM;}
   const ctx=c.getContext('2d'),im=ctx.createImageData(TAM,TAM),[nivel,ancho]=VENTANAS[r.ventana];
   for(let j=0;j<TAM*TAM;j++){
-   const e=Math.max(0,Math.min(1,(r.cache.em[j]/r.escala-r.umbral)/(1-r.umbral))),h=r.cache.hu[j],gris=255*Math.max(0,Math.min(1,(h-nivel)/ancho+.5)),col=paleta(e),a=e>0?r.mezcla:0,o=j*4;
+   const e=Math.max(0,Math.min(1,(r.cache.em[j]/r.escala-r.nivel)/r.ancho+.5)),h=r.cache.hu[j],gris=255*Math.max(0,Math.min(1,(h-nivel)/ancho+.5)),col=paleta(e),a=e>0?r.mezcla:0,o=j*4;
    // Fuera de la cobertura del CT el fondo es azul oscuro: ahi no hay con que calzar.
    for(let q=0;q<3;q++)im.data[o+q]=Number.isFinite(h)?gris*(1-a)+col[q]*a:(q===2?50:0)*(1-a)+col[q]*a;
    im.data[o+3]=255;
@@ -112,7 +112,8 @@ const Registro=(()=>{
   ctx.putImageData(im,0,0);
   $('regPlanoTexto').textContent={axial:'Axial',coronal:'Coronal',sagital:'Sagital'}[r.plano];
   $('regCorte').textContent=`${i+1}/${n}`;$('regCorteRango').max=n-1;$('regCorteRango').value=i;
-  $('regMezcla').value=Math.round(r.mezcla*100);$('regUmbral').value=Math.round(r.umbral*100);
+  $('regMezcla').value=Math.round(r.mezcla*100);$('regNivel').value=Math.round(r.nivel*100);$('regAncho').value=Math.round(r.ancho*100);
+  $('regVentanaSpect').textContent=`muestra de ${Math.round(Math.max(0,r.nivel-r.ancho/2)*100)} % a ${Math.round((r.nivel+r.ancho/2)*100)} %`;
   document.querySelectorAll('[data-plano]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plano===r.plano)));
   // En coronal y sagital lo vertical es Z, que el ejercicio no desplaza.
   $('regArriba').disabled=$('regAbajo').disabled=r.plano!=='axial';
@@ -153,7 +154,9 @@ const Registro=(()=>{
   document.querySelectorAll('[data-plano]').forEach(b=>b.addEventListener('click',()=>{r.plano=b.dataset.plano;pintar();}));
   $('regCorteRango').addEventListener('input',e=>{r.corte[r.plano]=+e.target.value;pintar();});
   $('regMezcla').addEventListener('input',e=>{r.mezcla=+e.target.value/100;pintar();});
-  $('regUmbral').addEventListener('input',e=>{r.umbral=+e.target.value/100;pintar();});
+  $('regNivel').addEventListener('input',e=>{r.nivel=+e.target.value/100;pintar();});
+  $('regAncho').addEventListener('input',e=>{r.ancho=Math.max(.01,+e.target.value/100);pintar();});
+  $('regSpectInicial').addEventListener('click',()=>{r.nivel=.65;r.ancho=.7;pintar();});
   $('regVentana').addEventListener('change',e=>{r.ventana=e.target.value;pintar();});
   $('regConfirmar').addEventListener('click',confirmar);
  }
