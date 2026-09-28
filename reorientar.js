@@ -20,7 +20,8 @@ const Reorientar=(()=>{
 
  // Volumen con z hacia la cabeza, una vez por reconstruccion (lo usan la caja y la reorientacion).
  const cacheVol={entrada:null,vol:null};
- function volumen(entrada,n){if(cacheVol.entrada!==entrada){cacheVol.entrada=entrada;cacheVol.vol=invertirZ(entrada.data,n);}return cacheVol.vol;}
+ // La reconstruccion del equipo ya viene con z hacia la cabeza (zArriba): no se invierte.
+ function volumen(entrada,n){if(cacheVol.entrada!==entrada){cacheVol.entrada=entrada;cacheVol.vol=entrada.zArriba?entrada.data:invertirZ(entrada.data,n);}return cacheVol.vol;}
 
  // El buscador de anillo de cardiaco-core recorre todo el volumen; con pocas cuentas (estres del
  // caso 1) gana un anillo falso del abdomen. Por eso busca solo dentro de la caja que el
@@ -34,7 +35,7 @@ const Reorientar=(()=>{
  // ventriculo y su tamano da el largo inicial del eje.
  function abrir({entrada,s,referencia,caja}){
   const aviso=$('reoEstado');
-  if(!entrada||entrada.tipo!=='osem'){aviso.className='estado error';aviso.textContent='Elige a la izquierda una reconstrucción OSEM (no el mapa μ) antes de reorientar.';return false;}
+  if(!entrada||!['osem','equipo'].includes(entrada.tipo)){aviso.className='estado error';aviso.textContent='Elige a la izquierda una reconstrucción OSEM (no el mapa μ) antes de reorientar.';return false;}
   const clave=JSON.stringify(caja);
   if(r.origen!==entrada){r.az=0;r.el=0;}
   if(r.origen!==entrada||r.claveCaja!==clave){
@@ -79,6 +80,8 @@ const Reorientar=(()=>{
   // arriba (fila h - t).
   {const k=lv.width/M,q=((M-1)/2-r.t+.5)*k;lv.getContext('2d').fillStyle='rgba(255,238,88,.6)';lv.getContext('2d').fillRect(q-1,0,2,lv.height);
    const x=lh.getContext('2d');x.fillStyle='rgba(255,238,88,.6)';x.fillRect(0,q-1,lh.width,2);}
+  // Referencia en las proyecciones: centro y eje hacia el apex.
+  {const h=r.L/2,ap=[0,1,2].map(q=>Cv[q]+Mk.a[q]*h),ba=[0,1,2].map(q=>Cv[q]-Mk.a[q]*h),m={lineas:[[ba,ap,'#4dd0e1']],puntos:[[...ap,'#4dd0e1'],[...Cv,'#ffee58']]};RefProy.dibujar('reoRefAnt','anterior',m);RefProy.dibujar('reoRefLat','lateral',m);}
   $('reoAz').value=r.az;$('reoEl').value=r.el;$('reoAzTexto').textContent=`${r.az}°`;$('reoElTexto').textContent=`${r.el}°`;
   const h=r.L/2;$('reoT').min=Math.round(-h);$('reoT').max=Math.round(h);$('reoT').value=Math.round(r.t);
   $('reoTTexto').textContent=Math.abs(r.t)<.5?'centro':r.t>0?`${dec(r.t*r.sp,0)} mm hacia el ápex`:`${dec(-r.t*r.sp,0)} mm hacia la base`;

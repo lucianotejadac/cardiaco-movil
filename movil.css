@@ -149,3 +149,6 @@ footer{padding-bottom:76px}
 .gatBarra{display:flex;gap:4px;margin:6px 0 2px}
 .gatBarra span{flex:1;height:6px;border-radius:3px;background:var(--linea)}
 .gatBarra span.activo{background:var(--acento)}
+.refProy{margin-top:8px}
+.refProy canvas{image-rendering:pixelated}
+.boton.secundario{background:var(--tarjeta);color:var(--texto);border:1px solid var(--acento)}

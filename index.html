@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=17">
+<link rel="stylesheet" href="movil.css?v=18">
 </head>
 <body>
 <header class="barra">
@@ -40,6 +40,7 @@
   <p id="resumen" class="dato"></p>
   <button type="button" class="vermas ancho" data-dialogo="dGeneral">Ver más sobre las proyecciones y estos números</button>
   <button id="aRegistro" type="button" class="boton ancho">Siguiente: registro FBP con el CT →</button>
+  <button id="aEquipo" type="button" class="boton ancho secundario" hidden>Reorientar con la reconstrucción del equipo →</button>
  </section>
 
  <section class="oculta" id="reg">
@@ -163,6 +164,13 @@
    <div class="fila"><span class="etq">Techo</span><input id="cajaTecho" type="range" min="20" max="100" step="1" value="100" aria-label="Techo de la escala de color"></div>
    <div class="recetas"><button id="cajaCentro" type="button" class="mini">Volver a poner la caja al centro</button></div>
   </div>
+  <div class="refProy" hidden>
+   <p class="clave">Referencia en la adquisición: dos proyecciones del estudio, con la caja proyectada (celeste) y su centro (amarillo). Si la marca no cae sobre el corazón, la ubicación está mal.</p>
+   <div class="rejilla">
+    <figure><figcaption>Proyección anterior <span class="mono"></span></figcaption><canvas id="cajaRefAnt" aria-label="Proyección anterior con la referencia."></canvas></figure>
+    <figure><figcaption>Lateral izquierda <span class="mono"></span></figcaption><canvas id="cajaRefLat" aria-label="Proyección lateral izquierda con la referencia."></canvas></figure>
+   </div>
+  </div>
   <p id="cajaResumen" class="dato"></p>
   <button id="aReorientar" type="button" class="boton ancho">Siguiente: reorientar los ejes →</button>
   <button type="button" class="vermas ancho" data-dialogo="dCaja">Ver más sobre la caja</button>
@@ -189,6 +197,13 @@
    <p id="reoTTexto" class="clave"></p>
    <div class="fila"><span class="etq">Techo</span><input id="reoTecho" type="range" min="20" max="100" step="1" value="100" aria-label="Techo de la escala de color"></div>
    <div class="recetas"><button id="reoBuscar" type="button" class="mini">Buscar el centro con este eje</button><button id="reoCero" type="button" class="mini">Volver a 0° y 0°</button></div>
+  </div>
+  <div class="refProy" hidden>
+   <p class="clave">Referencia en la adquisición: dos proyecciones del estudio, con el centro del ventrículo (amarillo) y el eje hacia el ápex (celeste). Si la marca no cae sobre el corazón, la ubicación está mal.</p>
+   <div class="rejilla">
+    <figure><figcaption>Proyección anterior <span class="mono"></span></figcaption><canvas id="reoRefAnt" aria-label="Proyección anterior con la referencia."></canvas></figure>
+    <figure><figcaption>Lateral izquierda <span class="mono"></span></figcaption><canvas id="reoRefLat" aria-label="Proyección lateral izquierda con la referencia."></canvas></figure>
+   </div>
   </div>
   <p id="reoResumen" class="dato"></p>
   <button type="button" class="vermas ancho" data-dialogo="dReo">Ver más sobre la reorientación</button>
@@ -443,9 +458,10 @@
 <script src="simulador95-pool.js?v=1"></script>
 <script src="osem-movil.js?v=4"></script>
 <script src="cardiaco-core.js?v=1"></script>
-<script src="reorientar.js?v=3"></script>
-<script src="caja.js?v=2"></script>
+<script src="reorientar.js?v=4"></script>
+<script src="referencia.js?v=1"></script>
+<script src="caja.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="movil.js?v=16"></script>
+<script src="movil.js?v=17"></script>
 </body>
 </html>
