@@ -291,3 +291,15 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 - Emulación de teléfono con el ZIP del caso 3: aparece el botón; la reconstrucción del equipo abre; con la caja en el ventrículo que encuentra `buscarVentriculo` con ese eje y los ángulos del equipo, el eje corto es un anillo, el largo vertical una «C» abierta a la derecha y el largo horizontal una «U» invertida; el resumen dice 0° de diferencia; en las proyecciones anterior y lateral el centro y el eje caen sobre el foco del corazón, arriba del hígado y el intestino.
 
 **Pendiente.** El encabezado sigue diciendo «Caso 1 · Estrés» aunque se cargue otro caso, y el control de calidad sigue mostrando el estrés.
+
+## 2026-09-28 · Caso 4: una serie de CT y reconstrucción del equipo en las dos fases
+
+**Contexto.** El docente subió el ZIP del caso 4 («Cardiaco Diego»). A diferencia del 1 y el 3, trae dos series de CT por fase («CT 512» y «CT 128») y `Referencia equipo` en estrés y en reposo.
+
+**Decisiones.**
+- **Una sola serie de CT:** si la fase trae varias carpetas «CT …», se usa «CT 512», el CT tal como salió del tomógrafo; si no está, la primera. Antes se juntaban los cortes de las dos series: 83 cortes con dos resoluciones distintas, que el registro no podía usar bien.
+- **Un botón por cada reconstrucción del equipo:** el caso 4 ofrece «(caso 4, estrés)» y «(caso 4, reposo)». Lo guardado en el teléfono con el formato anterior, una sola reconstrucción, se convierte al cargar.
+
+**Validación.**
+- El eje corto de Siemens del caso 4, pasado por `angulosDe`, da estrés 25,4°/13,4° y reposo 24,4°/15,4°: exactamente los del manifiesto, igual que el caso 3.
+- Emulación con los tres ZIP: el caso 1 usa 41 cortes de CT y no muestra botones del equipo; el caso 3 usa 37 y muestra el de reposo; el caso 4 usa 33 («CT 512») y muestra los dos. El registro FBP abre en los tres. En el caso 4, estrés y reposo con el eje del equipo dan anillo en el eje corto, «C» en el largo vertical y «U» invertida en el largo horizontal.

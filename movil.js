@@ -15,7 +15,7 @@ const paleta=v=>{v=Math.max(0,Math.min(1,v));return [255*Math.min(1,v*3),255*Mat
 const TIPOS={cine:'Cine',sino:'Sinograma',suma:'Imagen suma',lino:'Linograma'};
 const DIALOGO={cine:'dCine',sino:'dSino',suma:'dSuma',lino:'dLino'};
 const EJES={cine:'y',suma:'y',sino:'k',lino:'ky'};
-const estado={crudo:null,corr:null,ct:null,gat:null,equipo:null,cuadros:null,correccion:null,ocupado:false,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
+const estado={crudo:null,corr:null,ct:null,gat:null,equipo:[],cuadros:null,correccion:null,ocupado:false,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
 
 function imagen(img,w,h,max){
  const id=new ImageData(w,h);for(let i=0;i<w*h;i++){const c=paleta(Math.max(0,img[i])/(max||1));id.data[i*4]=c[0];id.data[i*4+1]=c[1];id.data[i*4+2]=c[2];id.data[i*4+3]=255;}
@@ -58,16 +58,23 @@ function elegirEntradas(lista){
  const cruda=crudas.find(e=>/caso\s*1(\/|$)/i.test(e.name.replace(/\\/g,'/')))||crudas[0];
  // El CT de la misma fase: los cortes de la subcarpeta «CT …» junto a la cruda. Se usa en el registro.
  const carpeta=cruda.name.slice(0,cruda.name.lastIndexOf('/')+1).toLowerCase();
- const ct=lista.filter(e=>{const q=e.name.toLowerCase();return q.startsWith(carpeta)&&/^ct[^/]*\/[^/]+\.dcm$/.test(q.slice(carpeta.length));}).sort((a,b)=>a.name.localeCompare(b.name));
+ // Si hay varias series de CT de la fase («CT 512» y «CT 128», caso 4), se usa una sola: la
+ // «CT 512», el CT tal como salio del tomografo; si no esta, la primera carpeta «CT …».
+ const cts=lista.filter(e=>{const q=e.name.toLowerCase();return q.startsWith(carpeta)&&/^ct[^/]*\/[^/]+\.dcm$/.test(q.slice(carpeta.length));});
+ const carpetasCt=[...new Set(cts.map(e=>e.name.toLowerCase().slice(carpeta.length).split('/')[0]))].sort();
+ const carpetaCt=carpetasCt.find(c=>/^ct\s*512$/.test(c))||carpetasCt[0];
+ const ct=cts.filter(e=>e.name.toLowerCase().slice(carpeta.length).split('/')[0]===carpetaCt).sort((a,b)=>a.name.localeCompare(b.name));
  // La adquisicion gatillada de la misma fase, para el paso del gatillado.
  const gat=lista.find(e=>e.name.toLowerCase()===carpeta+'nm_estres_gatillado.dcm')||null;
  // La reconstruccion transaxial del equipo (Siemens), si el ZIP la trae en «Referencia equipo»,
  // con las proyecciones de esa misma fase: sirve para reorientar sobre la reconstruccion del
  // equipo y para mostrar en las proyecciones donde esta el corazon.
- const rec=lista.find(e=>/(^|\/)caso\s*\d+\/(estres|reposo)\/referencia equipo\/recon_transversal_noac\.dcm$/i.test(e.name));
- let equipo=null;
- if(rec){const m=rec.name.match(/caso\s*(\d+)\/(estres|reposo)\//i),fase=m[2].toLowerCase(),dir=rec.name.slice(0,rec.name.toLowerCase().indexOf('referencia equipo/')).toLowerCase();
-  const proy=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'.dcm');if(proy)equipo={rec,proy,caso:+m[1],fase};}
+ // Puede haber una por fase (caso 4: estres y reposo); se ofrecen todas.
+ const equipo=[];
+ for(const rec of lista.filter(e=>/(^|\/)caso\s*\d+\/(estres|reposo)\/referencia equipo\/recon_transversal_noac\.dcm$/i.test(e.name))){
+  const m=rec.name.match(/caso\s*(\d+)\/(estres|reposo)\//i),fase=m[2].toLowerCase(),dir=rec.name.slice(0,rec.name.toLowerCase().indexOf('referencia equipo/')).toLowerCase();
+  const proy=lista.find(e=>e.name.toLowerCase()===dir+'nm_'+fase+'.dcm');if(proy)equipo.push({rec,proy,caso:+m[1],fase});}
+ equipo.sort((a,b)=>a.fase.localeCompare(b.fase));
  return {cruda,ct,gat,equipo};
 }
 
@@ -105,7 +112,7 @@ async function cargar(file){
    bytes=await extraer(buf,e.cruda);
    if(e.ct.length){mensaje('Descomprimiendo el CT…');ct=[];for(const q of e.ct)ct.push(await extraer(buf,q));}
    if(e.gat){mensaje('Descomprimiendo la adquisición gatillada…');gat=await extraer(buf,e.gat);}
-   if(e.equipo){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo={recon:await extraer(buf,e.equipo.rec),proy:await extraer(buf,e.equipo.proy),caso:e.equipo.caso,fase:e.equipo.fase};}
+   if(e.equipo.length){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo=[];for(const q of e.equipo)equipo.push({recon:await extraer(buf,q.rec),proy:await extraer(buf,q.proy),caso:q.caso,fase:q.fase});}
   }else bytes=new Uint8Array(await file.arrayBuffer());
   if(await mostrar(bytes,origen,false,ct,gat,equipo))await guardar(bytes,origen,ct,gat,equipo);
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
@@ -123,8 +130,9 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo){
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
-  estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;estado.equipo=equipo||null;
-  $('aEquipo').hidden=!equipo;if(equipo)$('aEquipo').textContent=`Reorientar con la reconstrucción del equipo (caso ${equipo.caso}, ${equipo.fase==='reposo'?'reposo':'estrés'}) →`;Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
+  estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;// Lo guardado antes de este cambio traia una sola reconstruccion (objeto): se pasa a lista.
+  estado.equipo=equipo?(Array.isArray(equipo)?equipo:[equipo]):[];
+  $('equipoBotones').replaceChildren(...estado.equipo.map((q,i)=>{const b=document.createElement('button');b.type='button';b.className='boton ancho secundario';b.textContent=`Reorientar con la reconstrucción del equipo (caso ${q.caso}, ${q.fase==='reposo'?'reposo':'estrés'}) →`;b.addEventListener('click',()=>aEquipo(i));return b;}));Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
   textos();
   $('modo').disabled=false;
@@ -296,8 +304,8 @@ function aCaja(){
 // Reconstruccion transaxial del equipo: se lee con el lector de la segunda parte de escritorio
 // (cardiaco-core), que deja z hacia la cabeza, y las proyecciones de la misma fase dan la referencia.
 let equipoLeido=null;
-async function aEquipo(){
- const q=estado.equipo;if(!q)return;
+async function aEquipo(i=0){
+ const q=estado.equipo[i];if(!q)return;
  try{
   if(!equipoLeido||equipoLeido.bytes!==q.recon){
    const v=await CardiacoCore.leerVolumen(new File([q.recon],'Recon_transversal_NoAC.dcm'));
@@ -330,7 +338,6 @@ $('volverQc').addEventListener('click',aQc);
 $('aOsem').addEventListener('click',aOsem);
 $('volverReg').addEventListener('click',aReg);
 $('aCaja').addEventListener('click',aCaja);
-$('aEquipo').addEventListener('click',aEquipo);
 $('aGatillado').addEventListener('click',aGatillado);
 $('volverOsemGat').addEventListener('click',()=>mostrarSolo('osem'));
 $('aReorientar').addEventListener('click',aReorientar);
