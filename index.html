@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=24">
+<link rel="stylesheet" href="movil.css?v=25">
 </head>
 <body>
 <header class="barra">
@@ -25,6 +25,14 @@
    <input id="archivos" type="file" multiple>
    <label class="boton otro" for="carpeta">Elegir carpeta…</label>
    <input id="carpeta" type="file" webkitdirectory multiple>
+  </div>
+  <div class="otra">
+   <h3>Comparación directa con el equipo (provisional)</h3>
+   <p>Elige la carpeta del examen, o sus archivos, con las proyecciones de estrés, la tomografía computada y el eje corto que reconstruyó el equipo. La aplicación reconstruye con la receta del equipo y muestra las dos imágenes una sobre otra, sin pasar por los pasos intermedios.</p>
+   <label class="boton otro" for="directoCarpeta">Comparar: elegir carpeta…</label>
+   <input id="directoCarpeta" type="file" webkitdirectory multiple>
+   <label class="boton otro" for="directoArchivos">Comparar: elegir archivos…</label>
+   <input id="directoArchivos" type="file" multiple>
   </div>
   <p id="estado" class="estado">Nada cargado todavía.</p>
  </section>
@@ -48,6 +56,9 @@
   <p id="resumen" class="dato"></p>
   <button type="button" class="vermas ancho" data-dialogo="dGeneral">Ver más sobre las proyecciones y estos números</button>
   <button id="aRegistro" type="button" class="boton ancho">Siguiente: registro FBP con el CT →</button>
+  <button id="aDirecto" type="button" class="boton ancho secundario">Ir directo: simulador con la receta del equipo frente a Siemens →</button>
+  <input id="directoImagen" type="file">
+  <p id="directoEstado" class="estado"></p>
   <div id="equipoBotones"></div>
  </section>
 
@@ -548,12 +559,12 @@
 <script src="simulador95-pool.js?v=1"></script>
 <script src="osem-movil.js?v=4"></script>
 <script src="cardiaco-core.js?v=1"></script>
-<script src="reorientar.js?v=6"></script>
+<script src="reorientar.js?v=7"></script>
 <script src="referencia.js?v=1"></script>
 <script src="caja.js?v=3"></script>
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=2"></script>
-<script src="movil.js?v=24"></script>
+<script src="movil.js?v=25"></script>
 </body>
 </html>

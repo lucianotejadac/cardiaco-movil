@@ -406,3 +406,14 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 
 **Validación.** En local, emulación de teléfono, ZIP del caso 4 de la entrega y su `Recon_eje_corto_AC.dcm` cargado a mano. Frente a la reconstrucción propia 1 × 1 sin correcciones: r = 0,615 y diferencia media 43,9 %, en 0,5 s. Con la receta del equipo: r = 0,911 y 20,3 %, en 28 s. En los dos casos las dos filas muestran el corazón en el mismo lugar y con el mismo tamaño.
 
+## 2026-09-28 · Acceso directo a la comparación con el equipo
+
+**Contexto.** El docente pidió un botón al inicio que lleve directamente a la comparación entre la reconstrucción del simulador con la receta del equipo y la de Siemens.
+
+**Decisiones.**
+- **En la pantalla inicial**, tarjeta «Comparación directa con el equipo (provisional)»: elegir carpeta o archivos. La aplicación carga proyecciones, CT e imagen del equipo y pasa sola a la comparación.
+- **En el control de calidad**, botón «Ir directo: simulador con la receta del equipo frente a Siemens». Sirve cuando el teléfono ya tenía el examen guardado. Si falta la imagen del equipo, abre el selector para elegirla.
+- **Se saltan el registro, la OSEM del estudiante y la caja.** El CT entra sin desplazamiento, porque SPECT y CT comparten marco de referencia; si ya había un registro confirmado con las mismas proyecciones, se usa ese.
+- **Proyecciones:** las corregidas por la aplicación si ya se pulsó «Corregir»; si no, las crudas.
+- **La pantalla es la de reorientación**, con el eje exacto del equipo. «Volver» lleva al control de calidad. «Comparar con mi reconstrucción» no se ofrece, porque en este camino no hay reconstrucción propia.
+

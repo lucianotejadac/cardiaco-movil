@@ -58,6 +58,8 @@ const Reorientar=(()=>{
  function usarEquipo(x,s){
   r.origen=x.entrada;r.claveCaja=null;r.n=s.n;r.sp=s.spacing;r.vol=x.sim;r.comparar=x.equipo;r.max=x.max;r.etiqueta=x.entrada.etiqueta;
   r.Cv=x.centro.slice();r.L=x.largo;r.t=0;r.techo=1;r.equipo=x;r.marcoFijo=x.marco;
+  // Sin caja previa (acceso directo): una caja alrededor del centro del equipo, para «Buscar el centro».
+  if(!r.caja){const h=x.largo/2,c=x.centro;r.caja={x0:c[0]-h,x1:c[0]+h,y0:c[1]-h,y1:c[1]+h,z0:c[2]-h,z1:c[2]+h};}
   r.az=Math.max(-30,Math.min(120,Math.round(x.azimut)));r.el=Math.max(-40,Math.min(60,Math.round(x.elevacion)));
   const aviso=$('reoEstado');aviso.className='estado ok';
   aviso.textContent=`Imagen del equipo: «${x.descripcion}». Arriba, el simulador (${x.modo==='receta'?'reconstruido con la receta del equipo':'tu reconstrucción «'+x.nombre+'»'}); abajo, el equipo. Mismo centro, mismo marco, mismo zoom y misma escala de color.`;
@@ -148,7 +150,7 @@ const Reorientar=(()=>{
   $('reoEjeExacto').addEventListener('click',ejeExacto);
   for(const [id,ejes] of [['reoCortoEq',()=>{const m=Mk();return [m.u,m.v,M];}],['reoVlaEq',()=>{const m=Mk();return [m.a.map(q=>-q),m.v,M];}],['reoHlaEq',()=>{const m=Mk();return [m.u,m.a.map(q=>-q),M];}]])arrastre(id,ejes);
  }
- function olvidar(){r.vol=null;r.origen=null;r.claveCaja=null;r.marcoFijo=null;r.comparar=null;r.equipo=null;cacheVol.entrada=null;cacheVol.vol=null;}
+ function olvidar(){r.vol=null;r.origen=null;r.claveCaja=null;r.caja=null;r.referencia=null;r.marcoFijo=null;r.comparar=null;r.equipo=null;cacheVol.entrada=null;cacheVol.vol=null;}
  return {iniciar,abrir,usarEquipo,olvidar,volumen,estado:r};
 })();
 window.Reorientar=Reorientar;

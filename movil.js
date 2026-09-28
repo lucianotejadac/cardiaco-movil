@@ -363,12 +363,12 @@ async function aOsem(){
 const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();if(id!=='cmp')Comparador.salir();for(const q of ['qc','reg','osem','gat','caja','reo','cmp'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
 const entradaIzquierda=()=>{const o=OsemMovil.estado;return o.historial.find(h=>h.id===o.a);};
 // De donde se vino a la caja (la OSEM o el control de calidad) y con que volumen se trabaja.
-const segunda={origen:'osem',s:null,referencia:null};
+const segunda={origen:'osem',s:null,referencia:null,directo:null};
 function aCaja(){
  // OSEM de la aplicacion: voxel (con z hacia la cabeza) -> paciente, con la geometria de la cruda.
  const s=estado.crudo.s,n=s.n,c=(n-1)/2;
  RefProy.configurar(s,(i,j,k)=>[(i-c)*s.spacing+s.origin[0],(j-c)*s.spacing+s.origin[1],s.z0-(n-1-k)*s.spacing]);
- Object.assign(segunda,{origen:'osem',s:OsemMovil.estado.s,referencia:estado.esDelCaso?(CARDIACO_CASOS[CASO]?.fases?.[FASE]?.eje||null):null});
+ Object.assign(segunda,{directo:null,origen:'osem',s:OsemMovil.estado.s,referencia:estado.esDelCaso?(CARDIACO_CASOS[CASO]?.fases?.[FASE]?.eje||null):null});
  $('volverOsem').textContent='← Volver a la OSEM';
  mostrarSolo('caja');Caja.abrir({entrada:entradaIzquierda(),s:segunda.s});
 }
@@ -386,7 +386,7 @@ async function aEquipo(i=0){
   }
   const {v,s,entrada}=equipoLeido,pos=v.posicion||[0,0,0];
   RefProy.configurar(s,(i,j,k)=>[pos[0]+i*v.spacing,pos[1]+j*v.spacing,pos[2]+k*v.dz]);
-  Object.assign(segunda,{origen:'qc',s:{n:v.n,spacing:v.spacing},referencia:CARDIACO_CASOS[q.caso]?.fases?.[q.fase]?.eje||null});
+  Object.assign(segunda,{directo:null,origen:'qc',s:{n:v.n,spacing:v.spacing},referencia:CARDIACO_CASOS[q.caso]?.fases?.[q.fase]?.eje||null});
   $('volverOsem').textContent='← Volver al control de calidad';
   mostrarSolo('caja');Caja.abrir({entrada,s:segunda.s});
  }catch(err){$('resumen').textContent='No se pudo abrir la reconstrucción del equipo: '+(err.message||err);console.error(err);}
@@ -403,7 +403,7 @@ function aGatillado(){
  mostrarSolo('gat');
  Gatillado.abrir({bytes:estado.gat,referencia:entradaIzquierda(),filaCorazon:estado.crudo.filaInicial,correccion:estado.correccion});
 }
-function aCajaDesdeReo(){mostrarSolo('caja');}
+function aCajaDesdeReo(){if(segunda.directo){mostrarSolo('qc');armar();}else mostrarSolo('caja');}
 function aReg(){OsemMovil.cancelar();$('osem').classList.add('oculta');$('reg').classList.remove('oculta');window.scrollTo(0,0);}
 function aQc(){Registro.cancelar();$('reg').classList.add('oculta');$('qc').classList.remove('oculta');armar();window.scrollTo(0,0);}
 $('aRegistro').addEventListener('click',aRegistro);
@@ -417,21 +417,55 @@ $('aReorientar').addEventListener('click',aReorientar);
 // Imagen del equipo en la reorientacion. Dos usos: compararla con la reconstruccion que el
 // simulador ya hizo (sin recalcular) o reconstruir con la receta del equipo y comparar.
 function botonesEquipo(texto,clase){
- const hay=EjeEquipo.disponible(),propia=segunda.origen==='osem';
- document.querySelector('#reo .otra.equipo').hidden=!propia;$('reoPropia').hidden=!hay;$('reoEquipo').hidden=!hay;
+ const hay=EjeEquipo.disponible(),directo=!!segunda.directo,propia=segunda.origen==='osem'||directo;
+ document.querySelector('#reo .otra.equipo').hidden=!propia;$('reoPropia').hidden=!hay||directo;$('reoEquipo').hidden=!hay;
+ $('volverCaja').textContent=directo?'← Volver al control de calidad':'← Volver a la caja';
  const e=$('reoEquipoEstado');if(texto!==undefined){e.textContent=texto;e.className='estado'+(clase?' '+clase:'');}
  else if(!e.textContent)e.textContent=hay?'Hay una imagen del equipo cargada con la carpeta.':'';
 }
 async function conEquipo(f){
- const o=OsemMovil.estado,aviso=$('reoEstado');if(!o.s)return;
+ const o=segunda.directo||{s:OsemMovil.estado.s,fuente:OsemMovil.estado.fuente,reg:Registro.estado},aviso=$('reoEstado');if(!o.s)return;
  for(const id of ['reoPropia','reoEquipo'])$(id).disabled=true;
  try{const x=await f(o);if(x){Reorientar.usarEquipo(x,o.s);window.scrollTo(0,0);}}
  catch(err){const detenida=EjeEquipo.estado.detenido;aviso.className=detenida?'estado':'estado error';aviso.textContent=detenida?'Reconstrucción detenida.':'No se pudo comparar con el equipo: '+(err.message||err);if(!detenida)console.error(err);window.scrollTo(0,0);}
  finally{for(const id of ['reoPropia','reoEquipo'])$(id).disabled=false;}
 }
-const compararPropia=()=>conEquipo(async o=>{const en=Caja.estado.entrada;return EjeEquipo.comparar({s:o.s,volumen:Reorientar.volumen(en,o.s.n),etiqueta:en.etiqueta});});
+const compararPropia=()=>segunda.directo?conEquipo(recetaEquipo):conEquipo(async o=>{const en=Caja.estado.entrada;return EjeEquipo.comparar({s:o.s,volumen:Reorientar.volumen(en,o.s.n),etiqueta:en.etiqueta});});
 $('reoPropia').addEventListener('click',compararPropia);
-$('reoEquipo').addEventListener('click',()=>conEquipo(async o=>{const fuente=o.fuente||'sin corregir',x=await EjeEquipo.ejecutar({s:o.s,reg:Registro.estado,fuente});if(x)x.fuente=fuente;return x;}));
+const recetaEquipo=async o=>{const fuente=o.fuente||'sin corregir',x=await EjeEquipo.ejecutar({s:o.s,reg:o.reg,fuente});if(x)x.fuente=fuente;return x;};
+$('reoEquipo').addEventListener('click',()=>conEquipo(recetaEquipo));
+/* Acceso directo: del control de calidad a la comparacion, sin registro, OSEM ni caja. Usa las
+   proyecciones corregidas por la aplicacion si ya se corrigio. El CT entra sin desplazamiento
+   (SPECT y CT comparten marco de referencia), salvo que ya haya un registro confirmado. */
+async function aDirecto(){
+ if(!estado.crudo||estado.ocupado)return;detener();
+ const aviso=$('directoEstado'),f=estado.corr||estado.crudo,s=f.s,fuente=estado.corr?'corregidas por la aplicación':'sin corregir';
+ if(!EjeEquipo.disponible()){aviso.className='estado';aviso.textContent='Falta la imagen del equipo: elige el eje corto que reconstruyó el equipo.';$('directoImagen').click();return;}
+ $('aDirecto').disabled=true;aviso.className='estado';aviso.textContent='Preparando la comparación…';
+ try{
+  await new Promise(q=>setTimeout(q,30));
+  let reg={ct:null,off:[0,0,0]};
+  if(estado.ct){const r=Registro.estado;reg=r.s===s&&r.confirmado&&r.ct?r:{ct:Lab95.prepareCT(estado.ct.map(b=>Lab95.ct(dicomParser.parseDicom(b))),s),off:[0,0,0]};}
+  const o={s,fuente,reg},x=await recetaEquipo(o);if(!x){aviso.textContent='';return;}
+  const n=s.n,c=(n-1)/2;
+  RefProy.configurar(s,(i,j,k)=>[(i-c)*s.spacing+s.origin[0],(j-c)*s.spacing+s.origin[1],s.z0-(n-1-k)*s.spacing]);
+  Object.assign(segunda,{origen:'qc',s,referencia:null,directo:o});
+  Registro.cancelar();OsemMovil.cancelar();mostrarSolo('reo');document.body.classList.remove('comparar');botonesEquipo();Reorientar.usarEquipo(x,s);aviso.textContent='';window.scrollTo(0,0);
+ }catch(err){const detenida=EjeEquipo.estado.detenido;aviso.className=detenida?'estado':'estado error';aviso.textContent=detenida?'Reconstrucción detenida.':'No se pudo comparar: '+(err.message||err);if(!detenida)console.error(err);}
+ finally{$('aDirecto').disabled=false;}
+}
+$('aDirecto').addEventListener('click',aDirecto);
+$('directoImagen').addEventListener('change',async ev=>{
+ const f=ev.target.files&&ev.target.files[0];ev.target.value='';if(!f)return;const aviso=$('directoEstado');
+ try{aviso.className='estado';aviso.textContent='Leyendo la imagen del equipo…';await EjeEquipo.agregar(new Uint8Array(await f.arrayBuffer()));await aDirecto();}
+ catch(err){aviso.className='estado error';aviso.textContent=err.message||String(err);console.error(err);}
+});
+// Desde la pantalla inicial: cargar y seguir directo a la comparacion.
+for(const id of ['directoCarpeta','directoArchivos'])$(id).addEventListener('change',async ev=>{
+ const f=Array.from(ev.target.files||[]);ev.target.value='';if(!f.length)return;
+ estado.crudo=null;await cargar(f);
+ if(estado.crudo&&!$('qc').classList.contains('oculta'))await aDirecto();
+});
 $('reoArchivoEquipo').addEventListener('change',async ev=>{
  const f=ev.target.files&&ev.target.files[0];ev.target.value='';if(!f)return;
  try{botonesEquipo('Leyendo la imagen del equipo…');const q=await EjeEquipo.agregar(new Uint8Array(await f.arrayBuffer()));botonesEquipo(`Imagen del equipo cargada: «${q.descripcion}».`,'ok');await compararPropia();}
