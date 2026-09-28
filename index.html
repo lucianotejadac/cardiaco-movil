@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=15">
+<link rel="stylesheet" href="movil.css?v=16">
 </head>
 <body>
 <header class="barra">
@@ -165,6 +165,8 @@
   <button type="button" class="vermas ancho" data-dialogo="dReo">Ver más sobre la reorientación</button>
  </section>
 </main>
+<button id="candado" type="button" class="candado" aria-pressed="false" aria-label="Candado abierto: se manejan botones, deslizadores e imágenes y la página no se desplaza. Toca para cerrarlo y solo desplazar la página."><span aria-hidden="true">🔓</span></button>
+<div id="candadoAviso" class="candadoAviso" role="status" aria-live="polite"></div>
 <footer><p>Uso educativo · Los DICOM no salen del teléfono · Versión móvil</p></footer>
 
 <dialog id="dCarga">
@@ -398,6 +400,6 @@
 <script src="cardiaco-core.js?v=1"></script>
 <script src="reorientar.js?v=2"></script>
 <script src="caja.js?v=1"></script>
-<script src="movil.js?v=14"></script>
+<script src="movil.js?v=15"></script>
 </body>
 </html>
