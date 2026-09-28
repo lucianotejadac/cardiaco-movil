@@ -273,6 +273,7 @@ $('aRegistro').addEventListener('click',aRegistro);
 $('volverQc').addEventListener('click',aQc);
 $('aOsem').addEventListener('click',aOsem);
 $('volverReg').addEventListener('click',aReg);
+Progreso.iniciar();
 Registro.iniciar();
 OsemMovil.iniciar();
 $('frame').addEventListener('input',()=>{detener();estado.k=+$('frame').value;redibujar();});
@@ -280,7 +281,8 @@ $('fila').addEventListener('input',()=>{estado.y=+$('fila').value;redibujar();})
 $('play').addEventListener('click',reproducir);
 // Explicaciones en dialogos: «Ver mas» abre, «Cerrar» o tocar fuera cierra.
 document.querySelectorAll('[data-dialogo]').forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.dialogo)));
-document.querySelectorAll('dialog').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
+// La ventana de progreso no se cierra tocando fuera: solo al terminar o con «Detener».
+document.querySelectorAll('dialog:not(#dProgreso)').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
 window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();

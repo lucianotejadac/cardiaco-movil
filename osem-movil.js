@@ -25,7 +25,7 @@ const OsemMovil=(()=>{
   const map=new Float32Array(n*n*n).fill(NaN);let validos=0;
   for(let z=0;z<n;z++){
    for(let y=0;y<n;y++)for(let x=0;x<n;x++){const hu=Lab95.sampleCT(r.ct,Lab95.point(s,x,y,z,r.off));if(!Number.isFinite(hu))continue;const h=Math.max(-1000,Math.min(3000,hu));map[z*n*n+y*n+x]=h<=0?.15*(1+h/1000):.15+.0001*h;validos++;}
-   if(z%8===0){avance(z/n);await new Promise(q=>setTimeout(q,0));}
+   if(z%8===0){avance(z/n);await new Promise(q=>setTimeout(q,0));if(o.detenido)throw Error('detenida');}
   }
   if(!validos)throw Error('El CT no cubre la matriz del SPECT: revisa el registro.');
   o.mu=map;o.muClave=clave;o.muCobertura=validos/map.length;
@@ -39,7 +39,7 @@ const OsemMovil=(()=>{
  function osem(s,settings,mu,avance){
   return new Promise((ok,mal)=>{
    const codigo=[createModel.toString(),sampleGrid.toString(),attenuationWeights.toString(),gaussianKernel95.toString(),scatterBlur95.toString(),createPsfView95.toString(),'('+osem95Worker.toString()+')()'].join('\n');
-   const t=createOsem95Pool(codigo);o.tarea=t;
+   const t=createOsem95Pool(codigo);o.tarea=t;o.rechazo=mal;
    t.onerror=err=>{t.terminate();o.tarea=null;mal(Error(err.message||'Error del cálculo.'));};
    t.onmessage=({data:q})=>{
     if(q.error){t.terminate();o.tarea=null;mal(Error(q.error));return;}
@@ -49,23 +49,33 @@ const OsemMovil=(()=>{
    t.postMessage({n:s.n,data:s.data,views:s.views,spacing:s.spacing,window:1,scatterWindow:2,settings,mu,fbp:null,outsideAir:true});
   });
  }
- function cancelar(){if(o.tarea){o.tarea.terminate();o.tarea=null;o.detenido=true;}o.ocupado=false;$('osemCorrer').disabled=false;$('osemDetener').hidden=true;}
+ // Detiene la reconstruccion en curso: boton «Detener» de la ventana de progreso o salir del paso.
+ function cancelar(){if(o.ocupado)o.detenido=true;if(o.tarea){o.tarea.terminate();o.tarea=null;}if(o.rechazo){o.rechazo(Error('detenida'));o.rechazo=null;}}
 
+ // Lo que informa el worker, en palabras: «… · Preparando AC: corte 3/61, vista 8/64» o
+ // «… · OSEM: corte 12/61 terminado».
+ function etapa(t){const u=String(t||'').split(' · ').pop();let m=u.match(/Preparando AC: corte (\d+)\/(\d+), vista (\d+)\/(\d+)/);if(m)return `Atenuación de cada vista: corte ${m[1]} de ${m[2]}, vista ${m[3]} de ${m[4]}`;m=u.match(/OSEM: corte (\d+)\/(\d+)/);if(m)return `OSEM: corte ${m[1]} de ${m[2]} listo`;return 'OSEM…';}
  const receta=x=>`OSEM ${x.iteraciones} × ${x.subconjuntos} ${x.ac?'con':'sin'} atenuación${x.filtro?`, gaussiano ${dec(x.fwhm,1)} mm`:', sin filtro'}`;
  async function reconstruir(x){
-  if(o.ocupado)return null;o.ocupado=true;o.detenido=false;$('osemCorrer').disabled=true;$('osemDetener').hidden=false;
+  if(o.ocupado)return null;o.ocupado=true;o.detenido=false;$('osemCorrer').disabled=true;
+  Progreso.abrir(receta(x),cancelar,x.ac?'La corrección de atenuación calcula, para cada una de las 64 vistas, cuánto tejido atraviesa cada punto hasta el detector: en el teléfono puede tardar unos minutos.':'');
+  // Reparto de la barra: mapa μ 10 % (si hay atenuación), OSEM, filtro final 10 % (si hay filtro).
+  const base=x.ac?.1:0,peso=1-base-(x.filtro?.1:0);
   const aviso=$('osemEstado'),s=o.s,t0=performance.now();
   try{
    if(64%x.subconjuntos)throw Error('Los subconjuntos deben dividir las 64 vistas.');
    aviso.className='estado';
    let mu=null;
-   if(x.ac){$('osemAviso').textContent='La corrección de atenuación calcula, para cada una de las 64 vistas, cuánto tejido atraviesa cada punto: puede tardar unos minutos en el teléfono.';mu=await prepararMu(f=>{aviso.textContent=`Preparando el mapa μ desde el CT registrado… ${Math.round(f*100)} %`;});if(o.s!==s)return null;}
+   if(x.ac){mu=await prepararMu(f=>{aviso.textContent=`Preparando el mapa μ desde el CT registrado… ${Math.round(f*100)} %`;Progreso.avance(f*base,'Mapa μ desde el CT registrado…');});if(o.s!==s)return null;}
    const settings={...BASE,iterations:x.iteraciones,subsets:x.subconjuntos,attenuationCorrection:x.ac,postFilter:x.filtro,postFilterFWHMmm:x.fwhm};
    aviso.textContent=`${receta(x)}… 0 %`;
-   const q=await osem(s,settings,mu,(f,texto)=>{aviso.textContent=`${receta(x)}… ${Math.round(f*100)} %${x.ac&&/AC/.test(texto)?' (preparando la atenuación de cada vista)':''}`;});
+   Progreso.avance(base,'OSEM: repartiendo los cortes…');
+   // El motor avisa al terminar cada corte; con atenuacion cada corte tarda, asi que tambien se
+   // usa la vista en curso dentro del corte («corte a/b, vista k/m») para que la barra avance.
+   const q=await osem(s,settings,mu,(f,texto)=>{const m=String(texto).match(/corte (\d+)\/(\d+), vista (\d+)\/(\d+)/);if(m)f=Math.max(f,(m[1]-1+m[3]/m[4])/m[2]);aviso.textContent=`${receta(x)}… ${Math.round(f*100)} %`;Progreso.avance(base+f*peso,etapa(texto));});
    if(o.s!==s)return null;
    let data=q.volume;
-   if(x.filtro){aviso.textContent=`${receta(x)}: aplicando el gaussiano final…`;data=await Lab95.gaussian3D(q.volume,s.n,x.fwhm/s.spacing/2.354820045,()=>o.s!==s);if(!data)return null;}
+   if(x.filtro){aviso.textContent=`${receta(x)}: aplicando el gaussiano final…`;Progreso.avance(1-.1,`Filtro gaussiano final de ${dec(x.fwhm,1)} mm…`);data=await Lab95.gaussian3D(q.volume,s.n,x.fwhm/s.spacing/2.354820045,()=>o.s!==s||o.detenido);if(!data){if(o.detenido)throw Error('detenida');return null;}}
    const muestra=[];for(let i=0;i<data.length;i+=7)if(data[i]>0)muestra.push(data[i]);muestra.sort((a,b)=>a-b);
    const segundos=(performance.now()-t0)/1000,num=o.sig++;
    const e={id:'r'+num,tipo:'osem',etiqueta:`${num} · ${x.iteraciones}×${x.subconjuntos}${x.ac?' AC':''}${x.filtro?' G'+dec(x.fwhm,1):''}`,data,filas:new Set(q.rows),escala:muestra[Math.floor(muestra.length*.995)]||1,receta:{...x},segundos,
@@ -76,7 +86,7 @@ const OsemMovil=(()=>{
    aviso.className='estado ok';aviso.textContent=e.resumen;
    return e;
   }catch(err){aviso.className='estado error';aviso.textContent=o.detenido?'Reconstrucción detenida.':'No se pudo reconstruir: '+(err.message||err);if(!o.detenido)console.error(err);return null;}
-  finally{o.ocupado=false;$('osemCorrer').disabled=false;$('osemDetener').hidden=true;$('osemAviso').textContent='';}
+  finally{o.ocupado=false;o.rechazo=null;$('osemCorrer').disabled=false;Progreso.cerrar();}
  }
 
  async function abrir({s,fuente,cortes,registro}){
@@ -156,7 +166,6 @@ const OsemMovil=(()=>{
   $('osemA').addEventListener('change',e=>{o.a=e.target.value;listas();pintar();});
   $('osemB').addEventListener('change',e=>{o.b=e.target.value||null;listas();pintar();});
   $('osemPropia').addEventListener('change',e=>{o.propia=e.target.checked;pintar();});
-  $('osemDetener').addEventListener('click',()=>{cancelar();$('osemEstado').className='estado';$('osemEstado').textContent='Reconstrucción detenida.';});
   $('osemFiltro').addEventListener('change',e=>{$('osemFwhm').disabled=!e.target.checked;});
   $('osemRecetaSin').addEventListener('click',()=>ponerOpciones({iteraciones:CARDIACO_RECETA.iteraciones,subconjuntos:CARDIACO_RECETA.subconjuntos,ac:false,filtro:true,fwhm:CARDIACO_RECETA.filtroMm}));
   $('osemRecetaCon').addEventListener('click',()=>ponerOpciones({iteraciones:CARDIACO_RECETA.iteraciones,subconjuntos:CARDIACO_RECETA.subconjuntos,ac:true,filtro:true,fwhm:CARDIACO_RECETA.filtroMm}));
