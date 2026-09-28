@@ -15,7 +15,7 @@ const paleta=v=>{v=Math.max(0,Math.min(1,v));return [255*Math.min(1,v*3),255*Mat
 const TIPOS={cine:'Cine',sino:'Sinograma',suma:'Imagen suma',lino:'Linograma'};
 const DIALOGO={cine:'dCine',sino:'dSino',suma:'dSuma',lino:'dLino'};
 const EJES={cine:'y',suma:'y',sino:'k',lino:'ky'};
-const estado={crudo:null,corr:null,cuadros:null,correccion:null,ocupado:false,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
+const estado={crudo:null,corr:null,ct:null,cuadros:null,correccion:null,ocupado:false,k:0,y:64,modo:'uno',timer:null,aviso:'',resumen:'',comparacion:''};
 
 function imagen(img,w,h,max){
  const id=new ImageData(w,h);for(let i=0;i<w*h;i++){const c=paleta(Math.max(0,img[i])/(max||1));id.data[i*4]=c[0];id.data[i*4+1]=c[1];id.data[i*4+2]=c[2];id.data[i*4+3]=255;}
@@ -56,7 +56,10 @@ function elegirEntradas(lista){
  const crudas=lista.filter(e=>/(^|\/)NM_estres\.dcm$/i.test(e.name));
  if(!crudas.length)return null;
  const cruda=crudas.find(e=>/caso\s*1(\/|$)/i.test(e.name.replace(/\\/g,'/')))||crudas[0];
- return {cruda};
+ // El CT de la misma fase: los cortes de la subcarpeta «CT …» junto a la cruda. Se usa en el registro.
+ const carpeta=cruda.name.slice(0,cruda.name.lastIndexOf('/')+1).toLowerCase();
+ const ct=lista.filter(e=>{const q=e.name.toLowerCase();return q.startsWith(carpeta)&&/^ct[^/]*\/[^/]+\.dcm$/.test(q.slice(carpeta.length));}).sort((a,b)=>a.name.localeCompare(b.name));
+ return {cruda,ct};
 }
 
 /* ---------- memoria del telefono ---------- */
@@ -72,31 +75,32 @@ async function memoria(modo,valor){
   t.oncomplete=()=>ok(r.result);t.onerror=()=>mal(t.error);});}
  finally{db.close();}
 }
-async function guardar(bytes,origen){
- try{await memoria('guardar',{bytes,origen,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
+async function guardar(bytes,origen,ct){
+ try{await memoria('guardar',{bytes,origen,ct,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
  catch(err){console.warn('No se pudo guardar en el teléfono',err);}
 }
 async function recuperar(){
  let m=null;try{m=await memoria('leer');}catch(err){console.warn('No se pudo leer lo guardado',err);}
- if(m&&m.bytes)await mostrar(m.bytes,m.origen,true);
+ if(m&&m.bytes)await mostrar(m.bytes,m.origen,true,m.ct||null);
 }
 
 /* ---------- carga ---------- */
 async function cargar(file){
  try{
   mensaje('Leyendo '+file.name+'…');
-  let bytes,origen=file.name;
+  let bytes,origen=file.name,ct=null;
   if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){
    const buf=await file.arrayBuffer();const lista=await entradasZip(buf);const e=elegirEntradas(lista);
    if(!e)throw Error('Dentro del ZIP no hay NM_estres.dcm. Revisa que sea el ZIP «Cardiaco …» de U-Cursos.');
    mensaje('Descomprimiendo las proyecciones…');origen=e.cruda.name;
    bytes=await extraer(buf,e.cruda);
+   if(e.ct.length){mensaje('Descomprimiendo el CT…');ct=[];for(const q of e.ct)ct.push(await extraer(buf,q));}
   }else bytes=new Uint8Array(await file.arrayBuffer());
-  if(await mostrar(bytes,origen,false))await guardar(bytes,origen);
+  if(await mostrar(bytes,origen,false,ct))await guardar(bytes,origen,ct);
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
 }
 // Muestra un DICOM ya extraido. Devuelve true si se pudo leer.
-async function mostrar(bytes,origen,recuperado){
+async function mostrar(bytes,origen,recuperado,ct){
  try{
   const d=await Lab95.read(new Blob([bytes]));
   const crudo=Lab95.spect(d);
@@ -108,6 +112,7 @@ async function mostrar(bytes,origen,recuperado){
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
+  estado.ct=ct&&ct.length?ct:null;Registro.olvidar();$('reg').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
   textos();
   $('modo').disabled=false;
@@ -249,12 +254,23 @@ $('modo').addEventListener('click',async()=>{
  if(!estado.corr){try{await corregir();}catch(err){$('resumen').textContent='No se pudo corregir: '+(err.message||err);console.error(err);$('modo').textContent='Corregir';estado.ocupado=false;return;}}
  estado.modo=estado.modo==='dos'?'uno':'dos';armar();window.scrollTo(0,0);
 });
+// Paso siguiente: registro SPECT/CT sobre la FBP de las proyecciones (corregidas si ya se corrigio).
+async function aRegistro(){
+ if(!estado.crudo||estado.ocupado)return;detener();
+ $('qc').classList.add('oculta');$('reg').classList.remove('oculta');document.body.classList.remove('comparar');window.scrollTo(0,0);
+ const f=estado.corr||estado.crudo;
+ await Registro.abrir({s:f.s,fuente:estado.corr?'corregidas por la aplicación':'sin corregir',ctBytes:estado.ct,filaCorazon:estado.crudo.filaInicial});
+}
+function aQc(){Registro.cancelar();$('reg').classList.add('oculta');$('qc').classList.remove('oculta');armar();window.scrollTo(0,0);}
+$('aRegistro').addEventListener('click',aRegistro);
+$('volverQc').addEventListener('click',aQc);
+Registro.iniciar();
 $('frame').addEventListener('input',()=>{detener();estado.k=+$('frame').value;redibujar();});
 $('fila').addEventListener('input',()=>{estado.y=+$('fila').value;redibujar();});
 $('play').addEventListener('click',reproducir);
 // Explicaciones en dialogos: «Ver mas» abre, «Cerrar» o tocar fuera cierra.
 document.querySelectorAll('[data-dialogo]').forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.dialogo)));
 document.querySelectorAll('dialog').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
-window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir};
+window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();
