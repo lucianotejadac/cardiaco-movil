@@ -1,9 +1,8 @@
 /* Paso de registro SPECT/CT de la version movil. Reconstruye con FBP (filtro rampa, fotopico)
    las proyecciones de estres, corregidas si el estudiante ya corrigio, y muestra la fusion con
-   el CT del mismo ZIP. Como en el tutorial de escritorio de spect-lab-95, el ejercicio desplaza
-   el CT entre 35 y 70 mm en X y en Y (no en Z, donde ya comparten origen); el estudiante lo
-   arrastra hasta que calce y confirma. El registro se acepta con un residuo de hasta 8 mm por
-   eje (unos dos voxeles). Mientras no se confirma, la aplicacion no muestra cuanto falta. */
+   el CT del mismo ZIP. El CT parte alineado, tal como lo dejo el equipo (mismo marco de
+   referencia): el estudiante revisa la fusion en los tres planos, puede moverlo y confirma. El
+   registro se acepta con un residuo de hasta 8 mm por eje (unos dos voxeles). */
 'use strict';
 const Registro=(()=>{
  const TAM=256,FWHM=8.4,ACEPTABLE=8,EXACTO=3;
@@ -12,10 +11,8 @@ const Registro=(()=>{
  const dec=(x,d)=>Number(x).toFixed(d).replace('.',',');
  const paleta=v=>{v=Math.max(0,Math.min(1,v));return [255*Math.min(1,v*3),255*Math.max(0,Math.min(1,v*3-1)),255*Math.max(0,v*3-2)];};
  const r={s:null,fuente:'',ct:null,ctBytes:null,vol:null,escala:1,off:[0,0,0],plano:'axial',corte:{axial:64,coronal:64,sagital:64},
-  mezcla:.6,nivel:.65,ancho:.7,ventana:'contorno',trabajador:null,cache:null,confirmado:null,listo:false,ejercicio:false};
+  mezcla:.6,nivel:.65,ancho:.7,ventana:'contorno',trabajador:null,cache:null,confirmado:null,listo:false};
 
- function azar(min,max){const m=Math.round(min+Math.random()*(max-min));return (Math.random()<.5?-1:1)*m;}
- function nuevoEjercicio(){r.off=[azar(35,70),azar(35,70),0];r.confirmado=null;r.cache=null;}
 
  // El CT del ZIP: cortes axiales en HU, con el mismo marco de referencia que el SPECT.
  function prepararCT(s,bytes){
@@ -75,7 +72,6 @@ const Registro=(()=>{
    // axial, la posicion del maximo de la reconstruccion.
    const n=s.n,z=Math.max(0,Math.min(n-1,filaCorazon));let mi=0;for(let i=0;i<n*n;i++)if(sv[z*n*n+i]>sv[z*n*n+mi])mi=i;
    r.corte={axial:z,coronal:Math.floor(mi/n),sagital:mi%n};
-   if(!r.ejercicio){nuevoEjercicio();r.ejercicio=true;}
    r.listo=true;
    aviso.className='estado ok';aviso.textContent=`FBP con filtro rampa de las proyecciones ${fuente}, suavizada con un gaussiano de ${dec(FWHM,1)} mm. Tomó ${dec((performance.now()-t0)/1000,1)} s.`;
    pintar();return true;
@@ -115,7 +111,7 @@ const Registro=(()=>{
   $('regMezcla').value=Math.round(r.mezcla*100);$('regNivel').value=Math.round(r.nivel*100);$('regAncho').value=Math.round(r.ancho*100);
   $('regVentanaSpect').textContent=`muestra de ${Math.round(Math.max(0,r.nivel-r.ancho/2)*100)} % a ${Math.round((r.nivel+r.ancho/2)*100)} %`;
   document.querySelectorAll('[data-plano]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plano===r.plano)));
-  // En coronal y sagital lo vertical es Z, que el ejercicio no desplaza.
+  // En coronal y sagital lo vertical es Z: SPECT y CT comparten origen a lo largo de la camilla.
   $('regArriba').disabled=$('regAbajo').disabled=r.plano!=='axial';
  }
 
@@ -161,7 +157,7 @@ const Registro=(()=>{
   $('regConfirmar').addEventListener('click',confirmar);
  }
  // Otro archivo u otras proyecciones: el registro empieza de nuevo.
- function olvidar(){cancelar();r.s=null;r.vol=null;r.ct=null;r.ctBytes=null;r.cache=null;r.listo=false;r.confirmado=null;r.ejercicio=false;$('regResultado').textContent='';$('regResultado').className='dato';}
+ function olvidar(){cancelar();r.s=null;r.vol=null;r.ct=null;r.ctBytes=null;r.cache=null;r.listo=false;r.confirmado=null;r.off=[0,0,0];$('regResultado').textContent='';$('regResultado').className='dato';}
  return {iniciar,abrir,cancelar,olvidar,estado:r};
 })();
 window.Registro=Registro;
