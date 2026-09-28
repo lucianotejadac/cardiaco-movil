@@ -119,7 +119,7 @@ function textos(){
  fr.forEach(v=>{const a=s.data.subarray(v.source*p,(v.source+1)*p);const vacia=x=>{for(let y=0;y<n;y++)if(a[y*n+x]>0)return false;return true;};let izq=0;while(izq<n&&vacia(izq))izq++;let der=0;while(der<n-izq&&vacia(n-1-der))der++;const w=izq+der;if(w>0)afectadas++;if(w>anchoMax)anchoMax=w;});
  $('franja').textContent=afectadas?`En este archivo, ${afectadas} de las ${fr.length} vistas tienen una franja sin medición en un borde. La más ancha ocupa ${anchoMax} píxeles, es decir ${dec(anchoMax*s.spacing,0)} mm de los ${dec(n*s.spacing,0)} mm que mide la imagen de lado a lado.`:'En este archivo ninguna vista tiene franjas sin medición.';
  estado.resumen=`${estado.aviso}${fr.length} vistas en ${s.arc}° · ${dec(f.total/1e6,2)} millones de cuentas · franja sin medición de hasta ${dec(anchoMax*s.spacing,0)} mm · salto máximo medido a lo largo de la camilla: ${salto} ${salto===1?'píxel':'píxeles'}.`;
- estado.comparacion='Todavía no se ha corregido. Pulsa «Vista corregido».';
+ estado.comparacion='Todavía no se ha corregido. Pulsa «Corregir».';
  $('comparacion').textContent=estado.comparacion;
 }
 
@@ -152,8 +152,9 @@ function verMas(dialogo,texto,clase){const b=document.createElement('button');b.
 function armar(){
  const r=$('rejilla'),dos=estado.modo==='dos'&&!!estado.corr;r.replaceChildren();
  document.body.classList.toggle('comparar',dos);
- const b=$('modo');b.setAttribute('aria-pressed',String(dos));b.textContent=dos?'Volver a una columna':'Vista corregido';
+ const b=$('modo');b.setAttribute('aria-pressed',String(dos));b.textContent=dos?'Volver a sin corregir':estado.corr?'Ver corregido':'Corregir';
  if(!dos){
+  const t=document.createElement('div');t.className='columna ancha';t.textContent='Sin corregir';r.append(t);
   for(const tipo of ['cine','suma','sino','lino']){const f=figura(tipo,'',TIPOS[tipo]);f.append(verMas(DIALOGO[tipo],'Ver más'));r.append(f);}
   $('resumen').textContent=estado.resumen;
  }else{
@@ -210,7 +211,7 @@ $('archivo').addEventListener('change',e=>{const f=e.target.files&&e.target.file
 $('cambiar').addEventListener('click',()=>{$('archivo').value='';$('archivo').click();});
 $('modo').addEventListener('click',async()=>{
  if(!estado.crudo||estado.ocupado)return;
- if(!estado.corr){try{await corregir();}catch(err){$('resumen').textContent='No se pudo corregir: '+(err.message||err);console.error(err);$('modo').textContent='Vista corregido';estado.ocupado=false;return;}}
+ if(!estado.corr){try{await corregir();}catch(err){$('resumen').textContent='No se pudo corregir: '+(err.message||err);console.error(err);$('modo').textContent='Corregir';estado.ocupado=false;return;}}
  estado.modo=estado.modo==='dos'?'uno':'dos';armar();window.scrollTo(0,0);
 });
 $('frame').addEventListener('input',()=>{detener();estado.k=+$('frame').value;redibujar();});

@@ -115,3 +115,11 @@ Participantes: Luciano Tejada (docente) y Claude (Claude Code).
 El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no inventa movimiento.
 
 **Límites conocidos.** Con saltos de 2 píxeles falla en los casos 3, 4 y 5: en sus datos originales el registro entre vistas vecinas ya oscila entre 1 y 4 píxeles a lo largo de la camilla (ruido, o movimiento real del paciente), y el umbral adaptativo sube hasta tapar un salto de 2. No corrige derivas lentas. Antes de habilitar otros casos hay que decidir si se agrandan sus saltos o se mejora la detección.
+
+## 2026-09-28 · Parte sin corregir; el botón «Corregir» abre las dos columnas
+
+**Contexto.** El docente fijó el recorrido: la aplicación parte mostrando lo sin corregir, ofrece corregir y ahí muestra las dos columnas.
+
+**Decisión.** La vista de una columna lleva el rótulo «Sin corregir» a todo el ancho, sobre las cuatro imágenes. El botón dice «Corregir» mientras no se ha corregido; en las dos columnas dice «Volver a sin corregir», y al volver, «Ver corregido» (la corrección ya calculada no se repite). Se actualizaron los textos que nombraban el botón anterior («Vista corregido»).
+
+**Validación.** Emulación de teléfono con el ZIP del caso 1 con dos saltos de 4 píxeles a lo largo de la camilla (pasos 10 y 21, sin copia corregida): al cargar, botón «Corregir», rótulo «Sin corregir» y cuatro imágenes; al pulsarlo, rótulos «Sin corregir» y «Corregido» y ocho imágenes; volver y entrar de nuevo alterna sin recalcular. La corrección encuentra los dos saltos en su paso y sentido, pero mide 3 píxeles en cada uno en vez de 4: con dos saltos seguidos en el mismo eje subestima. No se tocó el algoritmo.
