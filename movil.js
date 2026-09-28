@@ -106,9 +106,62 @@ async function recuperar(){
  if(m&&m.bytes)await mostrar(m.bytes,m.origen,true,m.ct||null,m.gat||null,m.equipo||null);
 }
 
+/* ---------- archivos sueltos o carpeta (provisional) ---------- */
+// Lee solo el encabezado de cada archivo (hasta los pixeles) y elige las proyecciones crudas de
+// estres: NM tomografica original, ni gatillada ni reconstruida. Prefiere la que dice estres y la
+// que no fue corregida por el equipo. Despues busca, con el mismo marco de referencia, el CT axial
+// (de preferencia el original, no el remuestreado por el equipo) y la gatillada sin corregir.
+// No lee ni muestra datos de identidad.
+const TROZO=1<<20,PROPIO='Archivo propio: ';
+async function encabezado(file){
+ const intento=async blob=>{const u8=new Uint8Array(await blob.arrayBuffer());if(u8.length<136||u8[128]!==68||u8[129]!==73||u8[130]!==67||u8[131]!==77)return null;return dicomParser.parseDicom(u8,{untilTag:'x7fe00010'});};
+ let d=null;
+ try{d=await intento(file.size>TROZO?file.slice(0,TROZO):file);}catch(e){try{d=await intento(file);}catch(e2){return null;}}
+ if(!d)return null;
+ const t=tag=>(d.string(tag)||'').trim();
+ return {file,modalidad:t('x00080060'),tipo:t('x00080008'),descripcion:t('x0008103e'),marco:t('x00200052'),serie:t('x0020000e'),filas:d.uint16('x00280010')||0,intervalos:d.uint16('x00540071')||1};
+}
+async function elegirArchivos(files){
+ const lista=Array.from(files).filter(f=>f.size>=136&&f.size<=6e7&&!/\.(zip|rar|7z|pdf|txt|jpg|jpeg|png|xml|html?|exe|ini|inf)$/i.test(f.name)&&!/^dicomdir$/i.test(f.name));
+ const todos=[];let leidos=0;
+ for(const f of lista){
+  const e=await encabezado(f);leidos++;if(e)todos.push(e);
+  if(leidos%20===0){mensaje(`Revisando los archivos… ${leidos} de ${lista.length}`);await new Promise(r=>setTimeout(r,0));}
+ }
+ const tomo=e=>e.modalidad==='NM'&&/TOMO/.test(e.tipo)&&!/RECON/.test(e.tipo);
+ const puntos=e=>(/stress|estr[eé]s|esfuerzo/i.test(e.descripcion)?2:0)+(/correct|corregid/i.test(e.descripcion)?0:1);
+ const mejor=a=>a.slice().sort((x,y)=>puntos(y)-puntos(x))[0]||null;
+ const cruda=mejor(todos.filter(e=>tomo(e)&&!/GATED/.test(e.tipo)&&e.intervalos<=1));
+ if(!cruda)throw Error(`Entre los ${lista.length} archivos no hay proyecciones tomográficas originales sin sincronizar. Revisa que la carpeta sea la del examen completo.`);
+ // CT axial del mismo marco de referencia: una sola serie, de preferencia la de matriz 512.
+ const cortes=todos.filter(e=>e.modalidad==='CT'&&/AXIAL/.test(e.tipo)&&e.marco&&e.marco===cruda.marco),series=new Map();
+ for(const e of cortes){if(!series.has(e.serie))series.set(e.serie,[]);series.get(e.serie).push(e);}
+ const valor=a=>(a[0].filas===512?2:0)+(/transformed/i.test(a[0].descripcion)?0:1);
+ const serieCt=[...series.values()].filter(a=>a.length>=2).sort((a,b)=>valor(b)-valor(a)||b.length-a.length)[0]||[];
+ const gat=mejor(todos.filter(e=>tomo(e)&&(/GATED/.test(e.tipo)||e.intervalos>1)&&e.marco===cruda.marco&&!/correct|corregid/i.test(e.descripcion)));
+ const bytes=async f=>new Uint8Array(await f.arrayBuffer());
+ mensaje('Leyendo las proyecciones…');
+ const r={bytes:await bytes(cruda.file),ct:null,gat:null};
+ if(serieCt.length){mensaje('Leyendo el CT…');r.ct=[];for(const e of serieCt)r.ct.push(await bytes(e.file));}
+ if(gat){mensaje('Leyendo la adquisición gatillada…');r.gat=await bytes(gat.file);}
+ r.origen=`${PROPIO}serie «${cruda.descripcion||'sin descripción'}», elegida entre ${lista.length} ${lista.length===1?'archivo':'archivos'}; ${r.ct?r.ct.length+' cortes de CT':'sin CT'}; ${r.gat?'con':'sin'} adquisición gatillada`;
+ return r;
+}
+
 /* ---------- carga ---------- */
-async function cargar(file){
+async function cargar(entrada){
  try{
+  let file=entrada;
+  if(!(entrada instanceof Blob)){
+   const varios=Array.from(entrada||[]);if(!varios.length)return;
+   if(varios.length===1&&(/\.zip$/i.test(varios[0].name)||/zip/.test(varios[0].type)))file=varios[0];
+   else{
+    mensaje(`Revisando ${varios.length} ${varios.length===1?'archivo':'archivos'}…`);
+    const e=await elegirArchivos(varios);
+    if(await mostrar(e.bytes,e.origen,false,e.ct,e.gat,null))await guardar(e.bytes,e.origen,e.ct,e.gat,null);
+    return;
+   }
+  }
   mensaje('Leyendo '+file.name+'…');
   let bytes,origen=file.name,ct=null,gat=null,equipo=null;
   if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){
@@ -131,9 +184,13 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo){
   // De que cabezal y de que paso del giro es cada cuadro: lo necesita la correccion.
   estado.cuadros=Array.from({length:crudo.frames},(_,i)=>({cabezal:d.uint16('x00540020',i),ventana:d.uint16('x00540010',i),paso:d.uint16('x00540090',i)}));
   const marco=CARDIACO_CASOS[CASO].fases[FASE].marco,esDelCaso=cardiacoHash(crudo.frame)===marco;
-  estado.aviso=esDelCaso?'':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
-  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+origen+(recuperado?' (guardado en este teléfono)':''),esDelCaso?'ok':'error');
-  const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
+  // Un archivo propio (cargado suelto o por carpeta) que no es del caso 1 se muestra sin la
+  // advertencia en rojo y sin los antecedentes del caso 1.
+  const propio=!esDelCaso&&String(origen).startsWith(PROPIO);
+  estado.aviso=esDelCaso?'':propio?'Archivo propio, no es el caso 1. ':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
+  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+origen+(recuperado?' (guardado en este teléfono)':''),esDelCaso||propio?'ok':'error');
+  $('titulo').textContent=esDelCaso?'SPECT cardíaco · Caso 1 · Estrés':'SPECT cardíaco · '+(crudo.description||'archivo propio');
+  const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=!esDelCaso;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
   estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;// Lo guardado antes de este cambio traia una sola reconstruccion (objeto): se pasa a lista.
@@ -275,7 +332,10 @@ function tactil(c,ejes){
 function abrir(id){const d=$(id);if(d&&!d.open){d.showModal();d.scrollTop=0;}}
 
 $('archivo').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)cargar(f);});
-$('cambiar').addEventListener('click',()=>{$('archivo').value='';$('archivo').click();});
+for(const id of ['archivos','carpeta'])$(id).addEventListener('change',e=>{const f=e.target.files;if(f&&f.length)cargar(f);});
+// «Cambiar archivo» vuelve a la tarjeta de carga, donde estan las tres formas de cargar. Lo que
+// estaba cargado sigue en memoria hasta que se elija otro.
+$('cambiar').addEventListener('click',()=>{detener();for(const id of ['archivo','archivos','carpeta'])$(id).value='';document.querySelectorAll('main > section').forEach(s=>s.classList.toggle('oculta',s.id!=='carga'));$('cambiar').hidden=true;document.body.classList.remove('comparar');mensaje('Elige otro archivo, o recarga la página para volver al que estaba.');window.scrollTo(0,0);});
 $('modo').addEventListener('click',async()=>{
  if(!estado.crudo||estado.ocupado)return;
  if(!estado.corr){try{await corregir();}catch(err){$('resumen').textContent='No se pudo corregir: '+(err.message||err);console.error(err);$('modo').textContent='Corregir';estado.ocupado=false;return;}}

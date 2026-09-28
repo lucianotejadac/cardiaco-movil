@@ -348,3 +348,20 @@ Cada reconstrucción toma de 3,5 a 7 s. En las imágenes, corazón, hígado e in
 En el eje corto el anillo del simulador cae en el mismo lugar y con la misma forma que el de Siemens, y en el largo vertical la misma «C». En el gatillado, el intervalo 1 muestra la cavidad abierta y el 4 casi cerrada en los dos.
 
 **Diferencias que se ven.** Siemens deja en cero todo lo que está fuera del corazón; el simulador no. El gatillado de Siemens se ve con pocos niveles de gris, probablemente porque sus valores enteros son bajos; no se comprobó. La OSEM de Siemens es 3D y en estos equipos suele traer recuperación de resolución; la del simulador es 2D, corte por corte, sin ella.
+
+## 2026-09-28 · Carga provisional de archivos sueltos y de carpetas
+
+**Contexto.** El docente empezó a trabajar con exámenes exportados del archivo de imágenes, que vienen como carpetas con nombres hexadecimales y archivos sin extensión, no como el ZIP de la entrega. Pidió que el simulador permita, mientras tanto, cargar archivos y carpetas.
+
+**Decisiones.**
+- **Tres formas de cargar.** Se mantiene el ZIP y se agregan «Elegir archivos» (selección múltiple) y «Elegir carpeta» (con subcarpetas). Están rotuladas como provisionales.
+- **La aplicación elige la serie.** Lee solo el encabezado de cada archivo, hasta los píxeles, y se queda con las proyecciones tomográficas originales de medicina nuclear que no son gatilladas ni reconstruidas. Si hay varias, prefiere la que dice estrés y la que no fue corregida por el equipo.
+- **Filtro por tamaño antes de leer.** Solo se abren archivos entre 1 y 20 MB: las proyecciones crudas pesan unos 5 MB, un corte de tomografía computada menos de 1 MB y una gatillada más de 30 MB. Evita leer cientos de cortes en el teléfono. (Reemplazado al rehacer el cambio sobre la versión actual: ahora se lee el encabezado de todos los archivos de hasta 60 MB, porque también se cargan el CT y la gatillada.)
+- **Un archivo que no es el caso 1 se muestra como «archivo propio».** El título toma la descripción de la serie y no se muestran los antecedentes clínicos del caso 1.
+- **También el CT y la gatillada.** Con el mismo marco de referencia que las proyecciones elegidas se toman una sola serie de CT axial (de preferencia la de matriz 512 y no la remuestreada por el equipo) y la adquisición gatillada sin corregir, para que funcionen el registro, la OSEM con atenuación y el gatillado. La reconstrucción del equipo no se carga por esta vía.
+- **Se rehízo sobre la versión actual.** El primer intento se escribió sobre una copia local atrasada en 17 commits; se descartó y se volvió a escribir sobre la versión publicada.
+- **«Cambiar archivo» vuelve a la tarjeta de carga**, donde están las tres formas, en vez de abrir directamente el selector del ZIP.
+- **Identidad.** La aplicación no lee ni muestra nombre, RUT ni institución. Los archivos se leen en el dispositivo y no se envían a ningún servidor.
+
+**Límite conocido.** El botón de carpeta depende del navegador del teléfono; si no está disponible, se usa «Elegir archivos» y se marcan todos.
+

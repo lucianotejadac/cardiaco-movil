@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=21">
+<link rel="stylesheet" href="movil.css?v=22">
 </head>
 <body>
 <header class="barra">
- <h1>SPECT cardíaco · Caso 1 · Estrés</h1>
+ <h1 id="titulo">SPECT cardíaco · Caso 1 · Estrés</h1>
  <button id="cambiar" type="button" class="mini" hidden>Cambiar archivo</button>
 </header>
 <main>
@@ -18,6 +18,14 @@
   <label class="boton" for="archivo">Elegir el ZIP…</label>
   <input id="archivo" type="file" accept=".zip,application/zip,application/x-zip-compressed,.dcm,*/*">
   <button type="button" class="vermas" data-dialogo="dCarga">Ver más</button>
+  <div class="otra">
+   <h3>Otra forma de cargar (provisional)</h3>
+   <p>Si tienes el examen fuera de un ZIP, elige los archivos DICOM o la carpeta completa. La aplicación revisa cada archivo y abre las proyecciones de estrés tal como salieron del equipo, con su tomografía computada y su adquisición sincronizada si están. Lo demás no se abre.</p>
+   <label class="boton otro" for="archivos">Elegir archivos…</label>
+   <input id="archivos" type="file" multiple>
+   <label class="boton otro" for="carpeta">Elegir carpeta…</label>
+   <input id="carpeta" type="file" webkitdirectory multiple>
+  </div>
   <p id="estado" class="estado">Nada cargado todavía.</p>
  </section>
 
@@ -272,6 +280,8 @@
   <dd>La aplicación saca también los cortes de tomografía computada de la carpeta Caso 1 › Estres › CT. Se usan en el paso de registro.</dd>
   <dt>Lo que no se usa todavía</dt>
   <dd>El ZIP trae además una adquisición sincronizada con el electrocardiograma y el reposo. Aquí no se abren.</dd>
+  <dt>Archivos sueltos o una carpeta</dt>
+  <dd>Es una forma provisional de cargar. Puedes elegir varios archivos DICOM o una carpeta con subcarpetas, aunque los archivos no tengan extensión. La aplicación lee el encabezado de cada uno y se queda con las proyecciones tomográficas originales que no están sincronizadas con el electrocardiograma ni reconstruidas. Si hay varias, prefiere la de estrés y la que no fue corregida por el equipo. Después busca la tomografía computada y la adquisición sincronizada que comparten el mismo marco de referencia con esas proyecciones. La aplicación no muestra el nombre ni los datos del paciente. En algunos teléfonos el botón de carpeta no está disponible: en ese caso usa «Elegir archivos» y marca todos.</dd>
   <dt>Privacidad</dt>
   <dd>El archivo se lee dentro del teléfono y no se envía a ningún servidor. Las proyecciones y el CT que la aplicación saca del ZIP quedan guardados en el navegador de este teléfono, así no hay que volver a elegir el ZIP cada vez que se abre la página o se publica una versión nueva. Para usar otro archivo, toca «Cambiar archivo».</dd>
  </dl>
@@ -526,6 +536,6 @@
 <script src="caja.js?v=3"></script>
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="movil.js?v=20"></script>
+<script src="movil.js?v=21"></script>
 </body>
 </html>
