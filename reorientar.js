@@ -4,9 +4,9 @@
    transaxial, desde anterior hacia la izquierda del paciente) y elevacion (cuanto baja el apex
    respecto del plano transaxial). Usa cardiaco-core.js copiado tal cual de simulador-cardiaco:
    el mismo marco, los mismos cortes oblicuos (eje corto, largo vertical, largo horizontal), la
-   misma busqueda del ventriculo y la misma paleta. El eje parte en 0 y 0, sin girar: el centro
-   del ventriculo lo busca la aplicacion con un eje tipico (35 y 12 grados, como el escritorio),
-   y se puede mover arrastrando sobre las imagenes. */
+   misma busqueda del ventriculo y la misma paleta. El eje parte en 0 y 0, sin girar; el centro
+   del ventriculo es el centro de la caja que el estudiante puso sobre el corazon (caja.js) y se
+   puede mover arrastrando sobre las imagenes. */
 'use strict';
 const Reorientar=(()=>{
  const C=CardiacoCore,M=56; // lado de los cortes oblicuos en voxeles: 56 x 3,3 mm = 185 mm
@@ -18,24 +18,31 @@ const Reorientar=(()=>{
  // exportacion de SPECT Lab 95, que invierte el orden de los cortes). Se invierte una vez.
  function invertirZ(data,n){const p=n*n,out=new Float32Array(n*p);for(let z=0;z<n;z++)out.set(data.subarray((n-1-z)*p,(n-z)*p),z*p);return out;}
 
- // El buscador de anillo de cardiaco-core recorre todos los cortes; con pocas cuentas (estres del
- // caso 1) puede ganar un anillo falso del abdomen. Se busca solo en una franja de +-15 cortes
- // alrededor de la fila del corazon (la del maximo de la imagen suma, la misma del registro).
+ // Volumen con z hacia la cabeza, una vez por reconstruccion (lo usan la caja y la reorientacion).
+ const cacheVol={entrada:null,vol:null};
+ function volumen(entrada,n){if(cacheVol.entrada!==entrada){cacheVol.entrada=entrada;cacheVol.vol=invertirZ(entrada.data,n);}return cacheVol.vol;}
+
+ // El buscador de anillo de cardiaco-core recorre todo el volumen; con pocas cuentas (estres del
+ // caso 1) gana un anillo falso del abdomen. Por eso busca solo dentro de la caja que el
+ // estudiante puso sobre el corazon en el paso anterior.
  function buscar(Mk){
-  const n=r.n,p=n*n,z0=Math.max(0,r.zCorazon-15),z1=Math.min(n-1,r.zCorazon+15),franja=new Float32Array(r.vol.length);
-  franja.set(r.vol.subarray(z0*p,(z1+1)*p),z0*p);
-  return C.buscarVentriculo(franja,n,n,Mk,r.sp);
+  const n=r.n,p=n*n,k=r.caja,dentro=new Float32Array(r.vol.length);
+  for(let z=Math.max(0,Math.floor(k.z0));z<=Math.min(n-1,Math.ceil(k.z1));z++)for(let y=Math.max(0,Math.floor(k.y0));y<=Math.min(n-1,Math.ceil(k.y1));y++){const o=z*p+y*n,x0=Math.max(0,Math.floor(k.x0)),x1=Math.min(n-1,Math.ceil(k.x1));dentro.set(r.vol.subarray(o+x0,o+x1+1),o+x0);}
+  return C.buscarVentriculo(dentro,n,n,Mk,r.sp);
  }
- function abrir({entrada,s,referencia,filaCorazon}){
+ // caja: {x0,x1,y0,y1,z0,z1} en voxeles, con z hacia la cabeza. Su centro es el centro del
+ // ventriculo y su tamano da el largo inicial del eje.
+ function abrir({entrada,s,referencia,caja}){
   const aviso=$('reoEstado');
   if(!entrada||entrada.tipo!=='osem'){aviso.className='estado error';aviso.textContent='Elige a la izquierda una reconstrucción OSEM (no el mapa μ) antes de reorientar.';return false;}
-  if(r.origen!==entrada){
-   r.origen=entrada;r.n=s.n;r.sp=s.spacing;r.vol=invertirZ(entrada.data,s.n);r.max=C.percentil(r.vol,.999)||1;r.etiqueta=entrada.etiqueta;
-   r.zCorazon=Number.isFinite(filaCorazon)?s.n-1-filaCorazon:(s.n>>1);
-   const b=buscar(C.marco(35,12));
-   r.Cv=b?b.C.slice():[(r.n-1)/2,(r.n-1)/2,(r.n-1)/2];r.L=b?Math.max(12,b.L):24;r.t=0;r.az=0;r.el=0;
+  const clave=JSON.stringify(caja);
+  if(r.origen!==entrada){r.az=0;r.el=0;}
+  if(r.origen!==entrada||r.claveCaja!==clave){
+   r.origen=entrada;r.claveCaja=clave;r.caja={...caja};r.n=s.n;r.sp=s.spacing;r.vol=volumen(entrada,s.n);r.max=C.percentil(r.vol,.999)||1;r.etiqueta=entrada.etiqueta;
+   r.Cv=[(caja.x0+caja.x1)/2,(caja.y0+caja.y1)/2,(caja.z0+caja.z1)/2];
+   r.L=Math.max(12,Math.round(.7*Math.min(caja.x1-caja.x0,caja.y1-caja.y0,caja.z1-caja.z0)));r.t=0;
    aviso.className='estado ok';
-   aviso.textContent=`Reconstrucción «${entrada.etiqueta}». ${b?'La aplicación ubicó el ventrículo izquierdo':'No se encontró el ventrículo solo: arrastra el punto al centro del ventrículo'}. El eje parte sin girar: gíralo con los deslizadores.`;
+   aviso.textContent=`Reconstrucción «${entrada.etiqueta}». El centro del ventrículo es el centro de tu caja. El eje parte sin girar: gíralo con los deslizadores.`;
   }
   r.referencia=referencia||null;
   pintar();return true;
@@ -107,10 +114,10 @@ const Reorientar=(()=>{
   $('reoTecho').addEventListener('input',e=>{r.techo=Math.max(.05,+e.target.value/100);pintar();});
   const paso=(id,campo,d)=>{let t=null;const f=()=>{const el=$(id);r[campo]=Math.max(+el.min,Math.min(+el.max,r[campo]+d));pintar();};const b=$(id+(d>0?'Mas':'Menos'));const parar=()=>{clearInterval(t);t=null;};b.addEventListener('pointerdown',e=>{e.preventDefault();f();parar();t=setInterval(f,120);});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,parar));};
   paso('reoAz','az',1);paso('reoAz','az',-1);paso('reoEl','el',1);paso('reoEl','el',-1);
-  $('reoBuscar').addEventListener('click',()=>{if(!r.vol)return;const b=buscar(marco());if(b){r.Cv=b.C.slice();r.L=Math.max(12,b.L);r.t=0;$('reoEstado').className='estado ok';$('reoEstado').textContent='Centro y largo del ventrículo buscados de nuevo con el eje actual.';}else{$('reoEstado').className='estado error';$('reoEstado').textContent='Con este eje no se encontró un anillo: gira el eje o arrastra el punto amarillo al centro del ventrículo.';}pintar();});
+  $('reoBuscar').addEventListener('click',()=>{if(!r.vol)return;const b=buscar(marco());if(b){r.Cv=b.C.slice();r.L=Math.max(12,b.L);r.t=0;$('reoEstado').className='estado ok';$('reoEstado').textContent='Centro y largo del ventrículo buscados de nuevo con el eje actual.';}else{$('reoEstado').className='estado error';$('reoEstado').textContent='Con este eje no se encontró un anillo dentro de tu caja: gira el eje, arrastra el punto amarillo al centro del ventrículo o vuelve a revisar la caja.';}pintar();});
   $('reoCero').addEventListener('click',()=>{r.az=0;r.el=0;r.t=0;pintar();});
  }
- function olvidar(){r.vol=null;r.origen=null;}
- return {iniciar,abrir,olvidar,estado:r};
+ function olvidar(){r.vol=null;r.origen=null;r.claveCaja=null;cacheVol.entrada=null;cacheVol.vol=null;}
+ return {iniciar,abrir,olvidar,volumen,estado:r};
 })();
 window.Reorientar=Reorientar;

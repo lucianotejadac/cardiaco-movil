@@ -225,3 +225,15 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Límites conocidos.** En el estrés del caso 1 (9 mCi) el corazón apenas se distingue en la OSEM, y el centro propuesto quedó por delante del foco más probable del ventrículo: es solo un punto de partida y hay que llevarlo a mano. No se verificó con un caso que traiga el eje del equipo que el azimut y la elevación de referencia den el anillo esperado en esta aplicación.
 
 **Pendiente.** Mapa polar, cavidad y función ventricular.
+
+## 2026-09-28 · Ubicar el corazón con una caja en coronal y sagital
+
+**Contexto.** El docente pidió que, antes de reorientar, se vean un corte coronal y uno sagital y que el estudiante tenga que posicionar una caja en el corazón.
+
+**Decisiones.**
+- **Paso nuevo «Ubicar el corazón»** entre la OSEM y la reorientación (`caja.js`). El botón de la OSEM ahora lleva ahí; desde la caja se pasa a reorientar y desde la reorientación se vuelve a la caja.
+- **Una caja, dos vistas.** En el coronal la caja fija el rango lateral y el vertical; en el sagital, el anteroposterior y el mismo vertical. El coronal se corta por el centro de la caja de adelante hacia atrás y el sagital por su centro de lado a lado, así que mover la caja en una imagen cambia el corte de la otra. Orientación: cabeza arriba; izquierda del paciente a la derecha en el coronal; adelante a la izquierda en el sagital.
+- **Interacción táctil.** Arrastrar dentro mueve la caja sin salir del volumen; arrastrar desde una esquina cambia su tamaño, con un mínimo de 4 cm; tocar fuera la centra en ese punto. Parte en el centro del volumen, con 11 cm de lado, para que haya que llevarla al corazón. Hay techo de escala y «Volver a poner la caja al centro».
+- **Qué hace la caja en la reorientación.** Su centro es el centro del ventrículo con el que parte el eje, y el 70 % de su lado menor es el largo inicial del eje. «Buscar el centro con este eje» busca el anillo solo dentro de la caja. Esto reemplaza la búsqueda automática del paso anterior (franja de ±15 cortes alrededor de la fila del máximo de la imagen suma), que en el estrés del caso 1 dejaba el centro fuera del ventrículo. Si se vuelve a la caja y se cambia, la reorientación toma el nuevo centro y conserva los ángulos.
+
+**Validación.** Emulación de teléfono con la OSEM 2 × 8 sin atenuación del caso 1: la caja parte en 46,8–80,2 vóxeles en los tres ejes; arrastrarla en el coronal 10 vóxeles a la derecha y 10 hacia arriba la mueve eso mismo en x y z; la esquina inferior derecha amplía x1 en 6 y baja z0 en 6; un toque fuera en el sagital la centra en y 40 y z 77; la reorientación parte en el centro de la caja (76,5; 40; 77) con largo 23; la búsqueda dentro de la caja encuentra un anillo; volver a la caja la conserva. En el coronal del caso 1 se ve una herradura en la parte alta del tórax, a la izquierda del paciente, donde se pone la caja.
