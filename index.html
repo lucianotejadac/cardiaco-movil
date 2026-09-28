@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=8">
+<link rel="stylesheet" href="movil.css?v=9">
 </head>
 <body>
 <header class="barra">
@@ -58,7 +58,9 @@
   <div class="controles">
    <div class="fila"><span class="etq">Corte</span><input id="regCorteRango" type="range" min="0" max="127" value="64" aria-label="Corte"></div>
    <div class="fila"><span class="etq">SPECT</span><input id="regMezcla" type="range" min="0" max="100" value="60" aria-label="Mezcla del SPECT sobre el CT"></div>
-   <div class="fila"><span class="etq">Umbral</span><input id="regUmbral" type="range" min="0" max="80" value="30" aria-label="Umbral del SPECT: oculta la emisión más débil"></div>
+   <p class="clave">Ventana del SPECT · <span id="regVentanaSpect"></span> <button id="regSpectInicial" type="button" class="mini">Restablecer</button></p>
+   <div class="fila"><span class="etq">Nivel</span><input id="regNivel" type="range" min="0" max="150" value="65" aria-label="Nivel de la ventana del SPECT"></div>
+   <div class="fila"><span class="etq">Ancho</span><input id="regAncho" type="range" min="1" max="200" value="70" aria-label="Ancho de la ventana del SPECT"></div>
    <div class="fila"><span class="etq">CT</span>
     <select id="regVentana" aria-label="Ventana del CT"><option value="contorno">Contorno externo</option><option value="blando">Tejido blando</option><option value="hueso">Hueso</option></select>
    </div>
@@ -225,7 +227,7 @@
   <dt>El ejercicio</dt>
   <dd>El CT parte corrido varios centímetros hacia el lado y hacia adelante o atrás (no a lo largo de la camilla). Arrástralo sobre la imagen hasta que la piel del tórax del CT coincida con el borde de la emisión y el corazón del SPECT caiga sobre el corazón del CT. Revisa también los cortes coronal y sagital. La ventana «Contorno externo» muestra bien la piel.</dd>
   <dt>Cómo leer la fusión</dt>
-  <dd>El CT va en grises y el SPECT encima, en colores de negro a rojo, amarillo y blanco. El deslizador SPECT cambia cuánto se ve la emisión sobre el CT, y el umbral oculta la emisión más débil: súbelo para ver solo los órganos que más captan (corazón, hígado, intestino) y bájalo para ver el contorno del cuerpo. El azul oscuro marca dónde no hay CT: el CT cubre menos que el SPECT a lo largo de la camilla.</dd>
+  <dd>El CT va en grises y el SPECT encima, en colores de negro a rojo, amarillo y blanco. El deslizador SPECT cambia cuánto se ve la emisión sobre el CT. La ventana del SPECT elige qué parte de la escala se pinta, en porcentaje del máximo de la reconstrucción: el nivel es el centro y el ancho, cuánto abarca. Lo que queda por debajo no se pinta y deja ver el CT; lo que queda por encima sale blanco. Con nivel alto y ancho chico se ven solo los órganos que más captan (corazón, hígado, intestino); con nivel bajo y ancho grande aparece la emisión débil, que marca el contorno del cuerpo. «Restablecer» vuelve a nivel 65 % y ancho 70 %. El azul oscuro marca dónde no hay CT: el CT cubre menos que el SPECT a lo largo de la camilla.</dd>
   <dt>Al confirmar</dt>
   <dd>La aplicación dice a cuántos milímetros quedaste de la posición correcta. Hasta 3 mm está dentro de un vóxel; hasta 8 mm, unos dos vóxeles, es aceptable. Con más, todavía no calza y hay que seguir moviéndolo. Mientras no confirmas, la aplicación no dice cuánto falta.</dd>
  </dl>
@@ -236,7 +238,7 @@
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
 <script src="correccion.js?v=1"></script>
-<script src="registro.js?v=2"></script>
+<script src="registro.js?v=3"></script>
 <script src="movil.js?v=9"></script>
 </body>
 </html>

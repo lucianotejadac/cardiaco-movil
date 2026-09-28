@@ -147,3 +147,11 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Validación.** Emulación de teléfono (Pixel 7) servida por HTTP, con el ZIP del caso 1 modificado: se extraen y guardan los 41 cortes de CT y se recuperan al recargar; la FBP y el suavizado toman unos 4 s; un arrastre de 100 px mueve el CT 106 mm, lo esperado; confirmar sin mover dice que no calza; a 2 y 1 mm confirma «dentro de un vóxel»; a 6 mm, «aceptable»; mover después de confirmar pide confirmar de nuevo. Con el desfase en cero, el contorno del cuerpo del CT y el hígado y el corazón del SPECT coinciden en los tres planos, dentro de lo que permite una FBP de estrés con pocas cuentas.
 
 **Pendiente.** Probar en un teléfono real el arrastre y el tiempo de la FBP. El registro todavía no alimenta un mapa de atenuación ni una OSEM: son los pasos siguientes.
+
+## 2026-09-28 · Nivel y ancho de ventana del SPECT en el registro
+
+**Contexto.** El docente pidió poder modificar el nivel y el ancho de la ventana del SPECT en la fusión.
+
+**Decisión.** El umbral se reemplaza por dos deslizadores, **nivel** (0 a 150 %) y **ancho** (1 a 200 %), en porcentaje del percentil 99,5 de la reconstrucción, con la misma fórmula del escritorio: `(valor/escala − nivel)/ancho + 0,5`. Lo que queda bajo la ventana no se pinta y deja ver el CT; lo que queda sobre ella sale blanco. Parte en nivel 65 % y ancho 70 % (muestra de 30 % a 100 %), lo mismo que el umbral anterior. Una línea dice qué rango se está mostrando y «Restablecer» vuelve a los valores iniciales. La explicación de «Ver más sobre el registro» se actualizó.
+
+**Validación.** Emulación de teléfono: al entrar, «muestra de 30 % a 100 %» y el 18 % de los píxeles de la fusión con color; con nivel 30 y ancho 60, de 0 % a 60 % y el 45 %; con nivel 110 y ancho 40, de 90 % a 130 % y el 1 %; «Restablecer» vuelve a 65 y 70.
