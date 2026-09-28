@@ -159,3 +159,7 @@ footer{padding-bottom:76px}
 #cmp .segmento{margin:6px 0}
 #cmp .segmento button:disabled{opacity:.4}
 #cmp .fila .valor{width:64px}
+.segmento.cuatro button{font-size:.75rem;padding:8px 2px}
+.segmento button[hidden]{display:none}
+#cmp .valor.ancho3{width:auto;flex:1;text-align:left;padding-left:8px}
+#cmp .fila .paso{flex:none}

@@ -327,3 +327,24 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 Cada reconstrucción toma de 3,5 a 7 s. En las imágenes, corazón, hígado e intestino quedan en el mismo lugar en las dos; con los volúmenes a la misma suma, el simulador da más actividad en la pared del ventrículo que Siemens.
 
 **Límites.** No se sabe qué más hizo el equipo: corrección de centro de rotación, uniformidad, si su Butterworth es 2D o por fila, la normalización del filtro. La correlación no llega a 1 y la diferencia en el ventrículo puede venir de eso.
+
+## 2026-09-28 · Comparador: ejes cortos y gatillado de Siemens frente al simulador
+
+**Contexto.** El docente preguntó si Siemens usa OSEM. Los DICOM de los casos 3 y 4 dicen `ConvolutionKernel` por serie: la transversal «Isotope (A) – Recon – NoAC» es **FBP Butterworth 0,50 orden 5**; los ejes cortos NoAC y AC son **OSEM 3D 6 × 4 con gaussiano de 9 mm** (el AC con `ATTN`; el del estrés del caso 4, también con `SCAT`); el gatillado en eje corto es **OSEM 3D 4 × 4 con gaussiano de 8,4 mm**. Todas con `UNIF` y `MOTN`; el gatillado, además, con «CLN» y «ABN», códigos cuyo significado no se averiguó. El docente pidió comparar también esas reconstrucciones.
+
+**Decisiones.**
+- **Cuatro modos en el comparador:** transversal (lo de antes), eje corto NoAC, eje corto AC y gatillado; los que el ZIP no trae quedan deshabilitados. Por cada fase con `Referencia equipo` se extraen del ZIP también los ejes cortos, el gatillado de Siemens, la gatillada de esa fase y su CT («CT 512»).
+- **Grilla del eje corto de Siemens:** vóxel (i, j, k) → paciente = posición del primer corte + i·píxel·fila + j·píxel·columna + k·espaciado·n, con la orientación de `DetectorInformationSequence`. El DICOM no dice el sentido de los cortes: se midió remuestreando la transversal de Siemens en esa grilla y correlacionando con el eje corto de Siemens. Con n = fila × columna da r = 0,77 a 0,89 en las seis series de los casos 3 y 4; con −n, entre −0,16 y 0,09. El gatillado de Siemens viene ordenado por intervalo y, dentro de él, por corte (8 intervalos de 48 a 66 cortes).
+- **Recetas del simulador en los ejes cortos:** la de Siemens (6 × 4 con 9 mm; en el gatillado, 4 × 4 con 8,4 mm) o la del caso (2 × 8 con 8,4 mm). OSEM 2D del escritorio, solo en las filas que cubre el eje corto de Siemens (con 6 de margen para el filtro), gaussiano 3D, y remuestreo trilineal a la grilla de Siemens. Con AC, el mapa μ sale del CT de la fase sin desplazamiento, porque comparten marco de referencia. El gatillado usa la gatillada original: el ZIP no trae copia corregida.
+- **Vistas:** en los ejes cortos, eje corto, largo vertical y largo horizontal, sacados de la misma grilla en las dos. En el gatillado, «Latir» anima los 8 intervalos a la vez. Las métricas del gatillado suman los 8 intervalos. La transversal ahora también usa la orientación exacta de su DICOM (tiene medio grado de inclinación), y su correlación subió.
+
+**Validación.** Emulación de teléfono:
+
+| | Transversal (como el equipo) | Eje corto NoAC, receta Siemens | NoAC, receta del caso | Eje corto AC, receta Siemens | Gatillado, receta Siemens |
+|---|---|---|---|---|---|
+| Caso 4, estrés | r 0,844 · 5 s | 0,938 · 14 s | 0,942 · 6 s | 0,949 · 69 s | 0,823 · 73 s |
+| Caso 3, reposo | 0,890 · 5 s | 0,891 · 10 s | 0,894 · 5 s | 0,919 · 66 s | 0,856 · 61 s |
+
+En el eje corto el anillo del simulador cae en el mismo lugar y con la misma forma que el de Siemens, y en el largo vertical la misma «C». En el gatillado, el intervalo 1 muestra la cavidad abierta y el 4 casi cerrada en los dos.
+
+**Diferencias que se ven.** Siemens deja en cero todo lo que está fuera del corazón; el simulador no. El gatillado de Siemens se ve con pocos niveles de gris, probablemente porque sus valores enteros son bajos; no se comprobó. La OSEM de Siemens es 3D y en estos equipos suele traer recuperación de resolución; la del simulador es 2D, corte por corte, sin ella.
