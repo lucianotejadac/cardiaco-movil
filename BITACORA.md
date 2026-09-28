@@ -195,3 +195,15 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Pendiente.**
 - Con atenuación, una zona muy intensa en el borde lateral derecho del paciente domina la escala en los cortes del corazón. No se investigó si es el hígado reforzado por la corrección o un efecto de la franja sin medición (ceros medidos) combinada con la atenuación.
 - Probar el tiempo de la atenuación en un teléfono real.
+
+## 2026-09-28 · Ventana de progreso en las reconstrucciones
+
+**Contexto.** El docente pidió una barra de progreso emergente mientras se reconstruye.
+
+**Decisiones.**
+- **Una ventana modal compartida** (`progreso.js`, `<dialog id="dProgreso">`) para la FBP del registro y para todas las OSEM. Muestra qué se reconstruye, la barra con el porcentaje, los segundos transcurridos, la etapa en palabras y un botón «Detener». No se cierra tocando fuera ni con la tecla atrás: solo al terminar o al detener.
+- **Reparto de la barra.** FBP: 85 % el filtro rampa y la retroproyección, corte por corte; 15 % el suavizado. OSEM: 10 % el mapa μ si hay atenuación, luego la OSEM, y 10 % el filtro final si lo hay. El motor avisa al terminar cada corte, pero con atenuación cada corte tarda varios segundos; por eso también se usa la vista en curso dentro del corte. La barra nunca retrocede, porque los avisos de los dos trabajadores llegan desordenados.
+- **«Detener» ahora detiene de verdad.** Antes, al detener una OSEM se cortaba el trabajo, pero la espera quedaba pendiente para siempre; el mapa μ y el filtro final no se podían detener. Ahora las tres etapas se detienen y la pantalla informa «Reconstrucción detenida». La FBP también se puede detener; para rehacerla se vuelve al control de calidad y se pulsa «Siguiente».
+- Se quitaron el aviso y el botón «Detener» que había en la tarjeta de la OSEM: están en la ventana.
+
+**Validación.** Emulación de teléfono: la ventana aparece en la FBP (36 % en el corte 54 de 128) y se detiene; al volver a entrar la FBP termina; en la OSEM 1 × 1 la tecla atrás no la cierra; en la receta con atenuación la barra avanza pareja (3, 17, 25 … 87 % cada 8 s, en 87 s) con la etapa «Atenuación de cada vista: corte 15 de 30, vista 8 de 64»; al detenerla se puede reconstruir otra (sin atenuación, 6,0 s).

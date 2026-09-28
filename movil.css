@@ -104,4 +104,14 @@ body.comparar .clave{display:none}
 .opciones input:disabled{opacity:.4}
 .check.propia{display:flex;align-items:center;gap:8px;font-size:.85rem;margin:4px 0 6px}
 .check.propia input{width:20px;height:20px;accent-color:var(--acento)}
-#osemDetener{margin-top:8px}
+/* Ventana de progreso de las reconstrucciones */
+dialog.progreso{width:min(88vw,420px)}
+dialog.progreso h2{font-size:1rem;margin-bottom:10px}
+#progBarra{width:100%;height:14px;-webkit-appearance:none;appearance:none;border:0;border-radius:7px;background:var(--linea);overflow:hidden;accent-color:var(--acento)}
+#progBarra::-webkit-progress-bar{background:var(--linea);border-radius:7px}
+#progBarra::-webkit-progress-value{background:var(--acento);border-radius:7px;transition:width .2s}
+#progBarra::-moz-progress-bar{background:var(--acento);border-radius:7px}
+.progFila{display:flex;justify-content:space-between;margin:6px 0 0;font-weight:600;min-height:1.4em}
+#progTexto{min-height:2.6em;margin:4px 0}
+#progNota{color:var(--texto2)}
+#progDetener{margin:6px 0 0}

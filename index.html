@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=12">
+<link rel="stylesheet" href="movil.css?v=13">
 </head>
 <body>
 <header class="barra">
@@ -116,8 +116,6 @@
     <label>FWHM (mm) <input id="osemFwhm" type="number" min="1" max="25" step="0.1" value="8.4" inputmode="decimal"></label>
    </div>
    <button id="osemCorrer" type="button" class="boton ancho">Reconstruir</button>
-   <p id="osemAviso" class="clave"></p>
-   <button id="osemDetener" type="button" class="cambio" hidden>Detener</button>
   </section>
   <button type="button" class="vermas ancho" data-dialogo="dOsem">Ver más sobre la OSEM</button>
  </section>
@@ -298,16 +296,26 @@
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
 
+<dialog id="dProgreso" class="progreso" aria-live="polite">
+ <h2 id="progTitulo">Reconstruyendo</h2>
+ <progress id="progBarra" max="1" value="0"></progress>
+ <p class="progFila"><span id="progPorcentaje"></span><span id="progTiempo" class="mono"></span></p>
+ <p id="progTexto" class="clave"></p>
+ <p id="progNota" class="clave" hidden></p>
+ <button id="progDetener" type="button" class="cambio">Detener</button>
+</dialog>
+
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
 <script src="correccion.js?v=1"></script>
-<script src="registro.js?v=5"></script>
+<script src="progreso.js?v=1"></script>
+<script src="registro.js?v=6"></script>
 <script src="algorithm.js?v=1"></script>
 <script src="simulador95-psf.js?v=1"></script>
 <script src="simulador95-osem.js?v=1"></script>
 <script src="simulador95-pool.js?v=1"></script>
-<script src="osem-movil.js?v=3"></script>
-<script src="movil.js?v=11"></script>
+<script src="osem-movil.js?v=4"></script>
+<script src="movil.js?v=12"></script>
 </body>
 </html>

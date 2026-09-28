@@ -40,7 +40,7 @@ const Registro=(()=>{
  }
  function fbp(s,avance){
   return new Promise((ok,mal)=>{
-   const url=URL.createObjectURL(new Blob([Lab95.workerSource],{type:'text/javascript'}));const w=new Worker(url);URL.revokeObjectURL(url);r.trabajador=w;
+   const url=URL.createObjectURL(new Blob([Lab95.workerSource],{type:'text/javascript'}));const w=new Worker(url);URL.revokeObjectURL(url);r.trabajador=w;r.rechazo=mal;
    w.onerror=e=>{w.terminate();r.trabajador=null;mal(Error(e.message));};
    w.onmessage=({data:q})=>{
     if(q.error){w.terminate();r.trabajador=null;mal(Error(q.error));return;}
@@ -56,16 +56,19 @@ const Registro=(()=>{
   const aviso=$('regEstado');
   if(!ctBytes||!ctBytes.length){aviso.textContent='Para el registro hace falta el CT, que viene en el ZIP. Toca «Cambiar archivo» y elige el ZIP «Cardiaco …» una vez más: desde ahí queda guardado con el CT.';aviso.className='estado error';return false;}
   if(r.s===s&&r.vol){pintar();return true;}
-  cancelar();r.listo=false;r.s=s;r.fuente=fuente;r.vol=null;r.cache=null;
+  cancelar();r.listo=false;r.s=s;r.fuente=fuente;r.vol=null;r.cache=null;r.detenido=false;r.enCurso=true;
+  Progreso.abrir('Reconstrucción FBP para el registro',cancelar);
   try{
-   aviso.className='estado';aviso.textContent='Leyendo el CT…';await new Promise(q=>setTimeout(q,0));
+   aviso.className='estado';aviso.textContent='Leyendo el CT…';Progreso.avance(null,'Leyendo el CT del ZIP…');await new Promise(q=>setTimeout(q,0));
    if(r.ctBytes!==ctBytes){r.ct=prepararCT(s,ctBytes);r.ctBytes=ctBytes;}
    const t0=performance.now();
    const completa=completarFranja(s);r.franjas=completa.vistas;
-   const v=await fbp(completa.s,q=>{aviso.textContent=`Reconstruyendo con FBP… ${Math.round(q*100)} %`;});
-   aviso.textContent='Suavizando la reconstrucción…';
-   const sv=await Lab95.gaussian3D(v,s.n,FWHM/s.spacing/2.354820045,()=>r.s!==s);
-   if(r.s!==s||!sv)return false;
+   // La barra: 85 % la FBP (corte por corte) y 15 % el suavizado.
+   const v=await fbp(completa.s,q=>{aviso.textContent=`Reconstruyendo con FBP… ${Math.round(q*100)} %`;Progreso.avance(q*.85,`Filtro rampa y retroproyección: corte ${Math.round(q*s.n)} de ${s.n}`);});
+   aviso.textContent='Suavizando la reconstrucción…';Progreso.avance(.85,`Suavizado gaussiano 3D de ${dec(FWHM,1)} mm…`);
+   const sv=await Lab95.gaussian3D(v,s.n,FWHM/s.spacing/2.354820045,()=>r.s!==s||r.detenido);
+   if(r.s!==s||!sv){if(r.detenido)throw Error('detenida');return false;}
+   Progreso.avance(1,'Listo');
    r.vol=sv;
    const muestra=[];for(let i=0;i<sv.length;i+=7)if(sv[i]>0)muestra.push(sv[i]);muestra.sort((a,b)=>a-b);r.escala=muestra[Math.floor(muestra.length*.995)]||1;
    // Cortes iniciales por el corazon: la fila del maximo de la imagen suma y, en ese corte
@@ -75,9 +78,15 @@ const Registro=(()=>{
    r.listo=true;
    aviso.className='estado ok';aviso.textContent=`FBP con filtro rampa de las proyecciones ${fuente}, suavizada con un gaussiano de ${dec(FWHM,1)} mm. Tomó ${dec((performance.now()-t0)/1000,1)} s.`;
    pintar();return true;
-  }catch(err){aviso.className='estado error';aviso.textContent='No se pudo preparar el registro: '+(err.message||err);console.error(err);return false;}
+  }catch(err){
+   if(r.detenido){aviso.className='estado';aviso.textContent='FBP detenida. Para reconstruir de nuevo, vuelve al control de calidad y pulsa «Siguiente».';r.s=null;}
+   else{aviso.className='estado error';aviso.textContent='No se pudo preparar el registro: '+(err.message||err);console.error(err);}
+   return false;
+  }
+  finally{r.enCurso=false;Progreso.cerrar();}
  }
- function cancelar(){if(r.trabajador){r.trabajador.terminate();r.trabajador=null;}}
+ // Detiene la FBP en curso (boton «Detener» o salir del paso).
+ function cancelar(){if(r.enCurso)r.detenido=true;if(r.trabajador){r.trabajador.terminate();r.trabajador=null;if(r.rechazo)r.rechazo(Error('detenida'));}r.rechazo=null;}
 
  // Coordenadas del volumen para un punto (u,v) del plano elegido, como en el escritorio.
  function coords(u,v,i){return r.plano==='axial'?[u,v,i]:r.plano==='coronal'?[u,i,v]:[i,u,v];}
