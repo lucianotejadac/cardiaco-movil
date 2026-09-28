@@ -59,23 +59,52 @@ function elegirEntradas(lista){
  return {cruda};
 }
 
+/* ---------- memoria del telefono ---------- */
+// Se guarda solo el DICOM sacado del ZIP (unos 4 MB) en IndexedDB, dentro del navegador: al
+// volver a abrir la pagina, o cuando se publica una version nueva, se recarga sin elegir el ZIP.
+// Si el navegador no deja guardar (modo incognito, sin espacio), todo sigue funcionando igual.
+const MEMORIA={db:'cardiaco-movil',tienda:'archivos',clave:'estres-caso1'};
+function abrirMemoria(){return new Promise((ok,mal)=>{const r=indexedDB.open(MEMORIA.db,1);r.onupgradeneeded=()=>r.result.createObjectStore(MEMORIA.tienda);r.onsuccess=()=>ok(r.result);r.onerror=()=>mal(r.error);});}
+async function memoria(modo,valor){
+ const db=await abrirMemoria();
+ try{return await new Promise((ok,mal)=>{const t=db.transaction(MEMORIA.tienda,modo==='leer'?'readonly':'readwrite'),s=t.objectStore(MEMORIA.tienda);
+  const r=modo==='leer'?s.get(MEMORIA.clave):modo==='borrar'?s.delete(MEMORIA.clave):s.put(valor,MEMORIA.clave);
+  t.oncomplete=()=>ok(r.result);t.onerror=()=>mal(t.error);});}
+ finally{db.close();}
+}
+async function guardar(bytes,origen){
+ try{await memoria('guardar',{bytes,origen,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
+ catch(err){console.warn('No se pudo guardar en el teléfono',err);}
+}
+async function recuperar(){
+ let m=null;try{m=await memoria('leer');}catch(err){console.warn('No se pudo leer lo guardado',err);}
+ if(m&&m.bytes)await mostrar(m.bytes,m.origen,true);
+}
+
 /* ---------- carga ---------- */
 async function cargar(file){
  try{
   mensaje('Leyendo '+file.name+'…');
-  let d,origen=file.name;
+  let bytes,origen=file.name;
   if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){
    const buf=await file.arrayBuffer();const lista=await entradasZip(buf);const e=elegirEntradas(lista);
    if(!e)throw Error('Dentro del ZIP no hay NM_estres.dcm. Revisa que sea el ZIP «Cardiaco …» de U-Cursos.');
    mensaje('Descomprimiendo las proyecciones…');origen=e.cruda.name;
-   d=await Lab95.read(new Blob([await extraer(buf,e.cruda)]));
-  }else d=await Lab95.read(file);
+   bytes=await extraer(buf,e.cruda);
+  }else bytes=new Uint8Array(await file.arrayBuffer());
+  if(await mostrar(bytes,origen,false))await guardar(bytes,origen);
+ }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
+}
+// Muestra un DICOM ya extraido. Devuelve true si se pudo leer.
+async function mostrar(bytes,origen,recuperado){
+ try{
+  const d=await Lab95.read(new Blob([bytes]));
   const crudo=Lab95.spect(d);
   // De que cabezal y de que paso del giro es cada cuadro: lo necesita la correccion.
   estado.cuadros=Array.from({length:crudo.frames},(_,i)=>({cabezal:d.uint16('x00540020',i),ventana:d.uint16('x00540010',i),paso:d.uint16('x00540090',i)}));
   const marco=CARDIACO_CASOS[CASO].fases[FASE].marco,esDelCaso=cardiacoHash(crudo.frame)===marco;
   estado.aviso=esDelCaso?'':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
-  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+origen,esDelCaso?'ok':'error');
+  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+origen+(recuperado?' (guardado en este teléfono)':''),esDelCaso?'ok':'error');
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=false;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
@@ -84,7 +113,13 @@ async function cargar(file){
   $('modo').disabled=false;
   $('qc').classList.remove('oculta');$('carga').classList.add('oculta');$('cambiar').hidden=false;
   armar();window.scrollTo(0,0);
- }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
+  return true;
+ }catch(err){
+  // Lo guardado no se pudo leer (por ejemplo, de una version anterior): se olvida y se pide el ZIP.
+  if(recuperado){memoria('borrar').catch(()=>{});mensaje('Nada cargado todavía.');}
+  else mensaje(err.message||String(err),'error');
+  console.error(err);return false;
+ }
 }
 
 /* ---------- una fuente (cruda o corregida): vistas, escalas e imagenes fijas ---------- */
@@ -220,4 +255,6 @@ $('play').addEventListener('click',reproducir);
 // Explicaciones en dialogos: «Ver mas» abre, «Cerrar» o tocar fuera cierra.
 document.querySelectorAll('[data-dialogo]').forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.dialogo)));
 document.querySelectorAll('dialog').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d)d.close();});d.querySelectorAll('[data-cerrar]').forEach(b=>b.addEventListener('click',()=>d.close()));});
-window.MovilCardiaco={estado,cargar,redibujar,armar,corregir};
+window.MovilCardiaco={estado,cargar,mostrar,recuperar,redibujar,armar,corregir};
+// Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
+recuperar();

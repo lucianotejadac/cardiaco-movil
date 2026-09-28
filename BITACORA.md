@@ -123,3 +123,11 @@ El cálculo toma 0,6 a 1,2 segundos en la emulación. En los cinco originales no
 **Decisión.** La vista de una columna lleva el rótulo «Sin corregir» a todo el ancho, sobre las cuatro imágenes. El botón dice «Corregir» mientras no se ha corregido; en las dos columnas dice «Volver a sin corregir», y al volver, «Ver corregido» (la corrección ya calculada no se repite). Se actualizaron los textos que nombraban el botón anterior («Vista corregido»).
 
 **Validación.** Emulación de teléfono con el ZIP del caso 1 con dos saltos de 4 píxeles a lo largo de la camilla (pasos 10 y 21, sin copia corregida): al cargar, botón «Corregir», rótulo «Sin corregir» y cuatro imágenes; al pulsarlo, rótulos «Sin corregir» y «Corregido» y ocho imágenes; volver y entrar de nuevo alterna sin recalcular. La corrección encuentra los dos saltos en su paso y sentido, pero mide 3 píxeles en cada uno en vez de 4: con dos saltos seguidos en el mismo eje subestima. No se tocó el algoritmo.
+
+## 2026-09-28 · El archivo queda guardado en el teléfono
+
+**Contexto.** El docente pidió que la carga persista, para no tener que elegir el ZIP de nuevo cada vez que se publica una versión nueva del simulador.
+
+**Decisión.** Después de leer bien el archivo, la aplicación guarda en IndexedDB, dentro del navegador del teléfono, solo el DICOM que sacó del ZIP (`NM_estres.dcm`, 4,2 MB; no los 27 MB del ZIP) y el nombre de origen. Al abrir la página, si hay algo guardado, se muestra sin pedir nada y el estado dice «guardado en este teléfono». «Cambiar archivo» elige otro y lo reemplaza. Se pide almacenamiento persistente al navegador para que no lo borre por falta de espacio. Si lo guardado no se puede leer (por ejemplo, tras un cambio de formato), se olvida y se vuelve a pedir el ZIP. Si el navegador no deja guardar (modo incógnito), la aplicación funciona igual que antes. Sigue sin enviarse nada a ningún servidor; el texto de privacidad lo explica.
+
+**Validación.** Emulación de teléfono servida por HTTP: primera visita pide el ZIP; al elegirlo se muestra; al recargar se muestra solo, con el aviso de guardado; «Corregir» funciona sobre lo recuperado (los mismos dos saltos); con un dato guardado dañado, la página lo olvida y vuelve a pedir el ZIP, también en la recarga siguiente.
