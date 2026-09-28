@@ -125,3 +125,4 @@ dialog.progreso h2{font-size:1rem;margin-bottom:10px}
 #reo .fila .valor{flex:none;width:40px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 #reo .fila{gap:6px}
 #reo .recetas{margin-top:6px}
+#caja canvas{image-rendering:pixelated;touch-action:none;cursor:move}
