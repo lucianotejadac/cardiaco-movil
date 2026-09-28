@@ -365,3 +365,12 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 
 **Límite conocido.** El botón de carpeta depende del navegador del teléfono; si no está disponible, se usa «Elegir archivos» y se marcan todos.
 
+## 2026-09-28 · Se vuelve a habilitar la reorientación de ejes
+
+**Contexto.** La segunda parte (ubicar el corazón con una caja y reorientar los ejes) había quedado en pausa: el botón de entrada desde la OSEM estaba oculto y solo se llegaba a la reorientación por la reconstrucción del equipo, que únicamente traen los ZIP con «Referencia equipo». El docente pidió reincorporarla.
+
+**Decisiones.**
+- **El botón vuelve a estar visible al final de la OSEM**, junto al de gatillado: «Siguiente: reorientar los ejes (primero, ubicar el corazón)». El código de la caja y de la reorientación no cambió.
+- **La referencia del eje es del caso 1.** Con un archivo que no es el caso 1 (por ejemplo, un examen cargado por carpeta) la reorientación se abre sin referencia.
+- **Texto de carga.** Cuando el caso 1 se carga por carpeta, el mensaje ya no repite «Archivo propio».
+

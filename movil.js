@@ -186,9 +186,9 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo){
   const marco=CARDIACO_CASOS[CASO].fases[FASE].marco,esDelCaso=cardiacoHash(crudo.frame)===marco;
   // Un archivo propio (cargado suelto o por carpeta) que no es del caso 1 se muestra sin la
   // advertencia en rojo y sin los antecedentes del caso 1.
-  const propio=!esDelCaso&&String(origen).startsWith(PROPIO);
+  const propio=!esDelCaso&&String(origen).startsWith(PROPIO);estado.esDelCaso=esDelCaso;
   estado.aviso=esDelCaso?'':propio?'Archivo propio, no es el caso 1. ':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
-  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+origen+(recuperado?' (guardado en este teléfono)':''),esDelCaso||propio?'ok':'error');
+  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+(esDelCaso?String(origen).replace(PROPIO,''):origen)+(recuperado?' (guardado en este teléfono)':''),esDelCaso||propio?'ok':'error');
   $('titulo').textContent=esDelCaso?'SPECT cardíaco · Caso 1 · Estrés':'SPECT cardíaco · '+(crudo.description||'archivo propio');
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=!esDelCaso;
   detener();estado.k=0;
@@ -364,7 +364,7 @@ function aCaja(){
  // OSEM de la aplicacion: voxel (con z hacia la cabeza) -> paciente, con la geometria de la cruda.
  const s=estado.crudo.s,n=s.n,c=(n-1)/2;
  RefProy.configurar(s,(i,j,k)=>[(i-c)*s.spacing+s.origin[0],(j-c)*s.spacing+s.origin[1],s.z0-(n-1-k)*s.spacing]);
- Object.assign(segunda,{origen:'osem',s:OsemMovil.estado.s,referencia:CARDIACO_CASOS[CASO]?.fases?.[FASE]?.eje||null});
+ Object.assign(segunda,{origen:'osem',s:OsemMovil.estado.s,referencia:estado.esDelCaso?(CARDIACO_CASOS[CASO]?.fases?.[FASE]?.eje||null):null});
  $('volverOsem').textContent='← Volver a la OSEM';
  mostrarSolo('caja');Caja.abrir({entrada:entradaIzquierda(),s:segunda.s});
 }
