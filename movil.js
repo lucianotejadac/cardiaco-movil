@@ -97,13 +97,13 @@ async function memoria(modo,valor){
   t.oncomplete=()=>ok(r.result);t.onerror=()=>mal(t.error);});}
  finally{db.close();}
 }
-async function guardar(bytes,origen,ct,gat,equipo){
- try{await memoria('guardar',{bytes,origen,ct,gat,equipo,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
+async function guardar(bytes,origen,ct,gat,equipo,ejes){
+ try{await memoria('guardar',{bytes,origen,ct,gat,equipo,ejes:ejes||null,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
  catch(err){console.warn('No se pudo guardar en el teléfono',err);}
 }
 async function recuperar(){
  let m=null;try{m=await memoria('leer');}catch(err){console.warn('No se pudo leer lo guardado',err);}
- if(m&&m.bytes)await mostrar(m.bytes,m.origen,true,m.ct||null,m.gat||null,m.equipo||null);
+ if(m&&m.bytes)await mostrar(m.bytes,m.origen,true,m.ct||null,m.gat||null,m.equipo||null,m.ejes||null);
 }
 
 /* ---------- archivos sueltos o carpeta (provisional) ---------- */
@@ -119,7 +119,7 @@ async function encabezado(file){
  try{d=await intento(file.size>TROZO?file.slice(0,TROZO):file);}catch(e){try{d=await intento(file);}catch(e2){return null;}}
  if(!d)return null;
  const t=tag=>(d.string(tag)||'').trim();
- return {file,modalidad:t('x00080060'),tipo:t('x00080008'),descripcion:t('x0008103e'),marco:t('x00200052'),serie:t('x0020000e'),filas:d.uint16('x00280010')||0,intervalos:d.uint16('x00540071')||1};
+ return {file,modalidad:t('x00080060'),tipo:t('x00080008'),descripcion:t('x0008103e'),marco:t('x00200052'),serie:t('x0020000e'),filas:d.uint16('x00280010')||0,intervalos:d.uint16('x00540071')||1,nucleo:t('x00181210')};
 }
 async function elegirArchivos(files){
  const lista=Array.from(files).filter(f=>f.size>=136&&f.size<=6e7&&!/\.(zip|rar|7z|pdf|txt|jpg|jpeg|png|xml|html?|exe|ini|inf)$/i.test(f.name)&&!/^dicomdir$/i.test(f.name));
@@ -141,10 +141,14 @@ async function elegirArchivos(files){
  const gat=mejor(todos.filter(e=>tomo(e)&&(/GATED/.test(e.tipo)||e.intervalos>1)&&e.marco===cruda.marco&&!/correct|corregid/i.test(e.descripcion)));
  const bytes=async f=>new Uint8Array(await f.arrayBuffer());
  mensaje('Leyendo las proyecciones…');
- const r={bytes:await bytes(cruda.file),ct:null,gat:null};
+ // Reconstrucciones del equipo hechas con OSEM, no gatilladas, del mismo marco: entre ellas
+ // esta el eje corto que usa la reorientacion (eje-equipo.js decide cual sirve).
+ const recon=todos.filter(e=>e.modalidad==='NM'&&/RECON/.test(e.tipo)&&!/GATED/.test(e.tipo)&&e.intervalos<=1&&e.marco===cruda.marco&&/OSEM/i.test(e.nucleo));
+ const r={bytes:await bytes(cruda.file),ct:null,gat:null,ejes:[]};
  if(serieCt.length){mensaje('Leyendo el CT…');r.ct=[];for(const e of serieCt)r.ct.push(await bytes(e.file));}
  if(gat){mensaje('Leyendo la adquisición gatillada…');r.gat=await bytes(gat.file);}
- r.origen=`${PROPIO}serie «${cruda.descripcion||'sin descripción'}», elegida entre ${lista.length} ${lista.length===1?'archivo':'archivos'}; ${r.ct?r.ct.length+' cortes de CT':'sin CT'}; ${r.gat?'con':'sin'} adquisición gatillada`;
+ if(recon.length){mensaje('Leyendo las reconstrucciones del equipo…');for(const e of recon)r.ejes.push(await bytes(e.file));}
+ r.origen=`${PROPIO}serie «${cruda.descripcion||'sin descripción'}», elegida entre ${lista.length} ${lista.length===1?'archivo':'archivos'}; ${r.ct?r.ct.length+' cortes de CT':'sin CT'}; ${r.gat?'con':'sin'} adquisición gatillada; ${r.ejes.length?r.ejes.length+' '+(r.ejes.length===1?'reconstrucción':'reconstrucciones')+' del equipo':'sin reconstrucciones del equipo'}`;
  return r;
 }
 
@@ -158,7 +162,7 @@ async function cargar(entrada){
    else{
     mensaje(`Revisando ${varios.length} ${varios.length===1?'archivo':'archivos'}…`);
     const e=await elegirArchivos(varios);
-    if(await mostrar(e.bytes,e.origen,false,e.ct,e.gat,null))await guardar(e.bytes,e.origen,e.ct,e.gat,null);
+    if(await mostrar(e.bytes,e.origen,false,e.ct,e.gat,null,e.ejes))await guardar(e.bytes,e.origen,e.ct,e.gat,null,e.ejes);
     return;
    }
   }
@@ -177,7 +181,7 @@ async function cargar(entrada){
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
 }
 // Muestra un DICOM ya extraido. Devuelve true si se pudo leer.
-async function mostrar(bytes,origen,recuperado,ct,gat,equipo){
+async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes){
  try{
   const d=await Lab95.read(new Blob([bytes]));
   const crudo=Lab95.spect(d);
@@ -193,7 +197,7 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo){
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=!esDelCaso;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
-  estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;// Lo guardado antes de este cambio traia una sola reconstruccion (objeto): se pasa a lista.
+  estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;EjeEquipo.configurar(ejes);// Lo guardado antes de este cambio traia una sola reconstruccion (objeto): se pasa a lista.
   estado.equipo=equipo?(Array.isArray(equipo)?equipo:[equipo]):[];
   $('equipoBotones').replaceChildren(...estado.equipo.flatMap((q,i)=>{const fase=q.fase==='reposo'?'reposo':'estrés',boton=(texto,f)=>{const b=document.createElement('button');b.type='button';b.className='boton ancho secundario';b.textContent=texto;b.addEventListener('click',f);return b;};
    return [boton(`Comparar Siemens con el simulador (caso ${q.caso}, ${fase}) →`,()=>aComparar(i)),boton(`Reorientar con la reconstrucción del equipo (caso ${q.caso}, ${fase}) →`,()=>aEquipo(i))];}));Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
@@ -390,7 +394,7 @@ async function aEquipo(i=0){
 // Comparador: la reconstruccion de Siemens frente a la del simulador con las mismas proyecciones.
 function aComparar(i){const q=estado.equipo[i];if(!q)return;mostrarSolo('cmp');Comparador.abrir(q);}
 function aReorientar(){
- mostrarSolo('reo');
+ mostrarSolo('reo');$('reoEquipo').hidden=!(EjeEquipo.disponible()&&segunda.origen==='osem');
  Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
 }
 function aOsemDesdeCaja(){if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
@@ -410,6 +414,13 @@ $('aCaja').addEventListener('click',aCaja);
 $('aGatillado').addEventListener('click',aGatillado);
 $('volverOsemGat').addEventListener('click',()=>mostrarSolo('osem'));
 $('aReorientar').addEventListener('click',aReorientar);
+// Eje y receta del equipo: reconstruye con su receta, enmascara, iguala la escala y reorienta.
+$('reoEquipo').addEventListener('click',async()=>{
+ const o=OsemMovil.estado,b=$('reoEquipo'),aviso=$('reoEstado');if(!o.s)return;b.disabled=true;
+ try{const fuente=o.fuente||'sin corregir',x=await EjeEquipo.ejecutar({s:o.s,reg:Registro.estado,fuente});if(x){x.fuente=fuente;Reorientar.usarEquipo(x,o.s);window.scrollTo(0,0);}}
+ catch(err){const detenida=EjeEquipo.estado.detenido;aviso.className=detenida?'estado':'estado error';aviso.textContent=detenida?'Reconstrucción detenida.':'No se pudo usar el eje del equipo: '+(err.message||err);if(!detenida)console.error(err);}
+ finally{b.disabled=false;}
+});
 $('volverOsem').addEventListener('click',aOsemDesdeCaja);
 $('volverCaja').addEventListener('click',aCajaDesdeReo);
 Progreso.iniciar();

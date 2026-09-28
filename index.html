@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=22">
+<link rel="stylesheet" href="movil.css?v=23">
 </head>
 <body>
 <header class="barra">
@@ -243,6 +243,14 @@
    <figure><figcaption>Largo vertical</figcaption><canvas id="reoVla" aria-label="Eje largo vertical."></canvas></figure>
    <figure><figcaption>Largo horizontal</figcaption><canvas id="reoHla" aria-label="Eje largo horizontal."></canvas></figure>
   </div>
+  <div id="reoEq" hidden>
+   <div class="columna eq">Reconstrucción del equipo, cortada igual</div>
+   <div class="rejilla reo tres">
+    <figure><figcaption>Eje corto</figcaption><canvas id="reoCortoEq" aria-label="Eje corto del equipo."></canvas></figure>
+    <figure><figcaption>Largo vertical</figcaption><canvas id="reoVlaEq" aria-label="Eje largo vertical del equipo."></canvas></figure>
+    <figure><figcaption>Largo horizontal</figcaption><canvas id="reoHlaEq" aria-label="Eje largo horizontal del equipo."></canvas></figure>
+   </div>
+  </div>
   <p class="clave"><span class="celeste">━●</span> eje hacia el ápex · <span class="amarilla">●</span> centro del ventrículo (arrástralo sobre cualquier imagen) · <span class="amarilla">━</span> corte de eje corto que se muestra.</p>
   <div class="controles">
    <div class="fila"><span class="etq">Azimut</span><button id="reoAzMenos" type="button" class="paso" aria-label="Azimut menos 1°">−</button><input id="reoAz" type="range" min="-30" max="120" step="1" value="0" aria-label="Azimut"><button id="reoAzMas" type="button" class="paso" aria-label="Azimut más 1°">+</button><span id="reoAzTexto" class="valor"></span></div>
@@ -250,7 +258,8 @@
    <div class="fila"><span class="etq">Eje corto</span><input id="reoT" type="range" min="-12" max="12" step="1" value="0" aria-label="Posición del corte de eje corto, de la base al ápex"></div>
    <p id="reoTTexto" class="clave"></p>
    <div class="fila"><span class="etq">Techo</span><input id="reoTecho" type="range" min="20" max="100" step="1" value="100" aria-label="Techo de la escala de color"></div>
-   <div class="recetas"><button id="reoBuscar" type="button" class="mini">Buscar el centro con este eje</button><button id="reoCero" type="button" class="mini">Volver a 0° y 0°</button></div>
+   <div class="recetas"><button id="reoBuscar" type="button" class="mini">Buscar el centro con este eje</button><button id="reoCero" type="button" class="mini">Volver a 0° y 0°</button><button id="reoEjeExacto" type="button" class="mini" hidden>Volver al eje exacto del equipo</button></div>
+   <button id="reoEquipo" type="button" class="boton ancho otro" hidden>Usar el eje y la receta del equipo (provisional)</button>
   </div>
   <div class="refProy" hidden>
    <p class="clave">Referencia en la adquisición: dos proyecciones del estudio, con el centro del ventrículo (amarillo) y el eje hacia el ápex (celeste). Si la marca no cae sobre el corazón, la ubicación está mal.</p>
@@ -281,7 +290,7 @@
   <dt>Lo que no se usa todavía</dt>
   <dd>El ZIP trae además una adquisición sincronizada con el electrocardiograma y el reposo. Aquí no se abren.</dd>
   <dt>Archivos sueltos o una carpeta</dt>
-  <dd>Es una forma provisional de cargar. Puedes elegir varios archivos DICOM o una carpeta con subcarpetas, aunque los archivos no tengan extensión. La aplicación lee el encabezado de cada uno y se queda con las proyecciones tomográficas originales que no están sincronizadas con el electrocardiograma ni reconstruidas. Si hay varias, prefiere la de estrés y la que no fue corregida por el equipo. Después busca la tomografía computada y la adquisición sincronizada que comparten el mismo marco de referencia con esas proyecciones. La aplicación no muestra el nombre ni los datos del paciente. En algunos teléfonos el botón de carpeta no está disponible: en ese caso usa «Elegir archivos» y marca todos.</dd>
+  <dd>Es una forma provisional de cargar. Puedes elegir varios archivos DICOM o una carpeta con subcarpetas, aunque los archivos no tengan extensión. La aplicación lee el encabezado de cada uno y se queda con las proyecciones tomográficas originales que no están sincronizadas con el electrocardiograma ni reconstruidas. Si hay varias, prefiere la de estrés y la que no fue corregida por el equipo. Después busca la tomografía computada, la adquisición sincronizada y las reconstrucciones del equipo que comparten el mismo marco de referencia con esas proyecciones. Con una reconstrucción del equipo en eje corto, la reorientación ofrece «Usar el eje y la receta del equipo». La aplicación no muestra el nombre ni los datos del paciente. En algunos teléfonos el botón de carpeta no está disponible: en ese caso usa «Elegir archivos» y marca todos.</dd>
   <dt>Privacidad</dt>
   <dd>El archivo se lee dentro del teléfono y no se envía a ningún servidor. Las proyecciones y el CT que la aplicación saca del ZIP quedan guardados en el navegador de este teléfono, así no hay que volver a elegir el ZIP cada vez que se abre la página o se publica una versión nueva. Para usar otro archivo, toca «Cambiar archivo».</dd>
  </dl>
@@ -531,11 +540,12 @@
 <script src="simulador95-pool.js?v=1"></script>
 <script src="osem-movil.js?v=4"></script>
 <script src="cardiaco-core.js?v=1"></script>
-<script src="reorientar.js?v=4"></script>
+<script src="reorientar.js?v=5"></script>
 <script src="referencia.js?v=1"></script>
 <script src="caja.js?v=3"></script>
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="movil.js?v=22"></script>
+<script src="eje-equipo.js?v=1"></script>
+<script src="movil.js?v=23"></script>
 </body>
 </html>

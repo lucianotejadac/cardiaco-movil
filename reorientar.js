@@ -37,7 +37,7 @@ const Reorientar=(()=>{
   const aviso=$('reoEstado');
   if(!entrada||!['osem','equipo'].includes(entrada.tipo)){aviso.className='estado error';aviso.textContent='Elige a la izquierda una reconstrucción OSEM (no el mapa μ) antes de reorientar.';return false;}
   const clave=JSON.stringify(caja);
-  if(r.origen!==entrada){r.az=0;r.el=0;}
+  if(r.origen!==entrada){r.az=0;r.el=0;r.marcoFijo=null;r.comparar=null;r.equipo=null;}
   if(r.origen!==entrada||r.claveCaja!==clave){
    r.origen=entrada;r.claveCaja=clave;r.caja={...caja};r.n=s.n;r.sp=s.spacing;r.vol=volumen(entrada,s.n);r.max=Caja.maxEnCaja(r.vol,r.n,caja);r.etiqueta=entrada.etiqueta;
    r.Cv=[(caja.x0+caja.x1)/2,(caja.y0+caja.y1)/2,(caja.z0+caja.z1)/2];
@@ -49,7 +49,21 @@ const Reorientar=(()=>{
   pintar();return true;
  }
 
- const marco=()=>C.marco(r.az,r.el);
+ // Con el eje del equipo el marco es el de su DICOM, exacto; al mover un deslizador se vuelve al
+ // marco de los angulos.
+ const marco=()=>r.marcoFijo||C.marco(r.az,r.el);
+ /* Eje y receta del equipo: x viene de EjeEquipo.ejecutar. La reconstruccion del simulador (misma
+    receta, enmascarada y en la escala del equipo) pasa a ser el volumen que se reorienta, y la del
+    equipo se muestra debajo con el mismo centro, el mismo marco y la misma escala de color. */
+ function usarEquipo(x,s){
+  r.origen=x.entrada;r.claveCaja=null;r.n=s.n;r.sp=s.spacing;r.vol=x.sim;r.comparar=x.equipo;r.max=x.max;r.etiqueta=x.entrada.etiqueta;
+  r.Cv=x.centro.slice();r.L=x.largo;r.t=0;r.techo=1;r.equipo=x;r.marcoFijo=x.marco;
+  r.az=Math.max(-30,Math.min(120,Math.round(x.azimut)));r.el=Math.max(-40,Math.min(60,Math.round(x.elevacion)));
+  const aviso=$('reoEstado');aviso.className='estado ok';
+  aviso.textContent=`Eje del equipo («${x.descripcion}»). Arriba, el simulador con la misma receta; abajo, el equipo. Mismo centro, mismo marco, mismo zoom y misma escala de color.`;
+  pintar();
+ }
+ function ejeExacto(){if(!r.equipo)return;r.marcoFijo=r.equipo.marco;r.Cv=r.equipo.centro.slice();r.t=0;r.az=Math.round(r.equipo.azimut);r.el=Math.round(r.equipo.elevacion);pintar();}
  // Plano vertical que contiene el eje (el mismo que el escritorio usa para marcar el apex):
  // horizontal a lo largo del azimut, vertical hacia los pies. Ahi se ve la elevacion.
  function planoVertical(){const M0=C.marco(r.az,0);return {derecha:M0.a.map(q=>-q),abajo:[0,0,-1],normal:M0.u};}
@@ -75,6 +89,12 @@ const Reorientar=(()=>{
   C.pintar(lienzo('reoCorto',M*esc),C.ejeCorto(r.vol,n,n,Cv,Mk,r.t,M,1),M,op);
   const lv=lienzo('reoVla',M*esc);C.pintar(lv,C.ejeLargoVertical(r.vol,n,n,Cv,Mk,0,M,1),M,op);
   const lh=lienzo('reoHla',M*esc);C.pintar(lh,C.ejeLargoHorizontal(r.vol,n,n,Cv,Mk,0,M,1),M,op);
+  // La reconstruccion del equipo, cortada igual.
+  const fe=$('reoEq');if(fe){fe.hidden=!r.comparar;if(r.comparar){
+   C.pintar(lienzo('reoCortoEq',M*esc),C.ejeCorto(r.comparar,n,n,Cv,Mk,r.t,M,1),M,op);
+   C.pintar(lienzo('reoVlaEq',M*esc),C.ejeLargoVertical(r.comparar,n,n,Cv,Mk,0,M,1),M,op);
+   C.pintar(lienzo('reoHlaEq',M*esc),C.ejeLargoHorizontal(r.comparar,n,n,Cv,Mk,0,M,1),M,op);}}
+  const be=$('reoEjeExacto');if(be)be.hidden=!r.equipo||!!r.marcoFijo;
   // En los ejes largos, una linea marca donde esta el corte de eje corto que se muestra.
   // Largo vertical: el apex hacia la izquierda (columna h - t). Largo horizontal: el apex hacia
   // arriba (fila h - t).
@@ -87,8 +107,13 @@ const Reorientar=(()=>{
   $('reoTTexto').textContent=Math.abs(r.t)<.5?'centro':r.t>0?`${dec(r.t*r.sp,0)} mm hacia el ápex`:`${dec(-r.t*r.sp,0)} mm hacia la base`;
   $('reoTecho').value=Math.round(r.techo*100);
   let txt=`Azimut ${r.az}°, elevación ${r.el}° · reconstrucción «${r.etiqueta}».`;
-  const ref=r.referencia;
-  if(ref)txt+=` El equipo usó azimut ${dec(ref.azimut,1)}° y elevación ${dec(ref.elevacion,1)}°: te separan ${dec(Math.abs(r.az-ref.azimut),0)}° y ${dec(Math.abs(r.el-ref.elevacion),0)}° (tolerancia ${CARDIACO_TOLERANCIA.angulo}°).`;
+  const ref=r.referencia,q=r.equipo;
+  if(q){
+   txt=r.marcoFijo?`Eje exacto del equipo: azimut ${dec(q.azimut,1)}°, elevación ${dec(q.elevacion,1)}°.`:`Moviste el eje: azimut ${r.az}°, elevación ${r.el}° (el equipo usó ${dec(q.azimut,1)}° y ${dec(q.elevacion,1)}°).`;
+   txt+=` Simulador: ${q.nombre}, sobre proyecciones ${q.fuente||'sin corregir'}; tomó ${dec(q.segundos,0)} s. Se enmascaró con la máscara del equipo (${q.voxeles.toLocaleString('es-CL')} vóxeles) y se multiplicó por ${dec(q.factor,3)} para igualar la suma dentro de la máscara. Las dos filas usan la misma escala de color, de 0 a ${dec(q.max,0)}. Dentro de la región con actividad: correlación r = ${dec(q.correlacion,3)} y diferencia media ${dec(q.diferencia,1)} %.`;
+   txt+=` Diferencias que quedan: la OSEM del equipo es 3D y la del simulador es por cortes, sin recuperación de resolución${q.receta.dispersion?(q.dispersion?'; la dispersión se corrigió por doble ventana con k = 0,5, que puede no ser el método del equipo':'; el equipo corrigió dispersión y aquí no se pudo'):''}.`;
+  }
+  else if(ref)txt+=` El equipo usó azimut ${dec(ref.azimut,1)}° y elevación ${dec(ref.elevacion,1)}°: te separan ${dec(Math.abs(r.az-ref.azimut),0)}° y ${dec(Math.abs(r.el-ref.elevacion),0)}° (tolerancia ${CARDIACO_TOLERANCIA.angulo}°).`;
   else txt+=' Este caso no trae el eje del equipo para comparar: guíate por las imágenes.';
   $('reoResumen').textContent=txt;
  }
@@ -111,16 +136,18 @@ const Reorientar=(()=>{
   arrastre('reoCorto',()=>{const m=Mk();return [m.u,m.v,M];});
   arrastre('reoVla',()=>{const m=Mk();return [m.a.map(q=>-q),m.v,M];});
   arrastre('reoHla',()=>{const m=Mk();return [m.u,m.a.map(q=>-q),M];});
-  $('reoAz').addEventListener('input',e=>{r.az=+e.target.value;pintar();});
-  $('reoEl').addEventListener('input',e=>{r.el=+e.target.value;pintar();});
+  $('reoAz').addEventListener('input',e=>{r.marcoFijo=null;r.az=+e.target.value;pintar();});
+  $('reoEl').addEventListener('input',e=>{r.marcoFijo=null;r.el=+e.target.value;pintar();});
   $('reoT').addEventListener('input',e=>{r.t=+e.target.value;pintar();});
   $('reoTecho').addEventListener('input',e=>{r.techo=Math.max(.05,+e.target.value/100);pintar();});
-  const paso=(id,campo,d)=>{let t=null;const f=()=>{const el=$(id);r[campo]=Math.max(+el.min,Math.min(+el.max,r[campo]+d));pintar();};const b=$(id+(d>0?'Mas':'Menos'));const parar=()=>{clearInterval(t);t=null;};b.addEventListener('pointerdown',e=>{e.preventDefault();f();parar();t=setInterval(f,120);});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,parar));};
+  const paso=(id,campo,d)=>{let t=null;const f=()=>{const el=$(id);r.marcoFijo=null;r[campo]=Math.max(+el.min,Math.min(+el.max,r[campo]+d));pintar();};const b=$(id+(d>0?'Mas':'Menos'));const parar=()=>{clearInterval(t);t=null;};b.addEventListener('pointerdown',e=>{e.preventDefault();f();parar();t=setInterval(f,120);});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,parar));};
   paso('reoAz','az',1);paso('reoAz','az',-1);paso('reoEl','el',1);paso('reoEl','el',-1);
   $('reoBuscar').addEventListener('click',()=>{if(!r.vol)return;const b=buscar(marco());if(b){r.Cv=b.C.slice();r.L=Math.max(12,b.L);r.t=0;$('reoEstado').className='estado ok';$('reoEstado').textContent='Centro y largo del ventrículo buscados de nuevo con el eje actual.';}else{$('reoEstado').className='estado error';$('reoEstado').textContent='Con este eje no se encontró un anillo dentro de tu caja: gira el eje, arrastra el punto amarillo al centro del ventrículo o vuelve a revisar la caja.';}pintar();});
-  $('reoCero').addEventListener('click',()=>{r.az=0;r.el=0;r.t=0;pintar();});
+  $('reoCero').addEventListener('click',()=>{r.marcoFijo=null;r.az=0;r.el=0;r.t=0;pintar();});
+  $('reoEjeExacto').addEventListener('click',ejeExacto);
+  for(const [id,ejes] of [['reoCortoEq',()=>{const m=Mk();return [m.u,m.v,M];}],['reoVlaEq',()=>{const m=Mk();return [m.a.map(q=>-q),m.v,M];}],['reoHlaEq',()=>{const m=Mk();return [m.u,m.a.map(q=>-q),M];}]])arrastre(id,ejes);
  }
- function olvidar(){r.vol=null;r.origen=null;r.claveCaja=null;cacheVol.entrada=null;cacheVol.vol=null;}
- return {iniciar,abrir,olvidar,volumen,estado:r};
+ function olvidar(){r.vol=null;r.origen=null;r.claveCaja=null;r.marcoFijo=null;r.comparar=null;r.equipo=null;cacheVol.entrada=null;cacheVol.vol=null;}
+ return {iniciar,abrir,usarEquipo,olvidar,volumen,estado:r};
 })();
 window.Reorientar=Reorientar;

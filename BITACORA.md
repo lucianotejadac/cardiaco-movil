@@ -374,3 +374,22 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **La referencia del eje es del caso 1.** Con un archivo que no es el caso 1 (por ejemplo, un examen cargado por carpeta) la reorientación se abre sin referencia.
 - **Texto de carga.** Cuando el caso 1 se carga por carpeta, el mensaje ya no repite «Archivo propio».
 
+## 2026-09-28 · Reorientación con el eje y la receta del equipo (provisional)
+
+**Contexto.** El docente analizó un eje corto con atenuación reconstruido por el equipo y preguntó si el simulador podía adoptar el mismo zoom y la misma posición para comparar. De las dos opciones propuestas eligió, por ahora, la que vive en la pantalla de reorientación, y pidió tres cosas: usar la misma OSEM que el equipo, llevar el resultado a la misma escala de valores y enmascarar. La corrección de movimiento no importa.
+
+**Decisiones.**
+- **Solo con exámenes cargados por carpeta.** Al elegir la carpeta se guardan también las reconstrucciones del equipo hechas con OSEM, no gatilladas, que comparten marco de referencia con las proyecciones. En la reorientación aparece el botón «Usar el eje y la receta del equipo (provisional)». Con los ZIP de la entrega no aparece: a un estudiante le daría el eje.
+- **La receta se lee del DICOM del equipo**, no se escribe a mano: `ConvolutionKernel` («3DOSEM,6i,4s» y «Gauss,9,00mm») da iteraciones, subconjuntos y filtro; `CorrectedImage` dice si hubo atenuación (ATTN) y dispersión (SCAT). Si hay eje corto con y sin atenuación, se prefiere el que tiene atenuación cuando hay CT.
+- **Atenuación** con el CT registrado en el paso de registro, con la misma conversión de HU a μ del resto de la aplicación.
+- **Dispersión** por doble ventana con la ventana inferior del archivo, k = 0,5, suavizada con 10 mm y escalada por el cociente de anchos de ventana. No se sabe qué método usa el equipo. Medido en el caso 4 de estrés: con dispersión r = 0,911; sin ella r = 0,915. No cambia el parecido; se deja activada porque el equipo la declara.
+- **Misma posición y mismo zoom.** La reconstrucción del equipo se lleva, con interpolación trilineal, a la grilla del simulador (x izquierda, y posterior, z hacia la cabeza). Las dos se cortan con el mismo código, el mismo centro y el mismo marco. El marco es el del DICOM del equipo, exacto: a = normal a los cortes orientada hacia el ápex, v = dirección de las columnas, u = a × v. Coincide con el marco de `cardiaco-core` salvo un giro de menos de medio grado en el plano del corte.
+- **Centro** = centroide de la máscara del equipo. **Largo del eje** = extensión de la máscara a lo largo del eje.
+- **Máscara.** El equipo deja en cero lo que está fuera de un elipsoide alrededor del corazón. El simulador se pone en cero fuera de esa misma máscara, tomada por vecino más cercano.
+- **Misma escala de valores.** El simulador se multiplica por un factor que iguala su suma a la del equipo dentro de la máscara. Las dos filas de imágenes usan la misma escala de color, de 0 al máximo del equipo.
+- **Los deslizadores siguen activos.** Al mover el azimut o la elevación se deja el marco exacto y se vuelve al de los ángulos; las dos filas se mueven juntas. Hay un botón para volver al eje exacto del equipo.
+
+**Validación.** En local, emulación de teléfono, carpeta descomprimida del caso 4 de la entrega docente (174 archivos): eligió «Stress [Recon - AC]», receta 6 × 4 con atenuación y gaussiano de 9 mm, 28 s. Eje del equipo: azimut 25,4°, elevación 13,4°. Correlación 0,911 y diferencia media 20,3 % dentro de la región con actividad. En las imágenes, el anillo, la «C» del largo vertical y la herradura del largo horizontal caen en el mismo lugar y con el mismo tamaño en las dos filas.
+
+**Diferencias que quedan.** La OSEM del equipo es 3D y trae recuperación de resolución; la del simulador es por cortes y sin ella. La imagen del simulador se ve más granulada. El factor de escala no tiene significado físico: el DICOM del equipo no declara unidades.
+
