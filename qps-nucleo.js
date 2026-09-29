@@ -190,15 +190,19 @@ const QpsNucleo=(()=>{
  /* Zona anormal de referencia cuando no se tiene el mapa del equipo: dentro de los segmentos que
     el equipo puntuo, los puntos mas bajos respecto de lo mejor de su anillo, hasta completar la
     extension que informo (peso por volumen de pared). */
- function zonaPorPuntajes(R,puntajes,objetivo){
+ /* previa: zona conocida en otro mapa del mismo paciente (Uint8Array np x np, misma orientacion
+    del disco); sus puntos entran primero. Dentro de lo demas entran antes los segmentos con mas
+    puntaje del equipo. */
+ function zonaPorPuntajes(R,puntajes,objetivo,previa=null,np=0){
   const N=R.N,M=N*N,anillo=new Uint8Array(M),ref=new Float64Array(40),cand=new Uint8Array(M);let total=0;
   for(let o=0;o<M;o++){anillo[o]=Math.min(39,Math.floor(R.rho[o]*40));if(R.rho[o]<1){total+=R.vol[o];if(puntajes[R.seg[o]])cand[o]=1;}}
   for(let k=0;k<40;k++){const v=[];for(let o=0;o<M;o++)if(anillo[o]===k&&R.rho[o]<1)v.push(R.A[o]);ref[k]=v.length?percentil(v,85):0;}
   const rs=new Float64Array(40);for(let k=0;k<40;k++){let s=0;for(let i=-2;i<=2;i++)s+=ref[Math.min(39,Math.max(0,k+i))];rs[k]=s/5;}
   const q=new Float32Array(M);for(let o=0;o<M;o++)q[o]=R.A[o]/Math.max(rs[anillo[o]],1e-6);const razon=desenfocar(q,N,2*N/256);
-  const ext=T=>{let s=0;for(let o=0;o<M;o++)if(cand[o]&&razon[o]<T)s+=R.vol[o];return 100*s/total;};
-  let a=0,b=3;if(ext(b)<objetivo)a=b;else for(let i=0;i<40;i++){const m=(a+b)/2;if(ext(m)<objetivo)a=m;else b=m;}
-  const z=new Uint8Array(M);for(let o=0;o<M;o++)if(cand[o]&&razon[o]<b)z[o]=1;return {zona:z,umbral:100*b};
+  const clave=new Float32Array(M);for(let o=0;o<M;o++){let k=razon[o]-.02*(puntajes[R.seg[o]]||0);if(previa){const x=o%N,y=(o-x)/N,px=Math.min(np-1,Math.floor((x+.5)/N*np)),py=Math.min(np-1,Math.floor((y+.5)/N*np));if(previa[py*np+px])k-=.3;}clave[o]=k;}
+  const ext=T=>{let s=0;for(let o=0;o<M;o++)if(cand[o]&&clave[o]<T)s+=R.vol[o];return 100*s/total;};
+  let a=-1,b=3;if(ext(b)<objetivo)a=b;else for(let i=0;i<50;i++){const m=(a+b)/2;if(ext(m)<objetivo)a=m;else b=m;}
+  const z=new Uint8Array(M);for(let o=0;o<M;o++)if(cand[o]&&clave[o]<b)z[o]=1;return {zona:z,umbral:100*b};
  }
  /* Limite normal de este paciente: campo suave desde el borde de la zona, forzado a quedar sobre el
     valor dentro de la zona y con holgura bajo el valor fuera. */

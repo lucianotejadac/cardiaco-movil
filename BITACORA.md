@@ -486,3 +486,15 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **Abierto, un deslizador deja pasar el gesto vertical** (`touch-action: pan-y`): arrastrarlo hacia el lado lo mueve y deslizar hacia arriba o abajo sobre él desplaza la página. Las imágenes de ejes siguen tomando el arrastre en cualquier dirección, porque ahí el gesto es mover el eje.
 - La aplicación sigue partiendo con el candado abierto.
 
+## 2026-09-29 · Mapa polar con atenuación armado desde el informe, y los tres ejes a la vista
+
+**Contexto.** El docente pidió leer el informe, armar un mapa polar con atenuación y que al mover los deslizadores se vean el eje corto, el largo vertical y el largo horizontal.
+
+**Lo que dice el informe (sin identidad).** Defecto inferolateral apical, medio y basal, de cerca de 10 % del ventrículo, reversible por completo; interpretado en las imágenes sin atenuación (SSS 6, SRS 1, SDS 5). Las imágenes con atenuación no se usaron para interpretar, por actividad intestinal en reposo. Informa además TID 0,8 y razón pulmón-corazón 0,36; la pantalla del equipo muestra 0,86 y 0,51.
+
+**Decisiones.**
+- **La zona de referencia con atenuación parte de la zona real sin atenuación.** Se guardó la zona negra que QPS dibujó en el mapa de estrés sin atenuación (96 × 96, codificada por corridas, 592 píxeles, centrada a 22°, entre lateral e inferior). Sus puntos entran primero; después, dentro de los segmentos que el equipo puntuó con atenuación, los más bajos respecto de lo mejor de su anillo, antes los de más puntaje, hasta completar 21 %.
+- **La nota de la sección cita el informe** y explica de dónde sale la zona.
+- **Tres cortes más en el bloque fijo:** eje corto, largo vertical y largo horizontal por el centro, con los bordes de la pared, rehechos con cada movimiento. Un botón «Ocultar imágenes» deja solo los deslizadores.
+- Las reconstrucciones guardadas siguen sirviendo: la zona no cambia la reconstrucción ni la calibración.
+

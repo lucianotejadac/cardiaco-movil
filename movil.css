@@ -198,3 +198,8 @@ canvas.libre.clara{background:var(--fondo);max-width:170px;margin:0 auto}
 .ejesVivo canvas{width:104px;height:104px;border-radius:6px}
 .ejesVivo .clave{font-size:.68rem;line-height:1.5;margin:0}
 .mini.activa{border-color:var(--acento);color:var(--acento);font-weight:700}
+.ejesVivo2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
+.ejesVivo2 figcaption{font-size:.62rem;color:var(--texto2);font-weight:600}
+.ejesVivo2 canvas{width:100%;aspect-ratio:1;height:auto;border-radius:6px}
+#qps .mini.ocultar{display:block;margin:2px 0 4px auto;font-size:.72rem;padding:3px 8px}
+#qps .controles.fijo.sinImagenes .ejesVivo,#qps .controles.fijo.sinImagenes .ejesVivo2{display:none}

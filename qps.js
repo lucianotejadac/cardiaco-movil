@@ -11,7 +11,12 @@
 const Qps=(()=>{
  const Q=QpsNucleo,$=id=>document.getElementById(id),dec=(x,d=0)=>Number(x).toFixed(d).replace('.',',');
  // Lo que informo el equipo en el caso de referencia (pantalla «Splash AC»).
- const EQUIPO={'22d4f455':{serie:'Stress [Recon - AC ]',normales:'symbiaMaleStressTc_AC',volumen:43,pared:120,cuentas:1105,defecto:25,extension:21,tpd:16,forma:.46,excentricidad:.86,puntajes:{6:2,14:1,16:2,11:3,5:2,10:2,4:1}}};
+ const EQUIPO={'22d4f455':{serie:'Stress [Recon - AC ]',normales:'symbiaMaleStressTc_AC',volumen:43,pared:120,cuentas:1105,defecto:25,extension:21,tpd:16,forma:.46,excentricidad:.86,puntajes:{6:2,14:1,16:2,11:3,5:2,10:2,4:1},
+  // Zona bajo el limite normal que dibujo QPS en el estres SIN atenuacion (96 x 96, largos de
+  // corrida alternando fuera y dentro). El equipo no guardo el mapa con atenuacion.
+  zonaSinAtenuacion:'2914,2,89,1,1,6,88,8,87,10,87,9,87,10,85,12,84,11,84,12,84,13,82,15,82,15,81,16,81,15,81,15,81,15,33,1,47,14,27,2,1,6,46,14,26,10,46,14,26,10,47,11,28,10,48,9,29,11,48,4,33,15,81,16,79,18,78,18,78,18,78,17,80,16,80,16,80,15,80,16,79,17,79,16,79,17,79,16,80,16,81,14,82,9,1,3,83,7,89,6,12,1,76,3,93,1,2334',
+  informe:'El informe médico describe un defecto inferolateral apical, medio y basal, de cerca de 10 % del ventrículo, reversible por completo en reposo, en las imágenes sin corrección de atenuación. Las imágenes con corrección de atenuación no se usaron para interpretar, por actividad intestinal en la fase de reposo.'}};
+ const desplegar=(rle,n)=>{const z=new Uint8Array(n*n);let o=0,v=0;for(const k of rle.split(',').map(Number)){if(v)z.fill(1,o,o+k);o+=k;v^=1;}return z;};
  const N=192,q={listo:false,ocupado:false,dAz:0,dEl:0,t:null,guardadas:new Map()};
 
  /* ---------- reconstrucciones guardadas en el dispositivo ---------- */
@@ -66,7 +71,7 @@ const Qps=(()=>{
   await leerRecetas();
   const R=Q.medir(q.volRef,q.d,c.E,c.P,c.W,c.S,c.cal,q.sp,N);q.R0=R;
   if(q.obj){
-   const z=Q.zonaPorPuntajes(R,q.obj.puntajes,q.obj.extension);q.L=Q.limiteDesdeZona(R,z.zona);q.umbral=z.umbral;const p=Q.perfusion(R,q.L);
+   const z=Q.zonaPorPuntajes(R,q.obj.puntajes,q.obj.extension,q.obj.zonaSinAtenuacion?desplegar(q.obj.zonaSinAtenuacion,96):null,96);q.L=Q.limiteDesdeZona(R,z.zona);q.umbral=z.umbral;const p=Q.perfusion(R,q.L);
    q.f={cuentas:q.obj.cuentas/R.medidas.cuentas,forma:q.obj.forma/R.medidas.forma,excentricidad:q.obj.excentricidad/R.medidas.excentricidad,extension:q.obj.extension/p.extension,severidad:q.obj.tpd/p.extensionArea};
    q.refSeg={};for(let k=1;k<=17;k++)q.refSeg[k]=p.valor[k]/(1.05-.1*(q.obj.puntajes[k]||0));
   }else{q.L=null;q.f={cuentas:1,forma:1,excentricidad:1,extension:1,severidad:.9};q.refSeg=null;}
@@ -196,12 +201,12 @@ const Qps=(()=>{
   $('qpsEje').textContent=`Eje actual: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Eje del equipo: ${dec(a0.azimut,1)}° y ${dec(a0.elevacion,1)}°.`;
   $('qpsRecetaTexto').textContent=`Reconstrucción en pantalla: ${textoReceta(q.receta)}${mismaReceta(q.receta,q.recetaEquipo)?' (la del equipo)':''}.`;
   $('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);
-  ejes(a);guardadas();
+  ejes(a);vivo(a);guardadas();
   tabla();polar('qpsPolar',a,300,a.porcentaje||a.valor);polar('qpsPolarRef',q.ref,300,q.ref.porcentaje||q.ref.valor);
   $('qpsPolarTitulo').textContent=a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';$('qpsPolarRefTitulo').textContent=a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
   miniatura('qpsPuntajes',a.puntajes,150);miniatura('qpsPuntajesRef',q.ref.puntajes,150);$('qpsPuntajesCaja').hidden=!a.puntajes;
   cortes(a);splash(a);
-  $('qpsNota').textContent=q.obj?`Base de normales del equipo: ${q.obj.normales}. El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. La zona anormal de referencia es una estimación: el equipo no guardó su mapa polar con atenuación.`:'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
+  $('qpsNota').textContent=q.obj?`${q.obj.informe} Base de normales del equipo: ${q.obj.normales}. El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. El equipo no guardó su mapa polar con atenuación: la zona de referencia parte de la que dibujó sin atenuación, que es la misma anatomía, y se extiende dentro de los segmentos que el equipo puntuó con atenuación hasta su 21 %.`:'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
  }
  /* Los ejes a la vista mientras se mueven: corte transversal (se ve el azimut) y plano vertical que
     contiene el eje del equipo (se ve la elevacion). Celeste, el eje actual con un punto en el apex;
@@ -216,6 +221,15 @@ const Qps=(()=>{
    const c=linea(E.eje,E.O,'#4dd0e1',2.5,true);ctx.fillStyle='#ffee58';ctx.beginPath();ctx.arc(c[0],c[1],3.5,0,2*Math.PI);ctx.fill();
   }
  }
+ // Eje corto, largo vertical y largo horizontal por el centro, con los bordes de la pared.
+ function vivo(r){
+  const X=r.X,E=X.E,a=E.eje,u=E.u,v=E.v,na=a.map(t=>-t),vm=vmaxDe(q.vol),lado=104,semi=22;
+  for(const [id,der,aba,nor] of [['qpsVivoCorto',u,v,a],['qpsVivoVla',a,v,u],['qpsVivoHla',u,na,v]]){
+   const ctx=lienzo(id,lado,lado);corte(ctx,0,0,lado,q.vol,E.O,der,aba,semi,vm);
+   contorno(ctx,0,0,lado,X.Se,X.nsel,E.O,der,aba,nor,semi,'#ffe63c');contorno(ctx,0,0,lado,X.Sp,X.nsel,E.O,der,aba,nor,semi,'#ffa028');
+   if(nor!==a){contorno(ctx,0,0,lado,X.Se,X.nsel,E.O,der,aba,nor,semi,'#fff',true);contorno(ctx,0,0,lado,X.Sp,X.nsel,E.O,der,aba,nor,semi,'#fff',true);}
+  }
+ }
  function guardadas(){
   const caja=$('qpsGuardadas');caja.replaceChildren();
   const boton=(texto,r,activa)=>{const b=document.createElement('button');b.type='button';b.className='mini'+(activa?' activa':'');b.textContent=texto;b.addEventListener('click',()=>{if(q.ocupado)return;if(mismaReceta(r,q.recetaEquipo)){q.vol=q.volRef;q.receta={...q.recetaEquipo};}else{const g=q.guardadas.get(claveReceta(r));if(!g)return;q.vol=g.vol;q.receta={...r};}controles();calcular();});caja.append(b);};
@@ -226,6 +240,7 @@ const Qps=(()=>{
  const textoCorto=r=>`${r.it}×${r.sub}, ${r.fwhm>0?dec(r.fwhm,1)+' mm':'sin filtro'}${r.ac?', AC':''}${r.dispersion?', disp.':''}`;
  function iniciar(){
   $('qpsBorrar').addEventListener('click',borrarGuardadas);
+  $('qpsVerImagenes').addEventListener('click',e=>{const c=document.querySelector('#qps .controles.fijo'),o=c.classList.toggle('sinImagenes');e.target.textContent=o?'Mostrar imágenes':'Ocultar imágenes';e.target.setAttribute('aria-pressed',String(o));});
   let t=null;const vivo=()=>{clearTimeout(t);t=setTimeout(calcular,60);};
   $('qpsAz').addEventListener('input',e=>{q.dAz=+e.target.value;$('qpsAzTexto').textContent=`${q.dAz>0?'+':''}${q.dAz}°`;vivo();});
   $('qpsEl').addEventListener('input',e=>{q.dEl=+e.target.value;$('qpsElTexto').textContent=`${q.dEl>0?'+':''}${q.dEl}°`;vivo();});
