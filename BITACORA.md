@@ -429,3 +429,26 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **En la pantalla de comparación, cambiar el selector rehace la comparación** en el mismo modo (receta del equipo o reconstrucción propia).
 - **Sin atenuación no se usa el CT** y el cálculo es mucho más corto.
 
+## 2026-09-29 · Sección «Mapa polar y resultados en vivo» (estrés con atenuación)
+
+**Contexto.** El docente pidió una sección donde se modifique el ángulo o la receta del estrés con atenuación y se vea en vivo cómo cambian el mapa polar de QPS y los demás datos de las pantallas del equipo, desplazando la página. Se decidió trabajar siempre con un mismo caso de referencia.
+
+**Origen del algoritmo.** Se obtuvo antes, en Python, por ingeniería inversa de los resultados del equipo (carpeta local `Documents\mapa-polar-qps`, con su propia documentación). Aquí se llevó a JavaScript.
+
+**Decisiones.**
+- **Dos archivos.** `qps-nucleo.js` es el cálculo, sin interfaz; `qps.js` es la sección. El núcleo se validó contra Python con los mismos cortes: centro, semiejes, base, bordes, volumen, pared, cuentas, forma, excentricidad y extensión coinciden hasta el tercer decimal; el valor medio por segmento difiere a lo más 0,08 puntos.
+- **Referencia.** La reconstrucción del simulador con la receta y el eje del equipo, en su escala y con su máscara. Con ella se calibran una sola vez la base, los bordes de la pared, el límite normal, la referencia de puntaje por segmento y cinco factores (cuentas, forma, excentricidad, extensión y severidad). Después todo queda congelado.
+- **En la referencia, la sección muestra exactamente los números del equipo.** Volumen 43 ml, pared 120 ml, cuentas 1105 mil, defecto 25 ml, extensión 21 %, TPD 16 %, forma 0,46, excentricidad 0,86, suma de puntajes 13.
+- **El ángulo se cambia en vivo.** Dos deslizadores, cambio de azimut y de elevación respecto del eje del equipo, de −25° a +25°. Cada recálculo toma unos 150 ms en la emulación. El eje se impone; el algoritmo solo ajusta centro y semiejes.
+- **La receta necesita reconstruir.** Iteraciones, subconjuntos, filtro, atenuación y dispersión. Se reconstruye con el motor del simulador y se usa el factor de escala de la referencia, para que las cuentas cambien con la receta.
+- **El límite normal sigue a la anatomía.** Se guarda sobre el mapa de referencia y se lleva, lugar por lugar, a la geometría de cada condición. La holgura fuera de la zona es de 3 puntos y crece hasta 12 hacia la base, donde las cuentas caen rápido y cambian mucho con el eje.
+- **Aviso de ajuste inestable.** Si la pared medida cambia más de 20 % o el semieje largo más de 12 % con solo girar el eje, la sección lo dice y pide acercar el eje. En las pruebas ocurre desde unos ±15° de elevación.
+- **Solo el caso de referencia tiene datos del equipo.** Se reconoce por la huella del marco de referencia. Con otro examen la sección funciona sin extensión, TPD ni puntajes.
+- **Contenido de la sección, de arriba abajo:** controles de ángulo (fijos arriba), receta, tabla de resultados con columna de referencia y de cambio, mapa polar actual y de referencia, puntajes, cortes con los bordes de la pared y superficie, todos los cortes, tabla por segmento y nota.
+
+**Validación.** En local, emulación de teléfono, con la carpeta de trabajo del caso de referencia. Preparación: 57 s (reconstrucción con atenuación y calibración). Giro de azimut +10°: volumen 44 ml, pared 123 ml, extensión 20 %, suma de puntajes 14. Receta 2 × 8 sin atenuación: 3 s; cuentas 372 mil, extensión 62 %. «Volver al eje y a la receta del equipo» deja todo sin cambios. Ninguna petición sale del navegador.
+
+**Lo que es estimación, y se dice en la sección.** El equipo no guardó su mapa polar con atenuación: la zona anormal de referencia se armó dentro de los segmentos que el equipo puntuó, hasta completar 21 %. Los puntajes usan una referencia por segmento fijada para dar el puntaje del equipo. La magnitud del cambio de extensión con la receta no es confiable: el límite está pegado al mapa de referencia.
+
+**Sin publicar.** El cambio queda en la copia local. Trae constantes obtenidas de un examen real; la publicación espera la decisión del docente.
+

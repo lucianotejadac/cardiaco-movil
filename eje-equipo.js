@@ -151,6 +151,35 @@ const EjeEquipo=(()=>{
    return e.resultado;
   }finally{e.ocupado=false;e.tarea=null;e.rechazo=null;Progreso.cerrar();}
  }
- return {configurar,disponible,agregar,fijarTipo,comparar,ejecutar,cancelar,estado:e};
+ /* Reconstruye con una receta cualquiera y deja el volumen como el de referencia: z hacia la
+    cabeza, con la mascara del equipo y multiplicado por el factor de escala de la referencia
+    (asi las cuentas cambian con la receta y no se vuelven a igualar). */
+ let grilla=null;
+ async function reconstruirCon({s,reg,receta:R,factor}){
+  if(e.ocupado)return null;
+  const D=await elegir(s,true),hayCt=!!(reg&&reg.ct);
+  if(R.ac&&!hayCt)throw Error('No hay CT cargado para corregir la atenuación.');
+  const hayVentana=s.views.some(v=>v.window===2),disp=R.dispersion&&hayVentana,w=s.windows||[],escalaVentana=disp&&w[0]&&w[1]&&w[1].high>w[1].low?(w[0].high-w[0].low)/(w[1].high-w[1].low):1;
+  const nombre=`OSEM ${R.it} × ${R.sub}${R.ac?' con atenuación':''}${disp?' y dispersión':''}${R.fwhm>0?`, gaussiano ${String(R.fwhm).replace('.',',')} mm`:', sin filtro'}`;
+  e.ocupado=true;e.detenido=false;const t0=performance.now(),pausa=()=>new Promise(q=>setTimeout(q,0));
+  Progreso.abrir(`Reconstruyendo: ${nombre}`,cancelar,R.ac?'La atenuación de cada vista es la parte lenta: puede tardar minutos en el teléfono.':'');
+  try{
+   const n=s.n,p=n*n,filas=filasDe(D,s,Math.max(6,Math.ceil(R.fwhm/s.spacing)+2));let mu=null;
+   if(R.ac){
+    Progreso.avance(0,'Mapa μ desde el CT…');await pausa();mu=new Float32Array(n*p).fill(NaN);
+    for(let z=filas[0];z<=filas[1];z++){for(let y=0;y<n;y++)for(let x=0;x<n;x++){const hu=Lab95.sampleCT(reg.ct,Lab95.point(s,x,y,z,reg.off||[0,0,0]));if(!Number.isFinite(hu))continue;const h=Math.max(-1000,Math.min(3000,hu));mu[z*p+y*n+x]=h<=0?.15*(1+h/1000):.15+.0001*h;}if(z%8===0){await pausa();if(e.detenido)throw Error('detenida');}}
+   }
+   const settings={scatter:disp,scatterSmoothing:disp,scatterFwhm:disp?FWHM_DISPERSION:0,scatterWeight:disp?K_DISPERSION:0,scatterWindowScale:disp?escalaVentana:0,resolutionRecovery:false,distanceDependent:false,axialRecovery:false,initialization:'uniform',iterations:R.it,subsets:R.sub,attenuationCorrection:!!mu,postFilter:false,postFilterFWHMmm:0};
+   let vol=await osem(s,settings,mu,filas,f=>Progreso.avance(.05+f*.8,`${mu?'Atenuación y ':''}OSEM ${Math.round(f*100)} %`));
+   if(R.fwhm>0){Progreso.avance(.87,'Gaussiano final…');vol=await Lab95.gaussian3D(vol,n,R.fwhm/s.spacing/2.354820045,()=>e.detenido);if(!vol)throw Error('detenida');}
+   Progreso.avance(.93,'Máscara y escala de la referencia…');await pausa();
+   if(!grilla||grilla.D!==D||grilla.s!==s)grilla={D,s,G:equipoEnGrilla(D,s)};
+   const sim=new Float32Array(n*p),M=grilla.G.mascara;let se=0,ss=0;
+   for(let z=0;z<n;z++)for(let i=0;i<p;i++){const o=z*p+i;if(!M[o])continue;const v=Math.max(0,vol[(n-1-z)*p+i]);sim[o]=v;ss+=v;se+=grilla.G.vol[o];}
+   const f=factor||se/(ss||1);for(let o=0;o<sim.length;o++)sim[o]*=f;
+   return {sim,factor:f,nombre,dispersion:disp,segundos:(performance.now()-t0)/1000};
+  }finally{e.ocupado=false;e.tarea=null;e.rechazo=null;Progreso.cerrar();}
+ }
+ return {configurar,disponible,agregar,fijarTipo,comparar,ejecutar,reconstruirCon,cancelar,estado:e};
 })();
 window.EjeEquipo=EjeEquipo;

@@ -172,3 +172,22 @@ footer{padding-bottom:76px}
 .segmento button[hidden]{display:none}
 #cmp .valor.ancho3{width:auto;flex:1;text-align:left;padding-left:8px}
 #cmp .fila .paso{flex:none}
+
+/* Mapa polar y resultados en vivo */
+#qps .controles.fijo{position:sticky;top:0;z-index:6;box-shadow:0 6px 14px rgba(0,0,0,.55)}
+#qps .etq{width:70px}
+#qps .fila{gap:6px}
+#qps .fila .paso{flex:none;width:36px;height:36px;border-radius:8px;border:1px solid var(--linea);background:#0d1114;color:var(--texto);font-size:1.1rem}
+#qps .fila .valor{flex:none;width:44px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+#qps details.tarjeta summary{font-weight:600;cursor:pointer;color:var(--acento)}
+#qps details.tarjeta .opciones{margin-top:8px}
+.qpsT{font-size:.95rem;margin:14px 0 4px;color:var(--acento)}
+.qpsTabla{width:100%;border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums}
+.qpsTabla th,.qpsTabla td{padding:5px 4px;border-bottom:1px solid var(--linea);text-align:right}
+.qpsTabla th:first-child,.qpsTabla td:first-child{text-align:left}
+.qpsTabla th{color:var(--texto2);font-weight:600;font-size:.78rem}
+.qpsTabla.chica{font-size:.78rem}
+.qpsTabla td.cambia{color:#ffd54f;font-weight:700}
+canvas.libre{aspect-ratio:auto;height:auto;image-rendering:auto;touch-action:pan-y;cursor:default}
+canvas.libre.ancho{width:100%}
+canvas.libre.clara{background:var(--fondo);max-width:170px;margin:0 auto}

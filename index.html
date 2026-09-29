@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=26">
+<link rel="stylesheet" href="movil.css?v=27">
 </head>
 <body>
 <header class="barra">
@@ -58,6 +58,7 @@
   <button type="button" class="vermas ancho" data-dialogo="dGeneral">Ver más sobre las proyecciones y estos números</button>
   <button id="aRegistro" type="button" class="boton ancho">Siguiente: registro FBP con el CT →</button>
   <label class="tipoEquipo">Imagen del equipo <select class="tipoEquipoSel" aria-label="Imagen del equipo con o sin corrección de atenuación"><option value="ac">con atenuación (AC)</option><option value="noac">sin atenuación (NoAC)</option></select></label>
+  <button id="aQps" type="button" class="boton ancho secundario">Mapa polar y resultados en vivo (estrés con atenuación) →</button>
   <button id="aDirecto" type="button" class="boton ancho secundario">Ir directo: simulador con la receta del equipo frente a Siemens →</button>
   <input id="directoImagen" type="file">
   <p id="directoEstado" class="estado"></p>
@@ -218,6 +219,63 @@
   <button type="button" class="vermas ancho" data-dialogo="dCmp">Ver más sobre la comparación</button>
  </section>
 
+ <section class="oculta" id="qps">
+  <button id="volverQps" type="button" class="cambio">← Volver al control de calidad</button>
+  <div class="columna">Mapa polar y resultados en vivo · estrés con atenuación</div>
+  <p id="qpsEstado" class="estado"></p>
+  <div class="controles fijo">
+   <div class="fila"><span class="etq">Azimut</span><button id="qpsAzMenos" type="button" class="paso" aria-label="Azimut menos 1°">−</button><input id="qpsAz" type="range" min="-25" max="25" step="1" value="0" aria-label="Cambio de azimut respecto del eje del equipo"><button id="qpsAzMas" type="button" class="paso" aria-label="Azimut más 1°">+</button><span id="qpsAzTexto" class="valor">0°</span></div>
+   <div class="fila"><span class="etq">Elevación</span><button id="qpsElMenos" type="button" class="paso" aria-label="Elevación menos 1°">−</button><input id="qpsEl" type="range" min="-25" max="25" step="1" value="0" aria-label="Cambio de elevación respecto del eje del equipo"><button id="qpsElMas" type="button" class="paso" aria-label="Elevación más 1°">+</button><span id="qpsElTexto" class="valor">0°</span></div>
+  </div>
+  <p id="qpsEje" class="clave"></p>
+  <details class="tarjeta" id="qpsReceta">
+   <summary>Receta de reconstrucción</summary>
+   <p id="qpsRecetaTexto" class="clave"></p>
+   <div class="opciones">
+    <label>Iteraciones <input id="qpsIter" type="number" min="1" max="20" step="1" value="6" inputmode="numeric"></label>
+    <label>Subconjuntos <select id="qpsSub"><option>1</option><option>2</option><option selected>4</option><option>8</option><option>16</option></select></label>
+    <label>Filtro gaussiano, FWHM (mm); 0 = sin filtro <input id="qpsFwhm" type="number" min="0" max="25" step="0.5" value="9" inputmode="decimal"></label>
+    <span></span>
+    <label class="check"><input id="qpsAC" type="checkbox" checked> Corrección de atenuación con el CT</label>
+    <label class="check"><input id="qpsDisp" type="checkbox" checked> Corrección de dispersión (doble ventana)</label>
+   </div>
+   <p id="qpsPendiente" class="estado error" hidden>Cambiaste la receta: pulsa «Reconstruir» para verla.</p>
+   <button id="qpsReconstruir" type="button" class="boton ancho">Reconstruir con esta receta</button>
+   <div class="recetas"><button id="qpsRecetaEquipo" type="button" class="mini">Poner la receta del equipo</button></div>
+  </details>
+  <button id="qpsReferencia" type="button" class="vermas ancho">Volver al eje y a la receta del equipo</button>
+
+  <h3 class="qpsT">Resultados</h3>
+  <table id="qpsTabla" class="qpsTabla"></table>
+
+  <h3 class="qpsT">Mapa polar</h3>
+  <div class="rejilla">
+   <figure><figcaption id="qpsPolarTitulo">Ahora</figcaption><canvas id="qpsPolar" class="libre" aria-label="Mapa polar con el eje y la receta actuales."></canvas></figure>
+   <figure><figcaption id="qpsPolarRefTitulo">Referencia</figcaption><canvas id="qpsPolarRef" class="libre" aria-label="Mapa polar de referencia, con el eje y la receta del equipo."></canvas></figure>
+  </div>
+  <p class="clave">Arriba, pared anterior; abajo, inferior; izquierda, septum; derecha, pared lateral. Centro, ápex; borde, base. En negro, la zona bajo el límite normal. Los números son el porcentaje anormal de cada segmento.</p>
+
+  <div id="qpsPuntajesCaja">
+   <h3 class="qpsT">Puntajes por segmento</h3>
+   <div class="rejilla">
+    <figure><figcaption>Ahora</figcaption><canvas id="qpsPuntajes" class="libre clara"></canvas></figure>
+    <figure><figcaption>Referencia</figcaption><canvas id="qpsPuntajesRef" class="libre clara"></canvas></figure>
+   </div>
+  </div>
+
+  <h3 class="qpsT">Cortes con los bordes de la pared, y superficie</h3>
+  <canvas id="qpsCortes" class="libre ancho" aria-label="Tres ejes cortos, eje largo horizontal, eje largo vertical y superficie del ventrículo."></canvas>
+  <p class="clave"><span class="amarilla">●</span> borde interno · <span style="color:#ffa028">●</span> borde externo · <span style="color:#fff">●</span> base.</p>
+
+  <h3 class="qpsT">Todos los cortes</h3>
+  <canvas id="qpsSplash" class="libre ancho" aria-label="Todos los cortes: eje corto, largo vertical y largo horizontal."></canvas>
+
+  <h3 class="qpsT">Por segmento</h3>
+  <table id="qpsSegmentos" class="qpsTabla chica"></table>
+  <p id="qpsNota" class="dato"></p>
+  <button type="button" class="vermas ancho" data-dialogo="dQps">Ver más sobre esta sección</button>
+ </section>
+
  <section class="oculta" id="caja">
   <button id="volverOsem" type="button" class="cambio">← Volver a la OSEM</button>
   <div class="columna">Segunda parte · ubicar el corazón</div>
@@ -321,6 +379,27 @@
   <p id="antecedenteTexto"></p>
   <p id="procedimientoTexto"></p>
  </details>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
+<dialog id="dQps">
+ <h2>Mapa polar y resultados en vivo</h2>
+ <dl class="leyenda">
+  <dt>Qué se puede cambiar</dt>
+  <dd>El ángulo del eje largo, con los deslizadores, y la receta de reconstrucción. Al mover el ángulo todo se recalcula al momento. Al cambiar la receta hay que pulsar «Reconstruir», porque la reconstrucción toma tiempo.</dd>
+  <dt>Cuál es la referencia</dt>
+  <dd>La reconstrucción del simulador con la receta y el eje que usó el equipo. En esa condición los resultados son los que informó el equipo.</dd>
+  <dt>Qué se calcula</dt>
+  <dd>Se busca la pared del ventrículo, se le ajusta un elipsoide con el eje elegido y se miden las cuentas a lo largo de líneas perpendiculares a él. De ahí salen el mapa polar, el volumen de la cavidad, el volumen de la pared, las cuentas y la forma.</dd>
+  <dt>Qué es la extensión</dt>
+  <dd>El porcentaje de la pared que queda bajo el límite normal. El límite viene de una base de datos de personas sanas, que el equipo elige según el sexo, la fase y la receta. Aquí el límite es el de este paciente y vale para la receta del equipo.</dd>
+  <dt>Por qué cambia al girar el eje</dt>
+  <dd>El defecto sigue en el mismo lugar del corazón, pero los segmentos se definen respecto del eje. Al girarlo, el defecto pasa de un segmento al vecino. Cambia dónde se informa, más que cuánto hay.</dd>
+  <dt>Por qué cambia al cambiar la receta</dt>
+  <dd>Más iteraciones dan una pared más angosta y más ruido. Un filtro más ancho la engrosa y borra los defectos. La extensión se sigue comparando con el límite de la receta del equipo, así que cambia aunque la perfusión del paciente sea la misma. Por eso la receta y la base de normales tienen que corresponderse.</dd>
+  <dt>Lo que es una estimación</dt>
+  <dd>El equipo no guardó su mapa polar con atenuación. La zona anormal de referencia se armó dentro de los segmentos que el equipo puntuó, hasta completar la extensión que informó. Los puntajes se calculan con una referencia por segmento que es de este paciente.</dd>
+ </dl>
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
 
@@ -567,7 +646,9 @@
 <script src="caja.js?v=3"></script>
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="eje-equipo.js?v=3"></script>
-<script src="movil.js?v=26"></script>
+<script src="eje-equipo.js?v=4"></script>
+<script src="qps-nucleo.js?v=2"></script>
+<script src="qps.js?v=2"></script>
+<script src="movil.js?v=27"></script>
 </body>
 </html>
