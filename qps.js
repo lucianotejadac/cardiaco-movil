@@ -246,9 +246,12 @@ const Qps=(()=>{
  }
  function pintar(){
   const a=q.act,X=a.X,E=X.E,ang=CardiacoCore.angulosDe(E.eje[0],E.eje[1],E.eje[2]),a0=CardiacoCore.angulosDe(q.marco.a[0],q.marco.a[1],q.marco.a[2]);
-  $('qpsAzTexto').textContent=`${q.dAz>0?'+':''}${q.dAz}°`;$('qpsElTexto').textContent=`${q.dEl>0?'+':''}${q.dEl}°`;
+  // En el caso 7 los deslizadores muestran el angulo del eje (el del estudiante mas el giro); fuera
+  // del caso 7, el giro desde el eje del equipo.
+  if(q.caso7){const m=ejeActual(),am=CardiacoCore.angulosDe(m.a[0],m.a[1],m.a[2]);$('qpsAzTexto').textContent=`${Math.round(am.azimut)}°`;$('qpsElTexto').textContent=`${Math.round(am.elevacion)}°`;}
+  else{$('qpsAzTexto').textContent=`${q.dAz>0?'+':''}${q.dAz}°`;$('qpsElTexto').textContent=`${q.dEl>0?'+':''}${q.dEl}°`;}
   const eq=q.marcoEquipo?CardiacoCore.angulosDe(q.marcoEquipo.a[0],q.marcoEquipo.a[1],q.marcoEquipo.a[2]):a0;
-  $('qpsEje').textContent=oculto()?`Tu eje: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Los deslizadores lo giran desde el eje que dejaste en la reorientación.`:`Eje actual: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Eje del equipo: ${dec(eq.azimut,1)}° y ${dec(eq.elevacion,1)}°.`;
+  $('qpsEje').textContent=oculto()?`Tu eje: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°${q.dAz||q.dEl?` (girado ${q.dAz>0?'+':''}${q.dAz}° y ${q.dEl>0?'+':''}${q.dEl}° desde el que dejaste en la reorientación)`:', el que dejaste en la reorientación'}. Los deslizadores lo giran desde ahí, hasta 25° a cada lado.`:`Eje actual: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Eje del equipo: ${dec(eq.azimut,1)}° y ${dec(eq.elevacion,1)}°.`;
   $('qpsPolarRef').closest('figure').hidden=oculto();$('qpsPuntajesRef').closest('figure').hidden=oculto();$('qpsRevelar').hidden=!q.caso7;$('volverQps').textContent=q.caso7?'← Volver a las pantallas finales':'← Volver al control de calidad';$('qpsRevelar').textContent=q.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';$('qpsReferencia').textContent=q.caso7?'Volver a tu eje y a la receta del equipo':'Volver al eje y a la receta del equipo';
   $('qpsRecetaTexto').textContent=`Reconstrucción en pantalla: ${textoReceta(q.receta)}${mismaReceta(q.receta,q.recetaEquipo)?' (la del equipo)':''}.`;
   $('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);

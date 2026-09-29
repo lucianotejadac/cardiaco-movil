@@ -2,7 +2,8 @@
    aplicacion en un orden fijo, con una barra de pasos:
    A. Estres: 1. control de calidad, con dos saltos simulados y la correccion automatica;
       2. registro del mapa de atenuacion, que ya viene alineado; 3. reconstruccion con la receta
-      del equipo, caja y orientacion de los ejes, que parten torcidos al azar; 4. reconstruccion
+      del equipo, caja y orientacion de los ejes, que parten en 0° y 0° para que el estudiante los
+      corrija; 4. reconstruccion
       del gatillado, caja y orientacion de sus ejes.
    B. Reposo: los mismos cuatro pasos con las proyecciones, el CT y la gatillada del reposo.
    Despues: pantallas finales generadas con los ejes del estudiante, con y sin atenuacion (la
@@ -21,7 +22,7 @@ const Caso7=(()=>{
  const I={pantallas:8,mapa:9,qgs:10};
  // Receta con que el equipo reconstruyo cada fase (leida de sus DICOM de eje corto con atenuacion).
  const RECETA={estres:'OSEM 6 × 4 con corrección de atenuación y de dispersión, filtro gaussiano de 9 mm',reposo:'OSEM 6 × 4 con corrección de atenuación, filtro gaussiano de 9 mm'};
- const nueva=()=>({x:null,xNoAC:null,xNoACfuente:'',s:null,fuente:'',reg:null,inicial:null,inicialGat:null,entradaEstatica:null,entradaGat:null,ejes:null,ejesGat:null,gatBytes:null,correccion:null,estado:null,restaurar:false,restaurarGat:false});
+ const nueva=()=>({vivo:{estatico:null,gat:null},x:null,xNoAC:null,xNoACfuente:'',s:null,fuente:'',reg:null,inicial:null,inicialGat:null,entradaEstatica:null,entradaGat:null,ejes:null,ejesGat:null,gatBytes:null,correccion:null,estado:null,restaurar:false,restaurarGat:false});
  const c={activo:false,paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',tipo:'ac',qgs:'estres'},ocupado:false};
  const F=()=>c.F[c.fase],base=()=>c.fase==='reposo'?4:0;
  // Compatibilidad: lo de la fase activa se lee como antes (Caso7.estado.x, .s, .fuente, .reg).
@@ -72,7 +73,7 @@ const Caso7=(()=>{
  }
  async function aReposo(){guardarFase();if(!await MovilCardiaco.cargarFase('reposo',c.F.reposo.estado))return;marcar(4);}
 
- /* ---------- paso 3: reconstruccion con la receta del equipo, caja y ejes torcidos ---------- */
+ /* ---------- paso 3: reconstruccion con la receta del equipo, caja y ejes desde 0° y 0° ---------- */
  async function reconstruir(){
   const M=MovilCardiaco,est=M.estado,b=$('a7Reconstruir'),aviso=$('regEstado');if(!est.crudo||c.ocupado)return;
   const f=est.corr||est.crudo,s=f.s,fuente=est.corr?'corregidas por la aplicación':'sin corregir',r=Registro.estado;
@@ -87,7 +88,7 @@ const Caso7=(()=>{
    const Fx=F(),mismo=Fx.x&&Fx.s===s&&Fx.fuente===fuente;
    Object.assign(Fx,{x,s,fuente,reg,entradaEstatica:null});
    // Con las mismas proyecciones la reconstruccion es la misma: se recupera el eje que ya habia dejado.
-   if(!mismo)Object.assign(Fx,{xNoAC:null,inicial:null,ejes:null,entradaGat:null,ejesGat:null,inicialGat:null,restaurar:false,restaurarGat:false});
+   if(!mismo)Object.assign(Fx,{vivo:{estatico:null,gat:null},xNoAC:null,inicial:null,ejes:null,entradaGat:null,ejesGat:null,inicialGat:null,restaurar:false,restaurarGat:false});
    else Fx.restaurar=true;
    abrirCajaEstatica();marcar(base()+2);
   }catch(err){const det=EjeEquipo.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción detenida.':'No se pudo reconstruir: '+(err.message||err);if(!det)console.error(err);}
@@ -111,13 +112,23 @@ const Caso7=(()=>{
  }
  const debeTorcer=()=>c.sub==='gat'?!F().inicialGat:!F().inicial;
  function volverDesdeCaja(){if(c.sub==='gat'){F().restaurar=true;abrirCajaEstatica();marcar(base()+2);}else MovilCardiaco.aRegistro();}
- // Al abrir la reorientacion: si se vuelve a una fase o a un paso ya orientado, se recupera el eje
- // que dejo el estudiante; si es la primera vez, el eje parte torcido.
- function alAbrirReo(){
-  const Fx=F(),gat=c.sub==='gat',ej=gat?Fx.ejesGat:Fx.ejes,flag=gat?'restaurarGat':'restaurar';
-  if(ej&&Fx[flag]){Fx[flag]=false;const R=Reorientar.estado;R.Cv=ej.Cv.slice();R.t=ej.t||0;Reorientar.fijar(ej.az,ej.el);
-   $('reoEstado').className='estado ok';$('reoEstado').textContent='Recuperado el eje que dejaste en este paso. Puedes seguir ajustándolo.';}
-  else if(debeTorcer())torcer();
+ // Eje vivo: cada vez que la reorientacion se repinta, se anota el eje del estudiante en la fase y
+ // el paso a que pertenece esa reconstruccion (estatico o gatillado).
+ function anotarVivo(){
+  if(!c.activo||c.silencio)return;const R=Reorientar.estado;
+  for(const f of ['estres','reposo']){const Fx=c.F[f],k=R.origen&&R.origen===Fx.entradaEstatica?'estatico':R.origen&&R.origen===Fx.entradaGat?'gat':null;if(k){Fx.vivo[k]={az:R.az,el:R.el,Cv:R.Cv.slice(),t:R.t};return;}}
+ }
+ // Al abrir la reorientacion. reinicio: la reorientacion recibio otra reconstruccion y dejo el eje en
+ // 0° y 0°. Entonces se repone el ultimo eje del estudiante en ese paso o, si es la primera vez, el
+ // eje parte en 0° y 0°. Si no hubo reinicio, el eje sigue donde el estudiante lo dejo.
+ // Mientras la reorientacion se abre (y quizas vuelve a 0° y 0°) no se anota nada.
+ function antesDeReo(){c.silencio=true;}
+ function alAbrirReo(reinicio){
+  c.silencio=false;const Fx=F(),k=c.sub==='gat'?'gat':'estatico',v=Fx.vivo[k];
+  if(reinicio){
+   if(v){const R=Reorientar.estado;R.Cv=v.Cv.slice();R.t=v.t||0;Reorientar.fijar(v.az,v.el);$('reoEstado').className='estado ok';$('reoEstado').textContent=`Recuperado el eje que dejaste en este paso: azimut ${v.az}°, elevación ${v.el}°. Puedes seguir ajustándolo.`;}
+   else partirEnCero();
+  }else anotarVivo();
   botonSiguiente();
  }
  function guardarEjes(){
@@ -137,16 +148,16 @@ const Caso7=(()=>{
   const mismo=!!Fx.entradaGat&&Fx.gatFuente===Fx.fuente;
   try{const suma=await Gatillado7.reconstruir({est:{gat:M.estado.gat,correccion:M.estado.correccion},s:Fx.s,fuente:Fx.fuente,centro:Fx.x.centro,forzar:true});if(!suma)return;
    Object.assign(Fx,{entradaGat:{tipo:'osem',zArriba:true,data:suma,etiqueta:`gatillado del ${MINUS[c.fase]}, suma de los 8 intervalos`},gatFuente:Fx.fuente,gatBytes:M.estado.gat,correccion:M.estado.correccion});
-   if(mismo)Fx.restaurarGat=true;else Object.assign(Fx,{inicialGat:null,ejesGat:null});
+   if(mismo)Fx.restaurarGat=true;else{Object.assign(Fx,{inicialGat:null,ejesGat:null});Fx.vivo.gat=null;}
    abrirCajaGat();marcar(base()+3);}
   catch(err){const det=Gatillado7.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción del gatillado detenida.':'No se pudo reconstruir el gatillado: '+(err.message||err);if(!det)console.error(err);}
  }
- // Al pasar de la caja a la reorientacion, el eje parte entre 8 y 15 grados fuera del eje del
- // equipo, en azimut y en elevacion, con signo al azar. Cambia cada vez que se abre.
- function torcer(){
-  const Fx=F();if(!c.activo||!Fx.x)return;const az=Fx.x.azimut,el=Fx.x.elevacion,g=()=>(8+Math.random()*7)*(Math.random()<.5?-1:1),da=g(),de=g(),ini={az:Math.round(az+da),el:Math.round(el+de),dAz:da,dEl:de};
-  if(c.sub==='gat')Fx.inicialGat=ini;else Fx.inicial=ini;Reorientar.fijar(ini.az,ini.el);
-  $('reoEstado').className='estado';$('reoEstado').textContent='El eje parte torcido. Gíralo con los deslizadores hasta que el eje corto quede circular y los ejes largos simétricos, y después sigue.';
+ // La primera vez que se orienta cada paso (estatico y gatillado, en cada fase) el eje parte en 0°
+ // de azimut y 0° de elevacion, como en el equipo antes de reorientar: el estudiante lo corrige.
+ function partirEnCero(){
+  const Fx=F();if(!c.activo||!Fx.x)return;const ini={az:0,el:0};
+  if(c.sub==='gat')Fx.inicialGat=ini;else Fx.inicial=ini;Reorientar.fijar(0,0);
+  $('reoEstado').className='estado';$('reoEstado').textContent='El eje parte en 0° de azimut y 0° de elevación. Gíralo con los deslizadores hasta que el eje corto quede circular y los ejes largos simétricos, y después sigue.';
  }
 
  /* ---------- resultados: pantallas finales, mapa polar y mapa QGS, con menu estres / reposo ---------- */
@@ -197,6 +208,7 @@ const Caso7=(()=>{
  }
 
  function iniciar(){
+  Reorientar.estado.alCambiar=anotarVivo;
   $('a7Reconstruir').addEventListener('click',reconstruir);$('a7Mapa').addEventListener('click',siguiente);
   $('a7Qgs').addEventListener('click',()=>conBloqueo(()=>abrirQgs(c.vista.qgs)));$('a7MapaDesdePantallas').addEventListener('click',()=>conBloqueo(()=>abrirMapa(c.vista.mapa,c.vista.tipo)));
   $('pantRegenerar').addEventListener('click',()=>conBloqueo(()=>abrirPantallas(true)));
@@ -211,6 +223,6 @@ const Caso7=(()=>{
  // Paso 2: el registro parte con la configuracion elegida por el docente (en las dos fases).
  const REGISTRO={plano:'axial',corte:{axial:42},mezcla:.5,nivel:.51,ancho:.82,ventana:'blando'};
  function volverDesdeMapa(){conBloqueo(()=>abrirPantallas(false));}
- return {REGISTRO,iniciar,entrar,esCaso7,torcer,debeTorcer,alAbrirReo,volverDesdeCaja,volverDesdeMapa,estado:c,get activo(){return c.activo;},get fase(){return c.fase;}};
+ return {REGISTRO,iniciar,entrar,esCaso7,partirEnCero,debeTorcer,antesDeReo,alAbrirReo,volverDesdeCaja,volverDesdeMapa,estado:c,get activo(){return c.activo;},get fase(){return c.fase;}};
 })();
 window.Caso7=Caso7;

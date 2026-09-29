@@ -2,7 +2,7 @@
    Paso 4 de cada fase: reconstruye los 8 intervalos con la receta del equipo para el gatillado
    (OSEM 4 x 4, gaussiano 8,4 mm, sin atenuacion), sobre la adquisicion gatillada corregida con los
    mismos saltos que encontro la correccion automatica, si el estudiante corrigio. La caja y la
-   orientacion trabajan sobre la suma de los intervalos; el eje parte torcido al azar.
+   orientacion trabajan sobre la suma de los intervalos; el eje parte en 0° y 0°.
    Mapa QGS (con menu estres / reposo): con el eje del estudiante, calcula lo que muestra QGS:
    volumenes por intervalo, fraccion de eyeccion, forma, llenado, mapas polares de perfusion en fin
    de diastole y de sistole, movimiento y engrosamiento, y un ventriculo en 3D que late. La

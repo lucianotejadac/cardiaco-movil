@@ -403,8 +403,10 @@ async function aEquipo(i=0){
 function aComparar(i){const q=estado.equipo[i];if(!q)return;mostrarSolo('cmp');Comparador.abrir(q);}
 function aReorientar(){
  mostrarSolo('reo');botonesEquipo();
+ // Si la reorientacion recibe otra reconstruccion, vuelve el eje a 0° y 0°: el caso 7 lo repone.
+ const reinicio=Reorientar.estado.origen!==Caja.estado.entrada;if(segunda.origen==='caso7')Caso7.antesDeReo();
  Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
- if(segunda.origen==='caso7')Caso7.alAbrirReo();
+ if(segunda.origen==='caso7')Caso7.alAbrirReo(reinicio);
 }
 function aOsemDesdeCaja(){if(segunda.origen==='caso7')Caso7.volverDesdeCaja();else if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
 // Caso 7: la caja y la reorientacion trabajan sobre la reconstruccion con la receta del equipo.

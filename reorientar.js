@@ -119,6 +119,7 @@ const Reorientar=(()=>{
   else if(ref)txt+=` El equipo usó azimut ${dec(ref.azimut,1)}° y elevación ${dec(ref.elevacion,1)}°: te separan ${dec(Math.abs(r.az-ref.azimut),0)}° y ${dec(Math.abs(r.el-ref.elevacion),0)}° (tolerancia ${CARDIACO_TOLERANCIA.angulo}°).`;
   else txt+=' Este caso no trae el eje del equipo para comparar: guíate por las imágenes.';
   $('reoResumen').textContent=txt;
+  if(typeof r.alCambiar==='function')r.alCambiar(); // el caso 7 recuerda el eje vivo de cada paso
  }
 
  // Arrastrar mueve el centro del ventriculo en el plano de la imagen tocada.

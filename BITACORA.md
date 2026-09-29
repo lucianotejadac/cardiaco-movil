@@ -588,3 +588,14 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - Las reconstrucciones guardadas del mapa polar llevan el tipo en la clave, para no mezclar con y sin atenuación.
 
 **Validación.** Recorrido completo con clics. Con los ejes del equipo y sin saltos, los mapas sin atenuación dan los números del equipo (estrés 42 ml, extensión 11 %, SSS 6; reposo 52 ml, 1 %, SRS 1). Con el estudiante simulado (centro corrido un vóxel por eje y eje a 2°), el estrés sin atenuación da SSS 15 frente a 6: los puntajes son sensibles al centro.
+
+## 2026-09-29 · Caso 7: los ejes del estudiante parten en 0° y 0°
+
+**Contexto.** El docente pidió que los ejes del estudiante partan siempre en 0° de azimut y 0° de elevación, para que el estudiante los corrija. Antes partían torcidos al azar, entre 8° y 15° del eje del equipo.
+
+**Decisiones.**
+- La primera vez que se orienta cada paso (estático y gatillado, en estrés y en reposo), el eje parte en 0° y 0° (`partirEnCero` en `caso7.js`).
+- **Eje vivo por fase y por paso.** Se encontró que la reorientación volvía el eje a 0° y 0° cada vez que recibía una reconstrucción distinta (pulsar otra vez el paso 3 o el 4, ir del gatillado al estático, cambiar de fase), y el recorrido solo lo reponía si el estudiante ya había avanzado. Ahora la reorientación avisa en cada repintado (`Reorientar.estado.alCambiar`) y el recorrido anota el eje en la fase y el paso de esa reconstrucción. Al reabrir, si hubo reinicio, repone el eje del estudiante; si nunca lo orientó, parte en 0° y 0°. Si el estudiante cambia la corrección y la reconstrucción es otra, vuelve a partir en 0° y 0°.
+- En el mapa polar del caso 7, los deslizadores muestran el ángulo real del eje (el del estudiante más el giro) y no el giro desde su eje, que se leía como 0°.
+
+**Validación.** Recorrido completo con clics: los cuatro pasos parten en 0° y 0°; caja y vuelta mantienen el eje; volver del registro y pulsar otra vez el paso 3 reconstruye y recupera el eje del estudiante; al volver al estrés desde los resultados se recupera su eje.
