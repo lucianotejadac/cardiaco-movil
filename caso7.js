@@ -34,7 +34,8 @@ const Caso7=(()=>{
  function entrar(activo,fase){
   if(fase&&c.activo){c.fase=fase;c.sub='estatico';titulo();receta();pintarPasos();return;}
   c.activo=!!activo;document.body.classList.toggle('caso7',c.activo);$('pasos7').hidden=!c.activo;
-  if(!c.activo)return;Object.assign(c,{paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',tipo:'ac',qgs:'estres'}});
+  if(!c.activo){if(window.Tutorial7&&Tutorial7.estado.activo)Tutorial7.cerrar();return;}
+  setTimeout(()=>{if(c.activo&&window.Tutorial7)Tutorial7.ofrecer();},500);Object.assign(c,{paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',tipo:'ac',qgs:'estres'}});
   if(window.Pantallas7)Pantallas7.olvidar();titulo();receta();pintarPasos();
  }
  function receta(){const p=$('a7Receta');if(p)p.textContent=`Receta del equipo para el ${MINUS[c.fase]}: ${RECETA[c.fase]}. Se reconstruye sobre las proyecciones que dejaste en el control de calidad, corregidas o no.`;}

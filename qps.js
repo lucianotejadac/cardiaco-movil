@@ -257,7 +257,9 @@ const Qps=(()=>{
   $('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);
   ejes(a);vivo(a);guardadas();
   tabla();polar('qpsPolar',a,300,a.porcentaje||a.valor);polar('qpsPolarRef',q.ref,300,q.ref.porcentaje||q.ref.valor);
-  $('qpsPolarTitulo').textContent=a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';$('qpsPolarRefTitulo').textContent=q.caso7?'Eje del equipo sobre esta reconstrucción':a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
+  $('qps').classList.toggle('revelado',q.caso7&&!oculto());
+  $('qpsPolarTitulo').textContent=q.caso7?(a.porcentaje?`Tu mapa · extensión (%)`:'Tu mapa · valor medio'):a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';{const f=$('qpsPuntajes').closest('figure').querySelector('figcaption'),g=$('qpsPuntajesRef').closest('figure').querySelector('figcaption');f.textContent=q.caso7?'Tus puntajes':'Ahora';g.textContent=q.caso7?'Puntajes del equipo':'Referencia';}
+  $('qpsPolarRefTitulo').textContent=q.caso7?(q.obj&&q.obj.imagen?'Tu reconstrucción con el eje del equipo':'Equipo · su eje sobre tu reconstrucción'):a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
   miniatura('qpsPuntajes',a.puntajes,150);miniatura('qpsPuntajesRef',q.ref.puntajes,150);$('qpsPuntajesCaja').hidden=!a.puntajes;
   cortes(a);splash(a);
   const o=q.obj,estadoTxt=o&&o.estado?` Estado que informó el equipo: «${o.estado}».`:'';

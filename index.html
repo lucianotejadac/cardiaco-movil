@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=38">
+<link rel="stylesheet" href="movil.css?v=40">
 </head>
 <body>
 <header class="barra">
  <h1 id="titulo">SPECT cardíaco · Caso 1 · Estrés</h1>
- <button id="cambiar" type="button" class="mini" hidden>Cambiar archivo</button>
+ <div class="barraBotones"><button id="tutAbrir" type="button" class="mini solo7 tutBoton" aria-pressed="false">Tutorial</button><button id="cambiar" type="button" class="mini" hidden>Cambiar archivo</button></div>
 </header>
 <nav id="pasos7" class="pasos7" hidden aria-label="Pasos del caso 7"></nav>
 <main>
@@ -270,11 +270,11 @@
   <table id="qpsTabla" class="qpsTabla"></table>
 
   <h3 class="qpsT">Mapa polar</h3>
-  <div class="rejilla">
+  <div id="qpsMapas" class="rejilla pares">
    <figure><figcaption id="qpsPolarTitulo">Ahora</figcaption><canvas id="qpsPolar" class="libre" aria-label="Mapa polar con el eje y la receta actuales."></canvas></figure>
+   <figure id="qpsPolarEquipo" class="equipo" hidden><figcaption id="qpsPolarEquipoTitulo">Mapa polar que guardó el equipo</figcaption><img alt="Mapa polar que guardó el equipo, sin atenuación." loading="lazy"></figure>
    <figure><figcaption id="qpsPolarRefTitulo">Referencia</figcaption><canvas id="qpsPolarRef" class="libre" aria-label="Mapa polar de referencia, con el eje y la receta del equipo."></canvas></figure>
   </div>
-  <figure id="qpsPolarEquipo" class="equipoQgs" hidden><figcaption id="qpsPolarEquipoTitulo">Mapa polar que guardó el equipo</figcaption><img alt="Mapa polar que guardó el equipo, sin atenuación." loading="lazy"></figure>
   <p class="clave">Arriba, pared anterior; abajo, inferior; izquierda, septum; derecha, pared lateral. Centro, ápex; borde, base. En negro, la zona bajo el límite normal. Los números son el porcentaje anormal de cada segmento.</p>
 
   <div id="qpsPuntajesCaja">
@@ -311,16 +311,21 @@
   <table id="qgsTabla" class="qpsTabla"></table>
   <button id="qgsRevelar" type="button" class="boton ancho otro">Ver el resultado del equipo</button>
   <h3 class="qpsT">Volumen del ventrículo en el ciclo</h3>
-  <canvas id="qgsCurva" class="libre ancho" aria-label="Curva de volumen y de llenado en los ocho intervalos."></canvas>
-  <figure id="qgsCurvaEquipo" class="equipoQgs" hidden><figcaption>Curva del equipo: volumen en rojo (ml, eje izquierdo) y llenado en negro (ml/s, eje derecho)</figcaption><img src="caso7-qgs-estres-curva.png?v=1" alt="Curva de volumen y de llenado que calculó el equipo en los ocho intervalos." loading="lazy"></figure>
-  <h3 class="qpsT">Mapas polares</h3>
-  <div class="rejilla">
-   <figure><figcaption>Perfusión en fin de diástole (%)</figcaption><canvas id="qgsEd" class="libre"></canvas></figure>
-   <figure><figcaption>Perfusión en fin de sístole (%)</figcaption><canvas id="qgsEs" class="libre"></canvas></figure>
-   <figure><figcaption>Movimiento (0 a 10 mm)</figcaption><canvas id="qgsMov" class="libre"></canvas></figure>
-   <figure><figcaption>Engrosamiento (%)</figcaption><canvas id="qgsEng" class="libre"></canvas></figure>
+  <div id="qgsCurvas" class="pares">
+   <figure><figcaption>Tu curva <span class="quien">· tuya</span></figcaption><canvas id="qgsCurva" class="libre ancho" aria-label="Curva de volumen y de llenado en los ocho intervalos."></canvas></figure>
+   <figure id="qgsCurvaEquipo" class="equipo" hidden><figcaption>Curva del equipo: volumen en rojo (ml), llenado en negro (ml/s)</figcaption><img src="caso7-qgs-estres-curva.png?v=1" alt="Curva de volumen y de llenado que calculó el equipo en los ocho intervalos." loading="lazy"></figure>
   </div>
-  <figure id="qgsMapasEquipo" class="equipoQgs" hidden><figcaption>Mapas polares del equipo: perfusión en fin de diástole y de sístole, movimiento y engrosamiento</figcaption><img src="caso7-qgs-estres-mapas.png?v=1" alt="Los cuatro mapas polares que calculó el equipo para el gatillado de estrés." loading="lazy"></figure>
+  <h3 class="qpsT">Mapas polares</h3>
+  <div id="qgsMapas" class="rejilla pares">
+   <figure><figcaption>Perfusión en fin de diástole (%) <span class="quien">· tuyo</span></figcaption><canvas id="qgsEd" class="libre"></canvas></figure>
+   <figure class="equipo" data-mapa="ed" hidden><figcaption>Fin de diástole · equipo</figcaption><img alt="Perfusión en fin de diástole que calculó el equipo." loading="lazy"></figure>
+   <figure><figcaption>Perfusión en fin de sístole (%) <span class="quien">· tuyo</span></figcaption><canvas id="qgsEs" class="libre"></canvas></figure>
+   <figure class="equipo" data-mapa="es" hidden><figcaption>Fin de sístole · equipo</figcaption><img alt="Perfusión en fin de sístole que calculó el equipo." loading="lazy"></figure>
+   <figure><figcaption>Movimiento (0 a 10 mm) <span class="quien">· tuyo</span></figcaption><canvas id="qgsMov" class="libre"></canvas></figure>
+   <figure class="equipo" data-mapa="mov" hidden><figcaption>Movimiento · equipo</figcaption><img alt="Movimiento que calculó el equipo." loading="lazy"></figure>
+   <figure><figcaption>Engrosamiento (%) <span class="quien">· tuyo</span></figcaption><canvas id="qgsEng" class="libre"></canvas></figure>
+   <figure class="equipo" data-mapa="eng" hidden><figcaption>Engrosamiento · equipo</figcaption><img alt="Engrosamiento que calculó el equipo." loading="lazy"></figure>
+  </div>
   <h3 class="qpsT">Fin de diástole y fin de sístole</h3>
   <canvas id="qgsCortes" class="libre ancho" aria-label="Eje corto, largo vertical y largo horizontal en fin de diástole y en fin de sístole."></canvas>
   <p id="qgsNota" class="dato"></p>
@@ -748,13 +753,15 @@
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=7"></script>
 <script src="qps-nucleo.js?v=5"></script>
-<script src="qps.js?v=9"></script>
+<script src="qps.js?v=10"></script>
 <script src="caso7-constantes.js?v=3"></script>
 <script src="caso7-gatillado-constantes.js?v=2"></script>
-<script src="caso7-gatillado.js?v=6"></script>
-<script src="pantallas7.js?v=2"></script>
-<script src="caso7.js?v=8"></script>
-<script src="apaisado.js?v=3"></script>
+<script src="caso7-gatillado.js?v=7"></script>
+<script src="pantallas7.js?v=3"></script>
+<script src="caso7.js?v=9"></script>
+<script src="glosario.js?v=2"></script>
+<script src="tutorial7.js?v=2"></script>
+<script src="apaisado.js?v=5"></script>
 <script src="movil.js?v=38"></script>
 </body>
 </html>

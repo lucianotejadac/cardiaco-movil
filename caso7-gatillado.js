@@ -187,8 +187,11 @@ const Gatillado7=(()=>{
   polar('qgsEd',res.mapas.ed,res.rho,100,res.segv.ed);polar('qgsEs',res.mapas.es,res.rho,100,res.segv.es);polar('qgsMov',res.mapas.mov,res.rho,10,res.segv.mov,true);polar('qgsEng',res.mapas.eng,res.rho,100,res.segv.eng);
   const E=res.E,a=CardiacoCore.angulosDe(E.eje[0],E.eje[1],E.eje[2]);
   $('qgsEstado').className='estado ok';$('qgsEstado').textContent=`Tu eje del gatillado: azimut ${dec(a.azimut,1)}°, elevación ${dec(a.elevacion,1)}°. Receta del equipo para el gatillado: OSEM 4 × 4, gaussiano 8,4 mm.${g.deMemoria?' Reconstrucción recuperada de lo guardado.':''}`;
-  $('qgsCurvaEquipo').hidden=$('qgsMapasEquipo').hidden=!g.revelar;
-  for(const [id,q] of [['qgsCurvaEquipo','curva'],['qgsMapasEquipo','mapas']]){const im=document.querySelector(`#${id} img`),src=`caso7-qgs-${EQUIPO.imagen}-${q}.png?v=1`;if(im&&!im.getAttribute('src').startsWith(`caso7-qgs-${EQUIPO.imagen}-`))im.src=src;}
+  // Comparacion par a par: cada mapa y la curva del estudiante junto a los del equipo de esta fase.
+  $('qgs7').classList.toggle('revelado',g.revelar);$('qgsCurvaEquipo').hidden=!g.revelar;
+  const pon=(im,src)=>{if(im&&im.getAttribute('src')!==src)im.src=src;};
+  pon(document.querySelector('#qgsCurvaEquipo img'),`caso7-qgs-${EQUIPO.imagen}-curva.png?v=1`);
+  document.querySelectorAll('#qgsMapas figure.equipo').forEach(f=>{f.hidden=!g.revelar;if(g.revelar)pon(f.querySelector('img'),`caso7-qgs-${EQUIPO.imagen}-${f.dataset.mapa}.png?v=1`);});
   $('qgsRevelar').textContent=g.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';
   $('qgsNota').textContent=g.revelar?`El equipo informó para el ${EQUIPO.fase}: volumen de fin de diástole ${EQUIPO.edv} ml, de fin de sístole ${EQUIPO.esv} ml, fracción de eyección ${EQUIPO.ef} %. Los cuatro mapas del equipo traen un número por segmento; la calibración de esta sección se hizo con ellos, con el eje del equipo y sin los saltos.`:'Los números del equipo se ven al pulsar «Ver el resultado del equipo».';
  }

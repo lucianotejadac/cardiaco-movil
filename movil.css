@@ -259,8 +259,10 @@ html.bloqueado #qgs3d{pointer-events:none;touch-action:auto}
  #qgs7 .lienzo>#qgs3d{grid-column:1;grid-row:2;max-width:100%}
  #qgs7 .lienzo>.recetas{grid-column:1;grid-row:3}
  #qgs7 .lienzo>h3:nth-of-type(2){grid-column:2;grid-row:1;margin-top:0}
- #qgs7 .lienzo>#qgsCurva{grid-column:2;grid-row:2}
- #qgs7 .lienzo>#qgsCurvaEquipo{grid-column:2;grid-row:3;margin-top:6px}
+ #qgs7 .lienzo>#qgsCurvas{grid-column:2;grid-row:2}
+ /* comparando con el equipo: las dos curvas, lado a lado, bajan a todo el ancho */
+ #qgs7.revelado .lienzo>h3:nth-of-type(2){grid-column:1/-1;grid-row:auto;margin-top:14px}
+ #qgs7.revelado .lienzo>#qgsCurvas{grid-column:1/-1;grid-row:auto}
  .ejesVivo figure,.ejesVivo canvas{width:120px}
  .ejesVivo canvas{height:120px}
  dialog{width:min(80vw,680px)}
@@ -285,4 +287,37 @@ dialog.grande .boton{margin:0}
 .aviso b{color:#ffb3ab}
 #qpsTipo{margin:0 0 6px}
 body.caso7 p.aviso.solo7:not([hidden]){display:block}
+/* Comparacion con el equipo par a par: cada figura del estudiante junto a la del equipo */
+.pares{display:grid;grid-template-columns:1fr;gap:6px 8px}
+.revelado .pares{grid-template-columns:1fr 1fr}
+.rejilla.pares{grid-template-columns:1fr 1fr}
+.pares figure.equipo figcaption{color:var(--celeste)}
+.pares figure.equipo img{display:block;width:100%;height:auto;border-radius:6px;background:#000}
+.quien{display:none;color:var(--texto2);font-weight:400}
+.revelado .quien{display:inline}
+/* Barra: botones a la derecha */
+.barraBotones{display:flex;gap:6px;align-items:center}
+.tutBoton[aria-pressed=true]{border-color:var(--acento);color:var(--acento)}
+/* «Saber más» en cada paso */
+.saberMas{display:block;width:100%;background:transparent;color:var(--celeste);border:1px solid var(--celeste);border-radius:8px;padding:8px 10px;font-size:.9rem;font-weight:600;margin:0 0 6px;cursor:pointer}
+dialog.saberMasDlg{width:min(92vw,720px)}
+dialog.saberMasDlg .leyenda dt{color:var(--celeste)}
+/* Tutorial: ventana flotante, flecha y marco */
+.tut{position:fixed;left:16px;top:120px;z-index:40;width:min(360px,92vw);background:#1f2630;border:2px solid var(--acento);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.65);padding:0 12px 10px;color:var(--texto);font-size:.95rem}
+.tut[hidden]{display:none}
+.tutBarra{display:flex;align-items:center;gap:8px;cursor:move;touch-action:none;user-select:none;-webkit-user-select:none;padding:8px 0;border-bottom:1px solid var(--linea);margin-bottom:6px}
+.tutAsa{color:var(--texto2);font-size:1.1rem}
+#tutTitulo{font-size:.9rem;color:var(--acento)}
+#tutCuenta{margin-left:auto;color:var(--texto2);font-size:.8rem}
+#tutCerrar{background:none;border:0;color:var(--texto);font-size:1.1rem;cursor:pointer;padding:0 2px}
+#tutTexto{margin:4px 0 8px;line-height:1.45}
+.tutEspera{color:var(--acento);font-size:.85rem;margin:0 0 8px}
+.tutBotones{display:flex;gap:8px;justify-content:space-between}
+.tutBotones button{flex:1;background:var(--tarjeta);color:var(--texto);border:1px solid var(--linea);border-radius:8px;padding:8px;font-size:.88rem;font-weight:600;cursor:pointer}
+.tutBotones #tutSig{background:var(--acento);color:#111;border-color:var(--acento)}
+.tutBotones button:disabled{opacity:.4}
+.tutFlecha{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:39;overflow:visible}
+.tutMarco{position:fixed;pointer-events:none;z-index:38;border:3px solid var(--acento);border-radius:10px;box-shadow:0 0 0 4px rgba(255,179,71,.25),0 0 18px rgba(255,179,71,.6);animation:tutPulso 1.4s ease-in-out infinite}
+.tutMarco[hidden]{display:none}
+@keyframes tutPulso{50%{box-shadow:0 0 0 8px rgba(255,179,71,.12),0 0 26px rgba(255,179,71,.85)}}
 

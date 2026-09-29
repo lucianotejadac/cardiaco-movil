@@ -137,6 +137,9 @@ const Pantallas7=(()=>{
   qgs_reposo:'Toca la pantalla para verla ampliada. Gatillado del reposo con tu eje: cortes en fin de diástole y de sístole, ventrículo en fin de diástole, los cuatro mapas de QGS, curva de volumen y llenado.'};
  function mostrar(k){
   if(!p.lienzos[k])return;p.actual=k;const src=p.lienzos[k],c=$('pantLienzo');c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);
+  // Terminos dibujados en la pantalla, para «Saber más».
+  const T0='Results TID SSS SRS SDS SS% Dataset Recipe OSEM Volume Wall Defect Extent TPD Shape SI Ecc ml k mm Str Rst Rev',T1=k.endsWith('noac')?' NoAC Stress Rest Recon':' AC SC Stress Rest Recon Mask Failure QC';
+  c.dataset.terminos=k.startsWith('splash')?'Splash SAX VLA HLA ápex base septum pared lateral anterior inferior '+T0+T1:k.startsWith('qps')?'QPS Extent Reversibility reversibilidad ANT INF SEPT ÁPEX eje corto largo horizontal largo vertical superficie '+T0+T1:'QGS Gated Dataset Recipe OSEM EDV ESV SV EF Shape SI ED ES Ecc LV Volume Filling PER PFR PFR2 MFR/3 TTPF BPM R-R EDV/s ms ml Perfusion Motion Thickening BASE ANT SEPT INF ÁPEX intervalos fin de diástole fin de sístole';
   $('pantTitulo').textContent=TIPOS.find(t=>t[0]===k)[1];$('pantNota').textContent=NOTAS[k];$('pantMascara').hidden=!(k==='splash'||k==='qps');document.querySelectorAll('#pantMenu [data-pant]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pant===k)));
  }
  function descargar(){const c=p.lienzos[p.actual];if(!c)return;c.toBlob(b=>{if(!b)return;const a=document.createElement('a'),u=URL.createObjectURL(b);a.href=u;a.download=`caso7_${p.actual}.png`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);},'image/png');}
