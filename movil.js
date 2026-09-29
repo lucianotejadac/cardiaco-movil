@@ -183,7 +183,7 @@ async function cargar(entrada){
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
 }
 // Muestra un DICOM ya extraido. Devuelve true si se pudo leer.
-async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes){
+async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes,opciones){
  try{
   const d=await Lab95.read(new Blob([bytes]));
   const crudo=Lab95.spect(d);
@@ -196,12 +196,14 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes){
   estado.aviso=esDelCaso?'':propio?'Archivo propio, no es el caso 1. ':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
   mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+(esDelCaso?String(origen).replace(PROPIO,''):origen)+(recuperado?' (guardado en esta tablet)':''),esDelCaso||propio?'ok':'error');
   $('titulo').textContent=esDelCaso?'SPECT cardíaco · Caso 1 · Estrés':'SPECT cardíaco · '+(crudo.description||'archivo propio');
-  Caso7.entrar(Caso7.esCaso7(crudo.frame));if(Caso7.activo){estado.aviso='';mensaje('Caso 7, estrés: '+origen+(recuperado?' (guardado en esta tablet)':''),'ok');}
+  const fase7=opciones&&opciones.fase;Caso7.entrar(fase7?true:Caso7.esCaso7(crudo.frame),fase7);if(Caso7.activo){estado.aviso='';mensaje(`Caso 7, ${fase7==='reposo'?'reposo':'estrés'}: `+origen+(recuperado?' (guardado en esta tablet)':''),'ok');}
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=!esDelCaso;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
   estado.ct=ct&&ct.length?ct:null;estado.gat=gat||null;EjeEquipo.configurar(ejes);Qps.olvidar();// Lo guardado antes de este cambio traia una sola reconstruccion (objeto): se pasa a lista.
   estado.equipo=equipo?(Array.isArray(equipo)?equipo:[equipo]):[];
+  // Caso 7: los ejes cortos del equipo de las dos fases; EjeEquipo elige el de cada fase por su marco de referencia.
+  if(Caso7.activo)EjeEquipo.configurar(estado.equipo.flatMap(q=>[q.saAC,q.saNoAC]).filter(Boolean));
   $('equipoBotones').replaceChildren(...estado.equipo.flatMap((q,i)=>{const fase=q.fase==='reposo'?'reposo':'estrés',boton=(texto,f)=>{const b=document.createElement('button');b.type='button';b.className='boton ancho secundario';b.textContent=texto;b.addEventListener('click',f);return b;};
    return [boton(`Comparar Siemens con el simulador (caso ${q.caso}, ${fase}) →`,()=>aComparar(i)),boton(`Reorientar con la reconstrucción del equipo (caso ${q.caso}, ${fase}) →`,()=>aEquipo(i))];}));Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
@@ -366,7 +368,7 @@ async function aOsem(){
 }
 // Segunda parte, sin cambiar de simulador: reorientar sobre la reconstruccion de la izquierda.
 // Primero se ubica el corazon con una caja en coronal y sagital; despues se reorienta.
-const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();if(id!=='cmp')Comparador.salir();for(const q of ['qc','reg','osem','gat','caja','reo','cmp','qps','qgs7'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
+const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();if(id!=='cmp')Comparador.salir();for(const q of ['qc','reg','osem','gat','caja','reo','cmp','qps','qgs7','pantallas7'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
 const entradaIzquierda=()=>{const o=OsemMovil.estado;return o.historial.find(h=>h.id===o.a);};
 // De donde se vino a la caja (la OSEM o el control de calidad) y con que volumen se trabaja.
 const segunda={origen:'osem',s:null,referencia:null,directo:null};
@@ -402,12 +404,20 @@ function aComparar(i){const q=estado.equipo[i];if(!q)return;mostrarSolo('cmp');C
 function aReorientar(){
  mostrarSolo('reo');botonesEquipo();
  Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
- if(segunda.origen==='caso7'&&Caso7.debeTorcer())Caso7.torcer();
+ if(segunda.origen==='caso7')Caso7.alAbrirReo();
 }
 function aOsemDesdeCaja(){if(segunda.origen==='caso7')Caso7.volverDesdeCaja();else if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
 // Caso 7: la caja y la reorientacion trabajan sobre la reconstruccion con la receta del equipo.
 function prepararCaso7({s}){Object.assign(segunda,{origen:'caso7',s,referencia:null,directo:null});$('volverOsem').textContent='← Volver al registro';}
 function aQc7(){mostrarSolo('qc');armar();}
+// Caso 7: abre otra fase del mismo ZIP (proyecciones, CT y gatillada del estres o del reposo). Si la
+// fase ya se habia trabajado, recupera su correccion de movimiento.
+async function cargarFase(fase,previo){
+ const q=estado.equipo.find(e=>e.fase===fase);if(!q||!q.proy){mensaje(`El ZIP no trae las proyecciones del ${fase==='reposo'?'reposo':'estrés'}.`,'error');return false;}
+ const ok=await mostrar(q.proy,`Cardiaco caso 7/Caso 7/${fase==='reposo'?'Reposo/NM_reposo.dcm':'Estres/NM_estres.dcm'}`,false,q.ct,q.proyGat,estado.equipo,null,{fase});
+ if(ok&&previo&&previo.corr){Object.assign(estado,previo);$('comparacion').textContent=estado.comparacion||'';armar();}
+ return ok;
+}
 // Gatillado: se reconstruye con la receta del escritorio en el rango que elige el estudiante.
 function aGatillado(){
  mostrarSolo('gat');
@@ -487,7 +497,7 @@ async function aQps(){
 }
 let pendienteQps=false;
 $('aQps').addEventListener('click',aQps);
-$('volverQps').addEventListener('click',()=>{if(Caso7.activo){mostrarSolo('reo');return;}mostrarSolo('qc');armar();});
+$('volverQps').addEventListener('click',()=>{if(Caso7.activo){Caso7.volverDesdeMapa();return;}mostrarSolo('qc');armar();});
 // Con o sin atenuacion: un solo valor, con un selector en cada pantalla donde se usa.
 const selectoresTipo=()=>document.querySelectorAll('.tipoEquipoSel');
 function ponerTipo(t){EjeEquipo.fijarTipo(t);selectoresTipo().forEach(q=>{q.value=EjeEquipo.estado.tipo;});}
@@ -541,7 +551,7 @@ function candado(cerrado,avisar){
 }
 $('candado').addEventListener('click',()=>candado(!document.documentElement.classList.contains('bloqueado'),true));
 candado(false,false);
-window.MovilCardiaco={aQps,mostrarSolo,prepararCaso7,aQc7,estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo,aComparar};
+window.MovilCardiaco={aQps,mostrarSolo,prepararCaso7,aQc7,cargarFase,estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo,aComparar};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();
 // Al pasar entre tablet apaisada y pantalla angosta, la rejilla del control de calidad se rearma.

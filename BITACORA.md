@@ -549,3 +549,17 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - Los textos que decían «teléfono» ahora dicen «tablet».
 
 **Validación.** Recorrido del caso 7 en 1180 × 820 y en 390 × 844, sin errores.
+
+## 2026-09-29 · Caso 7 en dos fases: estrés, reposo, pantallas finales y menús de resultados
+
+**Contexto.** El docente fijó el orden: A. estrés (control de calidad, registro, caja y ejes, ejes del gatillado); B. reposo (los mismos cuatro pasos); después, generación de las pantallas finales, mapa polar con menú estrés/reposo y mapa QGS con menú estrés/reposo.
+
+**Decisiones.**
+- **Barra de pasos en tres grupos**: «A. Estrés», «B. Reposo» y «Resultados». Se puede volver a cualquier paso ya hecho. Al volver a la otra fase se recargan sus proyecciones, CT y gatillada desde el ZIP, se recupera su corrección de movimiento y, al reabrir la reorientación, el eje que dejó el estudiante.
+- **Cada fase guarda lo suyo** (`caso7.js`): reconstrucción, registro, ejes estáticos y gatillados, gatillada y corrección. EjeEquipo recibe los ejes cortos del equipo de las dos fases y elige el de cada una por su marco de referencia, así la receta del reposo sale de su propio DICOM (OSEM 6 × 4, atenuación sin dispersión, 9 mm).
+- **El mapa polar ya no va entre la caja y el gatillado**: tras orientar el eje estático se pasa directo a reconstruir y orientar el gatillado de la misma fase.
+- **Reposo calibrado como el estrés**: números del equipo del reposo con atenuación (pantalla Splash AC) y de su QGS, constantes congeladas por huella de fase en `caso7-constantes.js` y `caso7-gatillado-constantes.js`, obtenidas con el eje del equipo. El reposo con atenuación del equipo trae «Mask Failure: QC=4.47» (87 ml); la referencia reproduce ese resultado tal como lo informó el equipo y la nota del mapa polar lo explica.
+- **Pantallas finales** (`pantallas7.js`): cuatro pantallas con la disposición de las del equipo, calculadas con los ejes del estudiante y la receta del equipo: Splash AC, QPS AC (mapas de estrés y reposo, reversibilidad, puntajes Str/Rst/Rev, SSS, SRS, SDS, TID), QGS del estrés y QGS del reposo. Dicen arriba que las generó la aplicación y no llevan identidad. Se amplían al tocarlas y se descargan en PNG. No se generan las pantallas sin atenuación, Raw ni Surface: el recorrido reconstruye con atenuación.
+- **Imágenes del equipo en QGS por fase**: recortes sin identidad de los savescreen QGS de estrés y de reposo.
+
+**Validación.** Recorrido completo en 1180 × 820, con clics: modo exportación con los ejes del equipo (números del reposo iguales a los del equipo) y modo normal con ejes a 2° del equipo. Sin errores de JavaScript.

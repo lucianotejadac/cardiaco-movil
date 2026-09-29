@@ -1,21 +1,26 @@
-/* Caso 7, pasos 5 y 6: gatillado.
-   Paso 5: reconstruye los 8 intervalos con la receta del equipo para el gatillado (OSEM 4 x 4,
-   gaussiano 8,4 mm, sin atenuacion), sobre la adquisicion gatillada corregida con los mismos
-   saltos que encontro la correccion automatica, si el estudiante corrigio. La caja y la
+/* Caso 7: gatillado, en cada fase (estres y reposo).
+   Paso 4 de cada fase: reconstruye los 8 intervalos con la receta del equipo para el gatillado
+   (OSEM 4 x 4, gaussiano 8,4 mm, sin atenuacion), sobre la adquisicion gatillada corregida con los
+   mismos saltos que encontro la correccion automatica, si el estudiante corrigio. La caja y la
    orientacion trabajan sobre la suma de los intervalos; el eje parte torcido al azar.
-   Paso 6: con el eje del estudiante, calcula lo que muestra QGS: volumenes por intervalo, fraccion
-   de eyeccion, forma, llenado, mapas polares de perfusion en fin de diastole y de sistole,
-   movimiento y engrosamiento, y un ventriculo en 3D que late. La calibracion viene congelada
-   (caso7-gatillado-constantes.js), obtenida con los datos sin saltos y el eje del equipo; si
-   falta, se calibra aqui contra lo que informo el equipo. */
+   Mapa QGS (con menu estres / reposo): con el eje del estudiante, calcula lo que muestra QGS:
+   volumenes por intervalo, fraccion de eyeccion, forma, llenado, mapas polares de perfusion en fin
+   de diastole y de sistole, movimiento y engrosamiento, y un ventriculo en 3D que late. La
+   calibracion viene congelada por fase (caso7-gatillado-constantes.js), obtenida con los datos sin
+   saltos y el eje del equipo; si falta, se calibra aqui contra lo que informo el equipo. */
 'use strict';
 const Gatillado7=(()=>{
  const Q=QpsNucleo,$=id=>document.getElementById(id),dec=(x,d=0)=>Number(x).toFixed(d).replace('.',',');
  const N=192,RECETA={it:4,sub:4,fwhm:8.4},MEDIO=24,LADO_XY=34;
- // Lo que informo el equipo (pantallas QGS del estres), por segmento del 1 al 17.
- const EQUIPO={edv:55,esv:18,sv:37,ef:67,ed:1,es:4,si_ed:.61,si_es:.45,ecc:.79,per:-3.60,pfr:1.08,pfr2:3.50,mfr3:.78,ttpf:130,bpm:81.3,rr:738,
+ // Lo que informo el equipo en las pantallas QGS de cada fase (por la huella del marco de
+ // referencia de sus proyecciones), con los valores por segmento del 1 al 17.
+ const EQUIPOS={'22d4f455':{fase:'estrés',imagen:'estres',edv:55,esv:18,sv:37,ef:67,ed:1,es:4,si_ed:.61,si_es:.45,ecc:.79,per:-3.60,pfr:1.08,pfr2:3.50,mfr3:.78,ttpf:130,bpm:81.3,rr:738,
   curva:[55,40.5,24.7,18.0,21.4,27.0,35.0,51.5],
-  seg:{ed:[51,37,36,36,32,42,50,45,45,48,46,56,50,45,48,53,42],es:[62,53,45,46,48,62,75,64,68,60,56,72,75,64,76,80,84],mov:[10.5,4.6,1.3,5.2,9.6,11.8,8.0,3.7,1.7,5.7,9.5,10.0,7.4,3.3,8.0,11.3,10.2],eng:[31,35,28,25,30,38,39,40,47,32,30,39,51,46,50,50,68]}};
+  seg:{ed:[51,37,36,36,32,42,50,45,45,48,46,56,50,45,48,53,42],es:[62,53,45,46,48,62,75,64,68,60,56,72,75,64,76,80,84],mov:[10.5,4.6,1.3,5.2,9.6,11.8,8.0,3.7,1.7,5.7,9.5,10.0,7.4,3.3,8.0,11.3,10.2],eng:[31,35,28,25,30,38,39,40,47,32,30,39,51,46,50,50,68]}},
+  '474e44e4':{fase:'reposo',imagen:'reposo',edv:68,esv:22,sv:46,ef:68,ed:1,es:4,si_ed:.61,si_es:.44,ecc:.81,per:-3.40,pfr:1.72,pfr2:3.17,mfr3:1.04,ttpf:132,bpm:79.9,rr:751,
+  curva:[68,50.5,30.2,22.0,25.8,35.6,47.5,66.2],
+  seg:{ed:[49,38,35,41,36,47,56,47,47,52,49,63,51,46,51,53,46],es:[68,56,42,48,48,63,92,69,70,71,67,90,91,72,88,85,89],mov:[12.5,6.0,1.1,4.3,9.2,12.3,11.0,4.8,1.1,5.0,10.0,11.9,10.4,4.0,7.9,12.7,10.3],eng:[36,37,27,21,25,33,52,44,49,39,37,48,62,50,57,54,68]}}};
+ let EQUIPO=EQUIPOS['22d4f455'];
  const g={vols:null,suma:null,s:null,d:null,sp:1,fuente:'',res:null,ref:null,K:null,revelar:false,t:0,timer:null,yaw:28,pitch:12,vis:null,ocupado:false,tarea:null,rechazo:null,detenido:false};
 
  /* ---------- reconstruccion ---------- */
@@ -40,10 +45,11 @@ const Gatillado7=(()=>{
  /* est: estado de la aplicacion (gat, correccion). centro: centro del corazon del estres (voxel, z hacia la cabeza). */
  async function reconstruir({est,s,fuente,centro}){
   if(g.ocupado)return null;
+  EQUIPO=EQUIPOS[cardiacoHash(s.frame)]||EQUIPOS['22d4f455'];
   const n=s.n;let guardado=null;try{guardado=await tienda('readonly',t=>t.get(clave(s,fuente)));}catch(err){}
   if(guardado&&guardado.caja){g.vols=extender(guardado.datos,n,guardado.caja);g.deMemoria=true;}
   else{
-   if(!est.gat)throw Error('El ZIP no trae la adquisición gatillada del estrés.');
+   if(!est.gat)throw Error(`El ZIP no trae la adquisición gatillada del ${EQUIPO.fase}.`);
    g.ocupado=true;g.detenido=false;const t0=performance.now();
    Progreso.abrir('Gatillado: receta del equipo (OSEM 4 × 4, gaussiano 8,4 mm)',cancelar,'Ocho reconstrucciones, una por intervalo del ciclo cardíaco. Queda guardado en este dispositivo.');
    try{
@@ -114,15 +120,15 @@ const Gatillado7=(()=>{
 
  /* ---------- interfaz ---------- */
  async function abrir({marco,centro}){
-  g.K=window.CASO7_QGS||null;g.marco=marco;g.O0=centro.slice();g.revelar=false;
+  const KK=window.CASO7_QGS;g.K=(KK&&KK[cardiacoHash(g.s.frame)])||null;g.marco=marco;g.O0=centro.slice();g.revelar=false;
   g.res=calcular(g.vols,marco,g.O0,g.K);g.constantes=g.res.constantes;g.vis=null;pintar();animar();
  }
  const PAL=[[0,0,0],[0,15,14],[0,51,50],[0,85,84],[0,119,118],[26,99,154],[60,65,188],[94,31,222],[130,2,246],[164,36,178],[198,70,110],[234,106,38],[254,140,26],[254,174,94],[254,210,166],[254,240,225]],PX=[0,3.5,10.4,17.4,24.3,31.3,38.3,45.2,52.2,59.1,66.1,73,80,87,93.9,100];
  function color(v){v=Math.min(100,Math.max(0,v||0));let i=1;while(i<PX.length-1&&PX[i]<v)i++;const f=(v-PX[i-1])/(PX[i]-PX[i-1]);return [0,1,2].map(c=>PAL[i-1][c]+(PAL[i][c]-PAL[i-1][c])*f);}
- function lienzo(id,w,h){const c=$(id);if(c.width!==w||c.height!==h){c.width=w;c.height=h;}return c.getContext('2d');}
+ function lienzo(id,w,h){const c=typeof id==='string'?$(id):id;if(c.width!==w||c.height!==h){c.width=w;c.height=h;}return c.getContext('2d');}
  function posiciones(){const p=[[17,0,0]];[1,6,5,4,3,2].forEach((s,k)=>{const a=-Math.PI/2+k*Math.PI/3;p.push([s,.875*Math.cos(a),.875*Math.sin(a)],[s+6,.625*Math.cos(a),.625*Math.sin(a)]);});[13,16,15,14].forEach((s,k)=>{const a=-Math.PI/2+k*Math.PI/2;p.push([s,.375*Math.cos(a),.375*Math.sin(a)]);});return p;}
- function polar(id,A,rho,vmax,nums,dec1){
-  const x=210,ctx=lienzo(id,x,x),im=ctx.createImageData(x,x),R=x/2;
+ function polar(id,A,rho,vmax,nums,dec1,x=210){
+  const ctx=lienzo(id,x,x),im=ctx.createImageData(x,x),R=x/2;
   for(let j=0;j<x;j++)for(let i=0;i<x;i++){const o=Math.min(N-1,Math.round((j+.5)/x*N-.5))*N+Math.min(N-1,Math.round((i+.5)/x*N-.5)),p=(j*x+i)*4;if(Math.hypot(i+.5-R,j+.5-R)>=R-1){im.data[p+3]=255;continue;}const c=color(100*A[o]/vmax);im.data[p]=c[0];im.data[p+1]=c[1];im.data[p+2]=c[2];im.data[p+3]=255;}
   ctx.putImageData(im,0,0);ctx.strokeStyle='#00e5e5';for(const f of [.25,.5,.75,1]){ctx.beginPath();ctx.arc(R,R,R*f-.5,0,2*Math.PI);ctx.stroke();}
   for(let k=0;k<6;k++){const a=k*Math.PI/3;ctx.beginPath();ctx.moveTo(R+.5*R*Math.cos(a),R+.5*R*Math.sin(a));ctx.lineTo(R+R*Math.cos(a),R+R*Math.sin(a));ctx.stroke();}
@@ -134,8 +140,8 @@ const Gatillado7=(()=>{
   const t=$('qgsTabla');t.replaceChildren();const cab=t.insertRow();(g.revelar?['Medida','Tu resultado','Equipo']:['Medida','Tu resultado']).forEach(x=>{const c=document.createElement('th');c.textContent=x;cab.append(c);});
   for(const [n,k,d,u] of f){const fila=t.insertRow();[n,`${dec(r[k],d)}${u?' '+u:''}`,...(g.revelar?[`${dec(e[k],d)}${u?' '+u:''}`]:[])].forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if(i===1&&g.revelar&&Math.abs(r[k]-e[k])>=(d?.5*10**-d:.5))c.className='cambia';});}
  }
- function curva(){
-  const res=g.res,w=340,h=150,ctx=lienzo('qgsCurva',w,h),x0=34,y0=10,W=w-80,H=h-34,vmax=Math.ceil(Math.max(...res.V)/10)*10+10,X=t=>x0+t/8*W,Y=v=>y0+H-v/vmax*H,YD=v=>y0+H/2-v/250*H/2;
+ function curva(destino){
+  const res=g.res,w=340,h=150,ctx=lienzo(destino||'qgsCurva',w,h),x0=34,y0=10,W=w-80,H=h-34,vmax=Math.ceil(Math.max(...res.V)/10)*10+10,X=t=>x0+t/8*W,Y=v=>y0+H-v/vmax*H,YD=v=>y0+H/2-v/250*H/2;
   ctx.fillStyle='#0d1114';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#555';ctx.strokeRect(x0,y0,W,H);ctx.font='10px system-ui,sans-serif';ctx.fillStyle='#ff8080';ctx.textAlign='right';
   for(let v=0;v<=vmax;v+=20){ctx.fillText(String(v),x0-4,Y(v)+3);}ctx.textAlign='center';for(let k=0;k<8;k++)ctx.fillText(String(k+1),X(k),y0+H+12);
   ctx.strokeStyle='#e53935';ctx.lineWidth=1.5;ctx.beginPath();res.tt.forEach((t,i)=>{if(t>8)return;const x=X(t),y=Y(res.cur[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
@@ -149,8 +155,8 @@ const Gatillado7=(()=>{
  // abajo a la derecha, septum hacia el observador. Arrastrar la gira.
  function alisar(S,nsel,vueltas){const NF=Q.NF;let a=Float32Array.from(S);for(let v=0;v<vueltas;v++){const b=new Float32Array(a.length);for(let i=0;i<nsel;i++){const i0=Math.max(0,i-1),i1=Math.min(nsel-1,i+1);for(let j=0;j<NF;j++){const j0=(j+NF-1)%NF,j1=(j+1)%NF;for(let c=0;c<3;c++)b[(i*NF+j)*3+c]=(a[(i0*NF+j)*3+c]+a[(i1*NF+j)*3+c]+a[(i*NF+j0)*3+c]+a[(i*NF+j1)*3+c]+4*a[(i*NF+j)*3+c])/8;}}a=b;}return a;}
  function preparar3d(){const res=g.res;g.vis={endo:res.S.map(s=>({S:alisar(s.Se,s.nsel,14),nsel:s.nsel})),epi:{S:alisar(res.S[res.ed].Sp,res.S[res.ed].nsel,14),nsel:res.S[res.ed].nsel}};}
- function ventriculo(){
-  const res=g.res,E=res.E,NF=Q.NF,lado=300,ctx=lienzo('qgs3d',lado,lado);if(!g.vis)preparar3d();const s=g.vis.endo[g.t],ext=g.vis.epi,pi=2,pj=4;
+ function ventriculo(destino){
+  const res=g.res,E=res.E,NF=Q.NF,lado=300,ctx=lienzo(destino||'qgs3d',lado,lado);if(!g.vis)preparar3d();const s=g.vis.endo[g.t],ext=g.vis.epi,pi=2,pj=4;
   const rot=(p,q,a)=>{const c=Math.cos(a*Math.PI/180),sn=Math.sin(a*Math.PI/180);return [[0,1,2].map(k=>c*p[k]+sn*q[k]),[0,1,2].map(k=>-sn*p[k]+c*q[k])];};
   let der=E.eje.slice(),arr=E.v.map(t=>-t),hac=E.u.map(t=>-t);[der,hac]=rot(der,hac,g.yaw);[arr,hac]=rot(arr,hac,g.pitch);[der,arr]=rot(der,arr,32);
   const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],esc=lado/46,P=(S,i,j)=>{const o=(i*NF+((j+NF)%NF))*3,d=[S[o]-E.O[0],S[o+1]-E.O[1],S[o+2]-E.O[2]];return {x:lado/2+dot(d,der)*esc,y:lado/2-dot(d,arr)*esc,z:dot(d,hac),d};};
@@ -169,8 +175,8 @@ const Gatillado7=(()=>{
  }
  function animar(){parar();g.timer=setInterval(()=>{g.t=(g.t+1)%8;ventriculo();},140);$('qgsLatir').textContent='■ Parar';}
  function parar(){if(g.timer){clearInterval(g.timer);g.timer=null;}const b=$('qgsLatir');if(b)b.textContent='▶ Latir';}
- function cortes(){
-  const res=g.res,E=res.E,vm=(()=>{let m=0;const v=g.vols[res.es];for(let i=0;i<v.length;i+=5)if(v[i]>m)m=v[i];return m||1;})(),lado=96,semi=22,ctx=lienzo('qgsCortes',lado*3+8,lado*2+4),a=E.eje,u=E.u,v=E.v,na=a.map(t=>-t);
+ function cortes(destino){
+  const res=g.res,E=res.E,vm=(()=>{let m=0;const v=g.vols[res.es];for(let i=0;i<v.length;i+=5)if(v[i]>m)m=v[i];return m||1;})(),lado=96,semi=22,ctx=lienzo(destino||'qgsCortes',lado*3+8,lado*2+4),a=E.eje,u=E.u,v=E.v,na=a.map(t=>-t);
   ctx.fillStyle='#000';ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
   [[res.ed,0],[res.es,lado+4]].forEach(([t,y])=>{[[u,v],[a,v],[u,na]].forEach(([dr,ab],k)=>{const im=ctx.createImageData(lado,lado),e=2*semi/lado;for(let j=0;j<lado;j++)for(let i=0;i<lado;i++){const x=(i+.5)*e-semi,yy=(j+.5)*e-semi,val=Q.muestra(g.vols[t],g.d,E.O[0]+dr[0]*x+ab[0]*yy,E.O[1]+dr[1]*x+ab[1]*yy,E.O[2]+dr[2]*x+ab[2]*yy),c=color(100*val/vm),p=(j*lado+i)*4;im.data[p]=c[0];im.data[p+1]=c[1];im.data[p+2]=c[2];im.data[p+3]=255;}ctx.putImageData(im,k*(lado+4),y);});
    ctx.fillStyle='#00ff00';ctx.font='11px system-ui,sans-serif';ctx.textAlign='left';ctx.fillText(t===res.ed?'Fin de diástole':'Fin de sístole',3,y+12);});
@@ -181,14 +187,22 @@ const Gatillado7=(()=>{
   const E=res.E,a=CardiacoCore.angulosDe(E.eje[0],E.eje[1],E.eje[2]);
   $('qgsEstado').className='estado ok';$('qgsEstado').textContent=`Tu eje del gatillado: azimut ${dec(a.azimut,1)}°, elevación ${dec(a.elevacion,1)}°. Receta del equipo para el gatillado: OSEM 4 × 4, gaussiano 8,4 mm.${g.deMemoria?' Reconstrucción recuperada de lo guardado.':''}`;
   $('qgsCurvaEquipo').hidden=$('qgsMapasEquipo').hidden=!g.revelar;
+  for(const [id,q] of [['qgsCurvaEquipo','curva'],['qgsMapasEquipo','mapas']]){const im=document.querySelector(`#${id} img`),src=`caso7-qgs-${EQUIPO.imagen}-${q}.png?v=1`;if(im&&!im.getAttribute('src').startsWith(`caso7-qgs-${EQUIPO.imagen}-`))im.src=src;}
   $('qgsRevelar').textContent=g.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';
-  $('qgsNota').textContent=g.revelar?`El equipo informó para el estrés: volumen de fin de diástole ${EQUIPO.edv} ml, de fin de sístole ${EQUIPO.esv} ml, fracción de eyección ${EQUIPO.ef} %. Los cuatro mapas del equipo traen un número por segmento; la calibración de esta sección se hizo con ellos, con el eje del equipo y sin los saltos.`:'Los números del equipo se ven al pulsar «Ver el resultado del equipo».';
+  $('qgsNota').textContent=g.revelar?`El equipo informó para el ${EQUIPO.fase}: volumen de fin de diástole ${EQUIPO.edv} ml, de fin de sístole ${EQUIPO.esv} ml, fracción de eyección ${EQUIPO.ef} %. Los cuatro mapas del equipo traen un número por segmento; la calibración de esta sección se hizo con ellos, con el eje del equipo y sin los saltos.`:'Los números del equipo se ven al pulsar «Ver el resultado del equipo».';
  }
  function iniciar(){
   $('qgsLatir').addEventListener('click',()=>{g.timer?parar():animar();});$('qgsRevelar').addEventListener('click',()=>{g.revelar=!g.revelar;pintar();});
   const c=$('qgs3d');let ult=null;c.addEventListener('pointerdown',e=>{ult=[e.clientX,e.clientY];try{c.setPointerCapture(e.pointerId);}catch(err){}});c.addEventListener('pointermove',e=>{if(!ult||!g.res)return;g.yaw+=(e.clientX-ult[0])*.6;g.pitch=Math.max(-80,Math.min(80,g.pitch+(e.clientY-ult[1])*.6));ult=[e.clientX,e.clientY];ventriculo();});['pointerup','pointercancel'].forEach(v=>c.addEventListener(v,()=>{ult=null;}));
  }
  function exportarConstantes(){return g.constantes;}
- return {iniciar,reconstruir,abrir,parar,exportarConstantes,cancelar,estado:g,EQUIPO};
+ // Pantallas finales: mapas, curva, ventriculo en fin de diastole y cortes, en lienzos aparte.
+ function instantanea(){
+  const res=g.res,nuevo=()=>document.createElement('canvas'),m={};
+  for(const [k,vm,d1] of [['ed',100],['es',100],['mov',10,true],['eng',100]]){m[k]=nuevo();polar(m[k],res.mapas[k],res.rho,vm,res.segv[k],d1,280);}
+  const cu=nuevo();curva(cu);const t=g.t;g.t=res.ed;const v3=nuevo();ventriculo(v3);g.t=t;const co=nuevo();cortes(co);
+  return {r:{...res.r},V:res.V.slice(),mapas:m,curva:cu,ventriculo:v3,cortes:co,equipo:EQUIPO};
+ }
+ return {instantanea,iniciar,reconstruir,abrir,parar,exportarConstantes,cancelar,estado:g,get EQUIPO(){return EQUIPO;},EQUIPOS,calcular};
 })();
 window.Gatillado7=Gatillado7;

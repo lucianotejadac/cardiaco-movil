@@ -11,11 +11,16 @@
 const Qps=(()=>{
  const Q=QpsNucleo,$=id=>document.getElementById(id),dec=(x,d=0)=>Number(x).toFixed(d).replace('.',',');
  // Lo que informo el equipo en el caso de referencia (pantalla «Splash AC»).
+ const INFORME='El informe médico describe un defecto inferolateral apical, medio y basal, de cerca de 10 % del ventrículo, reversible por completo en reposo, en las imágenes sin corrección de atenuación. Las imágenes con corrección de atenuación no se usaron para interpretar, por actividad intestinal en la fase de reposo.';
  const EQUIPO={'22d4f455':{serie:'Stress [Recon - AC ]',normales:'symbiaMaleStressTc_AC',volumen:43,pared:120,cuentas:1105,defecto:25,extension:21,tpd:16,forma:.46,excentricidad:.86,puntajes:{6:2,14:1,16:2,11:3,5:2,10:2,4:1},
   // Zona bajo el limite normal que dibujo QPS en el estres SIN atenuacion (96 x 96, largos de
   // corrida alternando fuera y dentro). El equipo no guardo el mapa con atenuacion.
   zonaSinAtenuacion:'2914,2,89,1,1,6,88,8,87,10,87,9,87,10,85,12,84,11,84,12,84,13,82,15,82,15,81,16,81,15,81,15,81,15,33,1,47,14,27,2,1,6,46,14,26,10,46,14,26,10,47,11,28,10,48,9,29,11,48,4,33,15,81,16,79,18,78,18,78,18,78,17,80,16,80,16,80,15,80,16,79,17,79,16,79,17,79,16,80,16,81,14,82,9,1,3,83,7,89,6,12,1,76,3,93,1,2334',
-  informe:'El informe médico describe un defecto inferolateral apical, medio y basal, de cerca de 10 % del ventrículo, reversible por completo en reposo, en las imágenes sin corrección de atenuación. Las imágenes con corrección de atenuación no se usaron para interpretar, por actividad intestinal en la fase de reposo.'}};
+  informe:INFORME},
+  // Reposo con atenuacion (pantalla «Splash AC»). El equipo marco «Mask Failure: QC=4.47»: su
+  // mascara del ventriculo fallo. La referencia reproduce ese resultado tal como lo informo.
+  '474e44e4':{serie:'Rest [Recon - AC ]',normales:'symbiaMaleRestTc_AC',volumen:87,pared:197,cuentas:2173,defecto:18,extension:9,tpd:7,forma:.46,excentricidad:.93,puntajes:{6:2,11:2,5:2,4:1},
+  aviso:'Mask Failure: QC=4.47',informe:INFORME}};
  const desplegar=(rle,n)=>{const z=new Uint8Array(n*n);let o=0,v=0;for(const k of rle.split(',').map(Number)){if(v)z.fill(1,o,o+k);o+=k;v^=1;}return z;};
  const N=192,q={listo:false,ocupado:false,dAz:0,dEl:0,t:null,guardadas:new Map()};
 
@@ -80,11 +85,11 @@ const Qps=(()=>{
  /* Caso 7: el eje de partida es el del estudiante; la calibracion viene congelada (constantes
     obtenidas con los datos sin saltos y el eje del equipo) o, si faltan, se hace aqui con el eje del
     equipo. La referencia del equipo queda oculta hasta que se pide. */
- async function abrirCaso7({s,reg,ref,fuente,marco,centro}){
+ async function abrirCaso7({s,reg,ref,fuente,marco,centro,fase}){
   const n=s.n;q.caso7=true;q.revelar=false;q.s=s;q.reg=reg;q.fuente=fuente;q.d={nx:n,ny:n,nz:n};q.sp=s.spacing;q.x=ref;q.factor=ref.factor;
   q.recetaEquipo={...ref.receta};q.receta={...ref.receta};q.volRef=ref.sim;q.vol=ref.sim;q.dAz=0;q.dEl=0;q.obj=EQUIPO[cardiacoHash(s.frame)]||null;
   q.marcoEquipo=ref.marco;q.marco=marco;q.O0=centro.slice();
-  const K=window.CASO7_CONSTANTES?constantesDesde(window.CASO7_CONSTANTES):null;
+  q.fase=fase||'estres';const KK=window.CASO7_CONSTANTES,kk=KK&&KK[cardiacoHash(s.frame)],K=kk?constantesDesde(kk):null;
   if(K){q.cal=K.cal;q.f=K.f;q.refSeg=K.refSeg;q.L=K.L;q.congelado=true;q.R0=Q.evaluar(q.volRef,q.d,ref.marco,ref.centro,q.cal,q.sp,N);}
   else{
    const c=Q.calibrar(q.volRef,q.d,ref.marco,ref.centro,q.sp,q.obj,N,ref.cal||null);q.cal=c.cal;q.congelado=false;const R=Q.medir(q.volRef,q.d,c.E,c.P,c.W,c.S,c.cal,q.sp,N);q.R0=R;
@@ -144,7 +149,7 @@ const Qps=(()=>{
  function aReferencia(){q.dAz=0;q.dEl=0;q.vol=q.volRef;q.receta={...q.recetaEquipo};controles();calcular();}
 
  /* ---------- dibujo ---------- */
- function lienzo(id,w,h){const c=$(id);if(c.width!==w||c.height!==h){c.width=w;c.height=h;}return c.getContext('2d');}
+ function lienzo(id,w,h){const c=typeof id==='string'?$(id):id;if(c.width!==w||c.height!==h){c.width=w;c.height=h;}return c.getContext('2d');}
  function polar(id,r,lado,numeros){
   const X=r.X,x=lado,ctx=lienzo(id,x,x),im=ctx.createImageData(x,x),R=x/2;
   for(let j=0;j<x;j++)for(let i=0;i<x;i++){const u=(i+.5)/x*N-.5,v=(j+.5)/x*N-.5,i0=Math.min(N-1,Math.max(0,Math.round(u))),j0=Math.min(N-1,Math.max(0,Math.round(v))),o=j0*N+i0,p=(j*x+i)*4;
@@ -177,8 +182,8 @@ const Qps=(()=>{
   for(let i=soloAnillo?nsel-1:0;i<nsel;i++)for(let j=0;j<NF;j++){cruce(P(i,j),P(i,j+1));if(!soloAnillo&&i<nsel-1)cruce(P(i,j),P(i+1,j));}
  }
  function vmaxDe(vol){let m=0;for(let i=0;i<vol.length;i+=7)if(vol[i]>m)m=vol[i];return m*.97||1;}
- function cortes(r){
-  const X=r.X,E=X.E,a=E.eje,u=E.u,v=E.v,na=a.map(t=>-t),vm=vmaxDe(q.vol),lado=150,semi=22,ctx=lienzo('qpsCortes',lado*3+8,lado*2+30);ctx.fillStyle='#000';ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+ function cortes(r,destino){
+  const X=r.X,E=X.E,a=E.eje,u=E.u,v=E.v,na=a.map(t=>-t),vm=vmaxDe(q.vol),lado=150,semi=22,ctx=lienzo(destino||'qpsCortes',lado*3+8,lado*2+30);ctx.fillStyle='#000';ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
   const pos=t=>[0,1,2].map(c=>E.O[c]+a[c]*t),rot=(t,x,y)=>{ctx.fillStyle='#00ff00';ctx.font='12px system-ui,sans-serif';ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(t,x+3,y+2);};
   [[.55*E.a,'Eje corto · hacia el ápex'],[0,'Eje corto · medio'],[-.45*E.a,'Eje corto · hacia la base']].forEach(([t,n],k)=>{const C=pos(t),x=k*(lado+4);corte(ctx,x,0,lado,q.vol,C,u,v,semi,vm);contorno(ctx,x,0,lado,X.Se,X.nsel,C,u,v,a,semi,'#ffe63c');contorno(ctx,x,0,lado,X.Sp,X.nsel,C,u,v,a,semi,'#ffa028');rot(n,x,0);});
   const y=lado+6;
@@ -208,6 +213,17 @@ const Qps=(()=>{
   fila(2*lado+28,'Largo vertical, del septum a la pared lateral',7,k=>[pos(u,(k-3)*3),a,v]);
   fila(3*lado+42,'Largo horizontal, de la pared anterior a la inferior',7,k=>[pos(v,(k-3)*3),u,na]);
  }
+ /* Pantallas finales del caso 7: lo que se ve con el eje y la receta actuales, dibujado en lienzos
+    aparte (mapa polar, puntajes, cortes con bordes) y filas de cortes como las de la pantalla
+    «Splash» del equipo: 28 ejes cortos del apex a la base, 14 largos verticales y 14 horizontales. */
+ function instantanea(lado=84){
+  const a=q.act,X=a.X,E=X.E,nuevo=()=>document.createElement('canvas'),P=nuevo(),M=nuevo(),C=nuevo();
+  polar(P,a,360,a.porcentaje||a.valor);miniatura(M,a.puntajes,150);cortes(a,C);
+  const u=E.u,v=E.v,ax=E.eje,na=ax.map(t=>-t),vm=vmaxDe(q.vol),semi=22,L=X.medidas.largo/q.sp,t0=E.a*1.1,pos=(w,t)=>[0,1,2].map(c=>E.O[c]+w[c]*t);
+  const fila=(n,f)=>{const c=nuevo();c.width=n*lado;c.height=lado;const ctx=c.getContext('2d');for(let k=0;k<n;k++){const [Cc,d,b]=f(k);corte(ctx,k*lado,0,lado,q.vol,Cc,d,b,semi,vm);}return c;};
+  const filas={corto:fila(28,k=>[pos(ax,t0-(k+.5)*L/23),u,v]),vertical:fila(14,k=>[pos(u,k-6.5),ax,v]),horizontal:fila(14,k=>[pos(v,k-6.5),u,na])};
+  return {act:a,obj:q.obj,receta:{...q.receta},polar:P,puntajes:M,cortes:C,filas,N};
+ }
  function tabla(){
   const a=q.act,r=q.ref,o=q.obj,f=[['Volumen','volumen',0,'ml'],['Pared','pared',0,'ml'],['Cuentas','cuentas',0,'mil'],['Defecto','defecto',0,'ml'],['Extensión','extension',0,'%'],['TPD','tpd',0,'%'],['Forma (SI)','forma',2,''],['Excentricidad','excentricidad',2,'']];
   const t=$('qpsTabla');t.replaceChildren();const cab=t.insertRow();(oculto()?['Medida','Tu resultado']:['Medida',q.caso7?'Tu resultado':'Ahora',q.caso7?'Equipo':'Referencia','Cambio']).forEach(x=>{const c=document.createElement('th');c.textContent=x;cab.append(c);});
@@ -224,7 +240,7 @@ const Qps=(()=>{
   $('qpsAzTexto').textContent=`${q.dAz>0?'+':''}${q.dAz}°`;$('qpsElTexto').textContent=`${q.dEl>0?'+':''}${q.dEl}°`;
   const eq=q.marcoEquipo?CardiacoCore.angulosDe(q.marcoEquipo.a[0],q.marcoEquipo.a[1],q.marcoEquipo.a[2]):a0;
   $('qpsEje').textContent=oculto()?`Tu eje: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Los deslizadores lo giran desde el eje que dejaste en la reorientación.`:`Eje actual: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Eje del equipo: ${dec(eq.azimut,1)}° y ${dec(eq.elevacion,1)}°.`;
-  $('qpsPolarRef').closest('figure').hidden=oculto();$('qpsPuntajesRef').closest('figure').hidden=oculto();$('qpsRevelar').hidden=!q.caso7;$('volverQps').textContent=q.caso7?'← Volver a la orientación de los ejes':'← Volver al control de calidad';$('qpsRevelar').textContent=q.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';$('qpsReferencia').textContent=q.caso7?'Volver a tu eje y a la receta del equipo':'Volver al eje y a la receta del equipo';
+  $('qpsPolarRef').closest('figure').hidden=oculto();$('qpsPuntajesRef').closest('figure').hidden=oculto();$('qpsRevelar').hidden=!q.caso7;$('volverQps').textContent=q.caso7?'← Volver a las pantallas finales':'← Volver al control de calidad';$('qpsRevelar').textContent=q.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';$('qpsReferencia').textContent=q.caso7?'Volver a tu eje y a la receta del equipo':'Volver al eje y a la receta del equipo';
   $('qpsRecetaTexto').textContent=`Reconstrucción en pantalla: ${textoReceta(q.receta)}${mismaReceta(q.receta,q.recetaEquipo)?' (la del equipo)':''}.`;
   $('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);
   ejes(a);vivo(a);guardadas();
@@ -232,7 +248,7 @@ const Qps=(()=>{
   $('qpsPolarTitulo').textContent=a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';$('qpsPolarRefTitulo').textContent=q.caso7?'Eje del equipo sobre esta reconstrucción':a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
   miniatura('qpsPuntajes',a.puntajes,150);miniatura('qpsPuntajesRef',q.ref.puntajes,150);$('qpsPuntajesCaja').hidden=!a.puntajes;
   cortes(a);splash(a);
-  $('qpsNota').textContent=q.obj?`${q.obj.informe} Base de normales del equipo: ${q.obj.normales}. El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. El equipo no guardó su mapa polar con atenuación: la zona de referencia parte de la que dibujó sin atenuación, que es la misma anatomía, y se extiende dentro de los segmentos que el equipo puntuó con atenuación hasta su 21 %.`:'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
+  $('qpsNota').textContent=q.obj?`${q.obj.informe} Base de normales del equipo: ${q.obj.normales}. El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. El equipo no guardó su mapa polar con atenuación: la zona de referencia ${q.obj.zonaSinAtenuacion?'parte de la que dibujó sin atenuación, que es la misma anatomía, y ':''}se extiende dentro de los segmentos que el equipo puntuó con atenuación hasta su ${q.obj.extension} %.${q.obj.aviso?` En este estudio el equipo marcó «${q.obj.aviso}»: su máscara del ventrículo falló e informó ${q.obj.volumen} ml de volumen, frente a 52 ml del mismo reposo sin atenuación. La referencia reproduce ese resultado tal como lo informó el equipo; compáralo con el tuyo.`:''}`:'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
  }
  /* Los ejes a la vista mientras se mueven: corte transversal (se ve el azimut) y plano vertical que
     contiene el eje del equipo (se ve la elevacion). Celeste, el eje actual con un punto en el apex;
@@ -277,6 +293,6 @@ const Qps=(()=>{
   $('qpsRecetaEquipo').addEventListener('click',()=>{if(!q.listo)return;const r=q.recetaEquipo;$('qpsIter').value=r.it;$('qpsSub').value=String(r.sub);$('qpsFwhm').value=r.fwhm;$('qpsAC').checked=!!r.ac;$('qpsDisp').checked=!!r.dispersion;$('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);});
  }
  function olvidar(){q.listo=false;q.vol=q.volRef=null;q.R0=null;q.act=q.ref=null;q.L=null;}
- return {iniciar,abrir,abrirCaso7,exportarConstantes,guardarReferencia,calcular,reconstruir,aReferencia,olvidar,leerReferencia,borrarGuardadas,estado:q};
+ return {instantanea,iniciar,abrir,abrirCaso7,exportarConstantes,guardarReferencia,calcular,reconstruir,aReferencia,olvidar,leerReferencia,borrarGuardadas,estado:q};
 })();
 window.Qps=Qps;

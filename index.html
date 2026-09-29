@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=36">
+<link rel="stylesheet" href="movil.css?v=37">
 </head>
 <body>
 <header class="barra">
@@ -99,7 +99,7 @@
   <button id="regConfirmar" type="button" class="boton ancho">Confirmar registro</button>
   <p id="regResultado" class="dato"></p>
   <button id="a7Reconstruir" type="button" class="boton ancho solo7" hidden>Paso 3: reconstruir con la receta del equipo y ubicar el corazón →</button>
-  <p class="clave solo7">Receta del equipo: OSEM 6 × 4 con corrección de atenuación y de dispersión, filtro gaussiano de 9 mm. Se reconstruye sobre las proyecciones que dejaste en el control de calidad, corregidas o no.</p>
+  <p id="a7Receta" class="clave solo7">Receta del equipo: OSEM 6 × 4 con corrección de atenuación y de dispersión, filtro gaussiano de 9 mm. Se reconstruye sobre las proyecciones que dejaste en el control de calidad, corregidas o no.</p>
   <button id="aOsem" type="button" class="boton ancho" hidden>Siguiente: OSEM 1 × 1 sin correcciones →</button>
   <button type="button" class="vermas ancho" data-dialogo="dRegistro">Ver más sobre el registro</button>
  </section>
@@ -225,6 +225,7 @@
  <section class="oculta" id="qps">
   <button id="volverQps" type="button" class="cambio">← Volver al control de calidad</button>
   <div class="columna">Mapa polar y resultados en vivo · estrés con atenuación</div>
+  <div id="qpsFase" class="segmento solo7" role="group" aria-label="Fase"><button type="button" data-fase7="estres" aria-pressed="true">Estrés</button><button type="button" data-fase7="reposo" aria-pressed="false">Reposo</button></div>
   <p id="qpsEstado" class="estado"></p>
   <div class="controles fijo">
    <div class="ejesVivo">
@@ -291,14 +292,14 @@
   <h3 class="qpsT">Por segmento</h3>
   <table id="qpsSegmentos" class="qpsTabla chica"></table>
   <p id="qpsNota" class="dato"></p>
-  <button id="a7Gatillado" type="button" class="boton ancho solo7">Paso 5: ejes del gatillado →</button>
-  <p class="clave solo7">Receta del equipo para el gatillado: OSEM 4 × 4, sin atenuación, gaussiano de 8,4 mm, ocho intervalos. Si corregiste el movimiento, se aplica la misma corrección.</p>
+  <button id="a7Qgs" type="button" class="boton ancho solo7">Siguiente: mapa QGS →</button>
   <button type="button" class="vermas ancho" data-dialogo="dQps">Ver más sobre esta sección</button>
  </section>
 
  <section class="oculta" id="qgs7">
   <button id="volverQgs" type="button" class="cambio">← Volver a la orientación de los ejes</button>
   <div class="columna">Mapa QGS · estrés gatillado</div>
+  <div id="qgsFase" class="segmento solo7" role="group" aria-label="Fase"><button type="button" data-fase7="estres" aria-pressed="true">Estrés</button><button type="button" data-fase7="reposo" aria-pressed="false">Reposo</button></div>
   <p id="qgsEstado" class="estado"></p>
   <h3 class="qpsT">Ventrículo en 3D</h3>
   <canvas id="qgs3d" class="libre gira" aria-label="Ventrículo en 3D: superficie interna que late y externa en alambre. Arrastra para girarlo."></canvas>
@@ -308,7 +309,7 @@
   <button id="qgsRevelar" type="button" class="boton ancho otro">Ver el resultado del equipo</button>
   <h3 class="qpsT">Volumen del ventrículo en el ciclo</h3>
   <canvas id="qgsCurva" class="libre ancho" aria-label="Curva de volumen y de llenado en los ocho intervalos."></canvas>
-  <figure id="qgsCurvaEquipo" class="equipoQgs" hidden><figcaption>Curva del equipo: volumen en rojo (ml, eje izquierdo) y llenado en negro (ml/s, eje derecho)</figcaption><img src="caso7-qgs-equipo-curva.png?v=1" alt="Curva de volumen y de llenado que calculó el equipo en los ocho intervalos." loading="lazy"></figure>
+  <figure id="qgsCurvaEquipo" class="equipoQgs" hidden><figcaption>Curva del equipo: volumen en rojo (ml, eje izquierdo) y llenado en negro (ml/s, eje derecho)</figcaption><img src="caso7-qgs-estres-curva.png?v=1" alt="Curva de volumen y de llenado que calculó el equipo en los ocho intervalos." loading="lazy"></figure>
   <h3 class="qpsT">Mapas polares</h3>
   <div class="rejilla">
    <figure><figcaption>Perfusión en fin de diástole (%)</figcaption><canvas id="qgsEd" class="libre"></canvas></figure>
@@ -316,11 +317,21 @@
    <figure><figcaption>Movimiento (0 a 10 mm)</figcaption><canvas id="qgsMov" class="libre"></canvas></figure>
    <figure><figcaption>Engrosamiento (%)</figcaption><canvas id="qgsEng" class="libre"></canvas></figure>
   </div>
-  <figure id="qgsMapasEquipo" class="equipoQgs" hidden><figcaption>Mapas polares del equipo: perfusión en fin de diástole y de sístole, movimiento y engrosamiento</figcaption><img src="caso7-qgs-equipo-mapas.png?v=1" alt="Los cuatro mapas polares que calculó el equipo para el gatillado de estrés." loading="lazy"></figure>
+  <figure id="qgsMapasEquipo" class="equipoQgs" hidden><figcaption>Mapas polares del equipo: perfusión en fin de diástole y de sístole, movimiento y engrosamiento</figcaption><img src="caso7-qgs-estres-mapas.png?v=1" alt="Los cuatro mapas polares que calculó el equipo para el gatillado de estrés." loading="lazy"></figure>
   <h3 class="qpsT">Fin de diástole y fin de sístole</h3>
   <canvas id="qgsCortes" class="libre ancho" aria-label="Eje corto, largo vertical y largo horizontal en fin de diástole y en fin de sístole."></canvas>
   <p id="qgsNota" class="dato"></p>
-  <button id="a7Finales" type="button" class="boton ancho solo7" disabled>Paso 7: pantallas finales (en preparación)</button>
+ </section>
+
+ <section class="oculta" id="pantallas7">
+  <div class="columna">Pantallas finales · con tus ejes</div>
+  <p id="pantEstado" class="estado"></p>
+  <div id="pantMenu" class="menuPant" role="group" aria-label="Pantalla"></div>
+  <figure class="pantalla"><figcaption id="pantTitulo"></figcaption><canvas id="pantLienzo" class="libre ancho" aria-label="Pantalla final generada con tus resultados."></canvas></figure>
+  <p id="pantNota" class="clave"></p>
+  <button id="pantDescargar" type="button" class="boton ancho otro">Descargar esta pantalla (PNG)</button>
+  <button id="pantRegenerar" type="button" class="vermas ancho">Volver a generar con los ejes guardados</button>
+  <button id="a7MapaDesdePantallas" type="button" class="boton ancho solo7">Siguiente: mapa polar →</button>
  </section>
 
  <section class="oculta" id="caja">
@@ -396,7 +407,8 @@
    </div>
   </div>
   <p id="reoResumen" class="dato"></p>
-  <button id="a7Mapa" type="button" class="boton ancho solo7">Paso 4: mapa polar con tu eje →</button>
+  <button id="a7Mapa" type="button" class="boton ancho solo7">Paso 4: reconstruir el gatillado y orientar sus ejes →</button>
+  <p id="a7GatReceta" class="clave solo7">Receta del equipo para el gatillado: OSEM 4 × 4, sin atenuación, gaussiano de 8,4 mm, ocho intervalos. Si corregiste el movimiento, se aplica la misma corrección.</p>
   <button type="button" class="vermas ancho" data-dialogo="dReo">Ver más sobre la reorientación</button>
  </section>
 </main>
@@ -704,12 +716,13 @@
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=6"></script>
 <script src="qps-nucleo.js?v=5"></script>
-<script src="qps.js?v=6"></script>
-<script src="caso7-constantes.js?v=1"></script>
-<script src="caso7-gatillado-constantes.js?v=1"></script>
-<script src="caso7-gatillado.js?v=3"></script>
-<script src="caso7.js?v=3"></script>
-<script src="apaisado.js?v=1"></script>
-<script src="movil.js?v=36"></script>
+<script src="qps.js?v=7"></script>
+<script src="caso7-constantes.js?v=2"></script>
+<script src="caso7-gatillado-constantes.js?v=2"></script>
+<script src="caso7-gatillado.js?v=4"></script>
+<script src="pantallas7.js?v=1"></script>
+<script src="caso7.js?v=4"></script>
+<script src="apaisado.js?v=2"></script>
+<script src="movil.js?v=37"></script>
 </body>
 </html>

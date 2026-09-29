@@ -265,3 +265,17 @@ html.bloqueado #qgs3d{pointer-events:none;touch-action:auto}
  .ejesVivo canvas{height:120px}
  dialog{width:min(80vw,680px)}
 }
+/* Caso 7 en dos fases: rotulos de grupo en la barra, menus de fase y pantallas finales */
+.grupo7{flex:none;align-self:center;font-size:.72rem;font-weight:700;color:var(--acento);padding:0 2px 0 8px;white-space:nowrap}
+.grupo7:first-child{padding-left:0}
+body.caso7 .segmento.solo7:not([hidden]){display:flex}
+#qpsFase,#qgsFase{margin:6px 0}
+.menuPant{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.menuPant button{flex:1 1 45%;background:var(--tarjeta);color:var(--texto);border:1px solid var(--linea);border-radius:8px;padding:8px 6px;font-size:.82rem;font-weight:600}
+.menuPant button[aria-pressed=true]{background:var(--acento);color:#111;border-color:var(--acento)}
+.pantalla canvas{background:#b4c3dc;border-radius:4px;image-rendering:auto}
+.pantalla figcaption{white-space:normal}
+#pantLienzo{cursor:zoom-in}
+dialog.grande{width:98vw;max-width:none;max-height:96vh;padding:8px;overflow:auto}
+dialog.grande img{display:block;width:100%;height:auto;margin-top:6px;cursor:zoom-out}
+dialog.grande .boton{margin:0}

@@ -13,8 +13,9 @@ const Apaisado=(()=>{
   cmp:{izq:[':scope > .rejilla']},
   caja:{izq:[':scope > .rejilla',':scope > .refProy']},
   reo:{izq:[':scope > .rejilla',':scope > #reoEq',':scope > .refProy']},
-  qps:{der:['#volverQps',':scope > .columna','#qpsEstado',':scope > .controles.fijo','#qpsEje','#qpsReceta','#qpsTablaT','#qpsTabla','#qpsRevelar','#qpsReferencia','#a7Gatillado',':scope > p.clave.solo7',':scope > .vermas']},
-  qgs7:{der:['#volverQgs',':scope > .columna','#qgsEstado','#qgsTablaT','#qgsTabla','#qgsRevelar','#qgsNota','#a7Finales']}
+  qps:{der:['#volverQps',':scope > .columna','#qpsEstado',':scope > .controles.fijo','#qpsEje','#qpsReceta','#qpsTablaT','#qpsTabla','#qpsRevelar','#qpsReferencia','#a7Qgs','#qpsFase',':scope > .vermas']},
+  qgs7:{der:['#volverQgs',':scope > .columna','#qgsFase','#qgsEstado','#qgsTablaT','#qgsTabla','#qgsRevelar','#qgsNota']},
+  pantallas7:{izq:['figure.pantalla']}
  };
  const secciones={};let activo=false;
  function preparar(){

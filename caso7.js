@@ -1,81 +1,179 @@
 /* Recorrido del caso 7 (caso de referencia, anonimizado). Encadena lo que ya existe en la
    aplicacion en un orden fijo, con una barra de pasos:
-   1. control de calidad del estres, con dos saltos simulados y la correccion automatica;
-   2. registro del mapa de atenuacion, que ya viene alineado;
-   3. caja y orientacion de los ejes, que parten torcidos al azar;
-   4. mapa polar QPS con el eje del estudiante;
-   5. caja y orientacion del gatillado;
-   6. mapa polar QGS y ventriculo en 3D;
-   7. pantallas finales, con el reposo procesado por la aplicacion.
+   A. Estres: 1. control de calidad, con dos saltos simulados y la correccion automatica;
+      2. registro del mapa de atenuacion, que ya viene alineado; 3. reconstruccion con la receta
+      del equipo, caja y orientacion de los ejes, que parten torcidos al azar; 4. reconstruccion
+      del gatillado, caja y orientacion de sus ejes.
+   B. Reposo: los mismos cuatro pasos con las proyecciones, el CT y la gatillada del reposo.
+   Despues: pantallas finales generadas con los ejes del estudiante; mapa polar y mapa QGS, cada
+   uno con un menu para ver el estres o el reposo.
+   Cada fase guarda lo suyo (reconstruccion, registro, ejes, correccion) para poder volver a ella.
    El caso se reconoce por la huella del marco de referencia de sus proyecciones de estres. */
 'use strict';
 const Caso7=(()=>{
- const $=id=>document.getElementById(id),dec=(x,d=0)=>Number(x).toFixed(d).replace('.',',');
- const HUELLA='22d4f455';
- const PASOS=[['qc','Control de calidad'],['reg','Registro'],['ejes','Caja y ejes'],['qps','Mapa polar'],['ejesGat','Ejes del gatillado'],['qgs','Mapa QGS'],['finales','Pantallas finales']];
- const c={activo:false,paso:0,alcanzado:0,x:null,inicial:null,inicialGat:null,fase:'estres',reco:null,fuente:''};
+ const $=id=>document.getElementById(id);
+ const HUELLA='22d4f455',NOMBRE={estres:'Estrés',reposo:'Reposo'},MINUS={estres:'estrés',reposo:'reposo'};
+ const PASOS=[
+  {fase:'estres',id:'qc',n:'Control de calidad'},{fase:'estres',id:'reg',n:'Registro'},{fase:'estres',id:'ejes',n:'Caja y ejes'},{fase:'estres',id:'ejesGat',n:'Ejes del gatillado'},
+  {fase:'reposo',id:'qc',n:'Control de calidad'},{fase:'reposo',id:'reg',n:'Registro'},{fase:'reposo',id:'ejes',n:'Caja y ejes'},{fase:'reposo',id:'ejesGat',n:'Ejes del gatillado'},
+  {id:'pantallas',n:'Pantallas finales'},{id:'mapa',n:'Mapa polar'},{id:'qgs',n:'Mapa QGS'}];
+ const I={pantallas:8,mapa:9,qgs:10};
+ // Receta con que el equipo reconstruyo cada fase (leida de sus DICOM de eje corto con atenuacion).
+ const RECETA={estres:'OSEM 6 × 4 con corrección de atenuación y de dispersión, filtro gaussiano de 9 mm',reposo:'OSEM 6 × 4 con corrección de atenuación, filtro gaussiano de 9 mm'};
+ const nueva=()=>({x:null,s:null,fuente:'',reg:null,inicial:null,inicialGat:null,entradaEstatica:null,entradaGat:null,ejes:null,ejesGat:null,gatBytes:null,correccion:null,estado:null,restaurar:false,restaurarGat:false});
+ const c={activo:false,paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',qgs:'estres'},ocupado:false};
+ const F=()=>c.F[c.fase],base=()=>c.fase==='reposo'?4:0;
+ // Compatibilidad: lo de la fase activa se lee como antes (Caso7.estado.x, .s, .fuente, .reg).
+ for(const k of ['x','s','fuente','reg'])Object.defineProperty(c,k,{get:()=>F()[k],enumerable:false});
  const esCaso7=frame=>cardiacoHash(frame)===HUELLA;
- function entrar(activo){
+
+ function titulo(texto){$('titulo').textContent='SPECT cardíaco · Caso 7 · '+(texto||NOMBRE[c.fase]);}
+ // fase: al cambiar de fase dentro del recorrido no se borra lo hecho.
+ function entrar(activo,fase){
+  if(fase&&c.activo){c.fase=fase;c.sub='estatico';titulo();receta();pintarPasos();return;}
   c.activo=!!activo;document.body.classList.toggle('caso7',c.activo);$('pasos7').hidden=!c.activo;
-  if(!c.activo)return;c.paso=0;c.alcanzado=0;c.x=null;c.inicial=null;c.inicialGat=null;c.fase='estres';pintarPasos();
-  $('titulo').textContent='SPECT cardíaco · Caso 7 · Estrés';
+  if(!c.activo)return;Object.assign(c,{paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',qgs:'estres'}});
+  if(window.Pantallas7)Pantallas7.olvidar();titulo();receta();pintarPasos();
  }
+ function receta(){const p=$('a7Receta');if(p)p.textContent=`Receta del equipo para el ${MINUS[c.fase]}: ${RECETA[c.fase]}. Se reconstruye sobre las proyecciones que dejaste en el control de calidad, corregidas o no.`;}
  function pintarPasos(){
-  const nav=$('pasos7');nav.replaceChildren();
-  PASOS.forEach(([id,nombre],i)=>{const b=document.createElement('button');b.type='button';b.className='paso7'+(i===c.paso?' actual':'')+(i<=c.alcanzado?' hecho':'');b.disabled=i>c.alcanzado;b.textContent=`${i+1}. ${nombre}`;b.addEventListener('click',()=>ir(i));nav.append(b);});
-  const act=nav.children[c.paso];if(act&&act.scrollIntoView)act.scrollIntoView({block:'nearest',inline:'center'});
+  const nav=$('pasos7');nav.replaceChildren();let grupo=null;
+  PASOS.forEach((P,i)=>{
+   const g=P.fase?NOMBRE[P.fase]:'';if(g&&g!==grupo){const e=document.createElement('span');e.className='grupo7';e.textContent=(P.fase==='estres'?'A. ':'B. ')+g;nav.append(e);}grupo=g;
+   if(!P.fase&&i===I.pantallas){const e=document.createElement('span');e.className='grupo7';e.textContent='Resultados';nav.append(e);}
+   const b=document.createElement('button');b.type='button';b.className='paso7'+(i===c.paso?' actual':'')+(i<=c.alcanzado?' hecho':'');b.disabled=i>c.alcanzado||c.ocupado;
+   b.textContent=P.fase?`${i%4+1}. ${P.n}`:P.n;b.dataset.i=i;b.addEventListener('click',()=>ir(i));nav.append(b);});
+  const act=nav.querySelector('.paso7.actual');if(act&&act.scrollIntoView)act.scrollIntoView({block:'nearest',inline:'center'});
  }
  function marcar(i){c.paso=i;if(i>c.alcanzado)c.alcanzado=i;pintarPasos();}
+ async function conBloqueo(f){if(c.ocupado)return;c.ocupado=true;pintarPasos();try{return await f();}finally{c.ocupado=false;pintarPasos();}}
  function ir(i){
-  if(i>c.alcanzado)return;const M=MovilCardiaco;
-  if(i===0)M.aQc7();else if(i===1)M.aRegistro();else if(i===2&&c.x)abrirCajaEstres();else if(i===3)abrirMapa();else if(i===4&&Gatillado7.estado.suma)abrirCajaGat();else if(i===5&&Gatillado7.estado.res)M.mostrarSolo('qgs7');
-  marcar(i);
+  if(i>c.alcanzado||c.ocupado)return;const P=PASOS[i];
+  return conBloqueo(async()=>{
+   if(P.fase&&P.fase!==c.fase)await cambiarFase(P.fase);
+   const M=MovilCardiaco,Fx=F();
+   if(P.id==='qc')M.aQc7();else if(P.id==='reg')await M.aRegistro();
+   else if(P.id==='ejes'){if(!Fx.x)return;Fx.restaurar=true;abrirCajaEstatica();}
+   else if(P.id==='ejesGat'){if(!Fx.entradaGat)return;Fx.restaurarGat=true;abrirCajaGat();}
+   else if(P.id==='pantallas'){await abrirPantallas(false);return;}
+   else if(P.id==='mapa'){await abrirMapa(c.vista.mapa);return;}
+   else if(P.id==='qgs'){await abrirQgs(c.vista.qgs);return;}
+   marcar(i);
+  });
  }
+
+ /* ---------- cambio de fase ---------- */
+ function guardarFase(){const e=MovilCardiaco.estado;F().estado={corr:e.corr,correccion:e.correccion,modo:e.modo,comparacion:e.comparacion};}
+ async function cambiarFase(fase){
+  guardarFase();const Fx=c.F[fase];
+  if(!await MovilCardiaco.cargarFase(fase,Fx.estado))throw Error('No se pudo abrir el '+MINUS[fase]+' del ZIP.');
+  Fx.restaurar=true;Fx.restaurarGat=true;
+ }
+ async function aReposo(){guardarFase();if(!await MovilCardiaco.cargarFase('reposo',c.F.reposo.estado))return;marcar(4);}
 
  /* ---------- paso 3: reconstruccion con la receta del equipo, caja y ejes torcidos ---------- */
  async function reconstruir(){
-  const M=MovilCardiaco,est=M.estado,b=$('a7Reconstruir'),aviso=$('regEstado');if(!est.crudo)return;
-  const f=est.corr||est.crudo,s=f.s,fuente=est.corr?'corregidas por la aplicación':'sin corregir',reg=Registro.estado;
-  b.disabled=true;
+  const M=MovilCardiaco,est=M.estado,b=$('a7Reconstruir'),aviso=$('regEstado');if(!est.crudo||c.ocupado)return;
+  const f=est.corr||est.crudo,s=f.s,fuente=est.corr?'corregidas por la aplicación':'sin corregir',r=Registro.estado;
+  // El registro se guarda por fase: al cambiar de fase el modulo del registro empieza de nuevo.
+  const reg={ct:r.ct,off:r.off.slice(),s:r.s,ctBytes:r.ctBytes,confirmado:r.confirmado};
+  b.disabled=true;c.ocupado=true;pintarPasos();
   try{
    EjeEquipo.fijarTipo('ac');
    const x=await Qps.leerReferencia(s,fuente)||await EjeEquipo.ejecutar({s,reg,fuente});if(!x)return;
    if(x.completa&&!x.guardada){await guardarCompleta(s,fuente,x.completa);await Qps.guardarReferencia(s,fuente,x,null);}
    if(!x.completa)x.completa=await leerCompleta(s,fuente);
    if(!x.completa){aviso.className='estado error';aviso.textContent='Falta la reconstrucción completa: pulsa de nuevo para reconstruir.';await borrarDe(s,fuente);return;}
-   c.x=x;c.s=s;c.fuente=fuente;c.reg=reg;c.inicial=null;
-   const n=s.n,cc=(n-1)/2;RefProy.configurar(s,(i,j,k)=>[(i-cc)*s.spacing+s.origin[0],(j-cc)*s.spacing+s.origin[1],s.z0-(n-1-k)*s.spacing]);
-   abrirCajaEstres();marcar(2);window.scrollTo(0,0);
+   const Fx=F(),mismo=Fx.x&&Fx.s===s&&Fx.fuente===fuente;
+   Object.assign(Fx,{x,s,fuente,reg});
+   if(!mismo)Object.assign(Fx,{inicial:null,entradaEstatica:null,ejes:null,entradaGat:null,ejesGat:null,inicialGat:null,restaurar:false,restaurarGat:false});
+   else Fx.restaurar=true;
+   abrirCajaEstatica();marcar(base()+2);
   }catch(err){const det=EjeEquipo.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción detenida.':'No se pudo reconstruir: '+(err.message||err);if(!det)console.error(err);}
-  finally{b.disabled=false;}
+  finally{b.disabled=false;c.ocupado=false;pintarPasos();}
  }
- function abrirCajaEstres(){const n=c.s.n;c.fase='estres';MovilCardiaco.prepararCaso7({s:{n,spacing:c.s.spacing}});Caja.abrir({entrada:c.entradaEstres||(c.entradaEstres={tipo:'osem',zArriba:true,data:c.x.completa,etiqueta:'receta del equipo'}),s:{n,spacing:c.s.spacing}});$('a7Mapa').textContent='Paso 4: mapa polar con tu eje →';MovilCardiaco.mostrarSolo('caja');}
- function abrirCajaGat(){const n=c.s.n;c.fase='gat';MovilCardiaco.prepararCaso7({s:{n,spacing:c.s.spacing}});$('volverOsem').textContent='← Volver al mapa polar';Caja.abrir({entrada:c.entradaGat,s:{n,spacing:c.s.spacing}});$('a7Mapa').textContent='Paso 6: mapa QGS con tu eje →';MovilCardiaco.mostrarSolo('caja');}
- const debeTorcer=()=>c.fase==='gat'?!c.inicialGat:!c.inicial;
- function volverDesdeCaja(){if(c.fase==='gat')MovilCardiaco.mostrarSolo('qps');else MovilCardiaco.mostrarSolo('reg');}
- // paso 5: reconstruccion del gatillado con la receta del equipo
+ function configurarRef(s){const n=s.n,cc=(n-1)/2;RefProy.configurar(s,(i,j,k)=>[(i-cc)*s.spacing+s.origin[0],(j-cc)*s.spacing+s.origin[1],s.z0-(n-1-k)*s.spacing]);}
+ function abrirCajaEstatica(){
+  const Fx=F(),s=Fx.s,n=s.n;c.sub='estatico';configurarRef(s);MovilCardiaco.prepararCaso7({s:{n,spacing:s.spacing}});
+  Caja.abrir({entrada:Fx.entradaEstatica||(Fx.entradaEstatica={tipo:'osem',zArriba:true,data:Fx.x.completa,etiqueta:'receta del equipo'}),s:{n,spacing:s.spacing}});
+  botonSiguiente();MovilCardiaco.mostrarSolo('caja');
+ }
+ function abrirCajaGat(){
+  const Fx=F(),s=Fx.s,n=s.n;c.sub='gat';configurarRef(s);MovilCardiaco.prepararCaso7({s:{n,spacing:s.spacing}});$('volverOsem').textContent=`← Volver a los ejes del ${MINUS[c.fase]}`;
+  Caja.abrir({entrada:Fx.entradaGat,s:{n,spacing:s.spacing}});botonSiguiente();MovilCardiaco.mostrarSolo('caja');
+ }
+ function botonSiguiente(){
+  $('a7Mapa').textContent=c.sub==='estatico'?`Paso 4: reconstruir el gatillado del ${MINUS[c.fase]} y orientar sus ejes →`:c.fase==='estres'?'Siguiente: reposo, control de calidad →':'Siguiente: generar las pantallas finales →';
+  const p=$('a7GatReceta');if(p)p.hidden=c.sub!=='estatico';
+ }
+ const debeTorcer=()=>c.sub==='gat'?!F().inicialGat:!F().inicial;
+ function volverDesdeCaja(){if(c.sub==='gat'){F().restaurar=true;abrirCajaEstatica();marcar(base()+2);}else MovilCardiaco.aRegistro();}
+ // Al abrir la reorientacion: si se vuelve a una fase o a un paso ya orientado, se recupera el eje
+ // que dejo el estudiante; si es la primera vez, el eje parte torcido.
+ function alAbrirReo(){
+  const Fx=F(),gat=c.sub==='gat',ej=gat?Fx.ejesGat:Fx.ejes,flag=gat?'restaurarGat':'restaurar';
+  if(ej&&Fx[flag]){Fx[flag]=false;const R=Reorientar.estado;R.Cv=ej.Cv.slice();R.t=ej.t||0;Reorientar.fijar(ej.az,ej.el);
+   $('reoEstado').className='estado ok';$('reoEstado').textContent='Recuperado el eje que dejaste en este paso. Puedes seguir ajustándolo.';}
+  else if(debeTorcer())torcer();
+  botonSiguiente();
+ }
+ function guardarEjes(){
+  const R=Reorientar.estado,m=R.marcoFijo||CardiacoCore.marco(R.az,R.el);
+  F()[c.sub==='gat'?'ejesGat':'ejes']={az:R.az,el:R.el,Cv:R.Cv.slice(),t:R.t,marco:{a:m.a.slice(),u:m.u.slice(),v:m.v.slice()}};
+ }
+ async function siguiente(){
+  if(c.ocupado)return;const b=$('a7Mapa');b.disabled=true;
+  try{
+   if(c.sub==='estatico'){guardarEjes();await conBloqueo(gatillar);}
+   else{guardarEjes();if(c.fase==='estres')await conBloqueo(aReposo);else await conBloqueo(()=>abrirPantallas(true));}
+  }finally{b.disabled=false;}
+ }
+ // paso 4: reconstruccion del gatillado con la receta del equipo
  async function gatillar(){
-  const M=MovilCardiaco,b=$('a7Gatillado'),aviso=$('qpsEstado');if(!c.x)return;b.disabled=true;
-  try{const suma=await Gatillado7.reconstruir({est:M.estado,s:c.s,fuente:c.fuente,centro:c.x.centro});if(!suma)return;
-   c.entradaGat={tipo:'osem',zArriba:true,data:suma,etiqueta:'gatillado, suma de los 8 intervalos'};c.inicialGat=null;abrirCajaGat();marcar(4);window.scrollTo(0,0);}
+  const M=MovilCardiaco,Fx=F(),aviso=$('reoEstado');if(!Fx.x)return;
+  if(Fx.entradaGat){abrirCajaGat();marcar(base()+3);return;}
+  try{const suma=await Gatillado7.reconstruir({est:{gat:M.estado.gat,correccion:M.estado.correccion},s:Fx.s,fuente:Fx.fuente,centro:Fx.x.centro});if(!suma)return;
+   Object.assign(Fx,{entradaGat:{tipo:'osem',zArriba:true,data:suma,etiqueta:`gatillado del ${MINUS[c.fase]}, suma de los 8 intervalos`},inicialGat:null,ejesGat:null,gatBytes:M.estado.gat,correccion:M.estado.correccion});
+   abrirCajaGat();marcar(base()+3);}
   catch(err){const det=Gatillado7.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción del gatillado detenida.':'No se pudo reconstruir el gatillado: '+(err.message||err);if(!det)console.error(err);}
-  finally{b.disabled=false;}
- }
- // paso 6: mapa QGS con el eje del gatillado
- async function abrirQgs(){
-  const R=Reorientar.estado,marco=R.marcoFijo||CardiacoCore.marco(R.az,R.el),aviso=$('reoEstado'),b=$('a7Mapa');b.disabled=true;
-  try{Progreso.abrir('Mapa QGS con tu eje',null);Progreso.avance(null,'Ocho intervalos: bordes de la pared, volúmenes y mapas…');await new Promise(r=>setTimeout(r,30));
-   try{await Gatillado7.abrir({marco:{a:marco.a,u:marco.u,v:marco.v},centro:R.Cv.slice()});}finally{Progreso.cerrar();}
-   MovilCardiaco.mostrarSolo('qgs7');marcar(5);window.scrollTo(0,0);}
-  catch(err){aviso.className='estado error';aviso.textContent='No se pudo construir el mapa QGS: '+(err.message||err)+' Revisa que el centro esté sobre el ventrículo y endereza el eje.';console.error(err);}
-  finally{b.disabled=false;}
  }
  // Al pasar de la caja a la reorientacion, el eje parte entre 8 y 15 grados fuera del eje del
  // equipo, en azimut y en elevacion, con signo al azar. Cambia cada vez que se abre.
  function torcer(){
-  if(!c.activo||!c.x)return;const az=c.x.azimut,el=c.x.elevacion,g=()=>(8+Math.random()*7)*(Math.random()<.5?-1:1),da=g(),de=g(),ini={az:Math.round(az+da),el:Math.round(el+de),dAz:da,dEl:de};
-  if(c.fase==='gat')c.inicialGat=ini;else c.inicial=ini;Reorientar.fijar(ini.az,ini.el);
-  $('reoEstado').className='estado';$('reoEstado').textContent='El eje parte torcido. Gíralo con los deslizadores hasta que el eje corto quede circular y los ejes largos simétricos, y después sigue al mapa polar.';
+  const Fx=F();if(!c.activo||!Fx.x)return;const az=Fx.x.azimut,el=Fx.x.elevacion,g=()=>(8+Math.random()*7)*(Math.random()<.5?-1:1),da=g(),de=g(),ini={az:Math.round(az+da),el:Math.round(el+de),dAz:da,dEl:de};
+  if(c.sub==='gat')Fx.inicialGat=ini;else Fx.inicial=ini;Reorientar.fijar(ini.az,ini.el);
+  $('reoEstado').className='estado';$('reoEstado').textContent='El eje parte torcido. Gíralo con los deslizadores hasta que el eje corto quede circular y los ejes largos simétricos, y después sigue.';
+ }
+
+ /* ---------- resultados: pantallas finales, mapa polar y mapa QGS, con menu estres / reposo ---------- */
+ const listo=f=>!!(c.F[f].x&&c.F[f].ejes),listoGat=f=>!!(c.F[f].entradaGat&&c.F[f].ejesGat);
+ function datosMapa(f){const Fx=c.F[f];return {s:Fx.s,reg:Fx.reg,ref:Fx.x,fuente:Fx.fuente,marco:Fx.ejes.marco,centro:Fx.ejes.Cv.slice()};}
+ async function cargarGat(f){const Fx=c.F[f];return Gatillado7.reconstruir({est:{gat:Fx.gatBytes,correccion:Fx.correccion},s:Fx.s,fuente:Fx.fuente,centro:Fx.x.centro});}
+ function menu(id,f){document.querySelectorAll(`#${id} [data-fase7]`).forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.fase7===f));b.disabled=!(id==='qgsFase'?listoGat(b.dataset.fase7):listo(b.dataset.fase7));});}
+ async function abrirMapa(f){
+  if(!listo(f))return;const aviso=$('qpsEstado');c.vista.mapa=f;titulo('Mapa polar · '+NOMBRE[f]);
+  try{
+   Progreso.abrir(`Mapa polar del ${MINUS[f]} con tu eje`,null);Progreso.avance(null,'Bordes de la pared, límite normal y resultados…');
+   try{await Qps.abrirCaso7({...datosMapa(f),fase:f});}finally{Progreso.cerrar();}
+   const t=document.querySelector('#qps .columna');if(t)t.textContent=`Mapa polar y resultados · ${MINUS[f]} con atenuación`;
+   menu('qpsFase',f);MovilCardiaco.mostrarSolo('qps');marcar(I.mapa);
+  }catch(err){aviso.className='estado error';aviso.textContent='No se pudo construir el mapa polar: '+(err.message||err);console.error(err);}
+ }
+ async function abrirQgs(f){
+  if(!listoGat(f))return;const Fx=c.F[f],aviso=$('qgsEstado');c.vista.qgs=f;titulo('Mapa QGS · '+NOMBRE[f]);
+  try{
+   if(!await cargarGat(f))return;
+   Progreso.abrir(`Mapa QGS del ${MINUS[f]} con tu eje`,null);Progreso.avance(null,'Ocho intervalos: bordes de la pared, volúmenes y mapas…');await new Promise(r=>setTimeout(r,30));
+   try{await Gatillado7.abrir({marco:Fx.ejesGat.marco,centro:Fx.ejesGat.Cv.slice(),fase:f});}finally{Progreso.cerrar();}
+   const t=document.querySelector('#qgs7 .columna');if(t)t.textContent=`Mapa QGS · ${MINUS[f]} gatillado`;
+   menu('qgsFase',f);MovilCardiaco.mostrarSolo('qgs7');marcar(I.qgs);
+  }catch(err){aviso.className='estado error';aviso.textContent='No se pudo construir el mapa QGS: '+(err.message||err)+' Revisa que el centro esté sobre el ventrículo y endereza el eje.';console.error(err);}
+ }
+ // Pantallas finales: se calculan con los ejes del estudiante en las dos fases (pantallas7.js).
+ async function abrirPantallas(generar){
+  if(!['estres','reposo'].every(f=>listo(f)&&listoGat(f))){$('reoEstado').className='estado error';$('reoEstado').textContent='Faltan pasos: para las pantallas finales hay que orientar los ejes del estrés y del reposo, estáticos y gatillados.';return;}
+  titulo('Pantallas finales');MovilCardiaco.mostrarSolo('pantallas7');marcar(I.pantallas);
+  if(generar||!Pantallas7.hechas())await Pantallas7.generar({fases:['estres','reposo'].map(f=>({fase:f,nombre:NOMBRE[f],mapa:datosMapa(f),gat:{marco:c.F[f].ejesGat.marco,centro:c.F[f].ejesGat.Cv.slice()},cargarGat:()=>cargarGat(f)}))});
  }
 
  /* ---------- guardado de la reconstruccion completa (sin la mascara del equipo) ---------- */
@@ -87,24 +185,19 @@ const Caso7=(()=>{
  async function leerCompleta(s,fuente){try{const v=await tienda('readonly',t=>t.get(clave(s,fuente)));return v instanceof Float32Array?v:null;}catch(err){return null;}}
  async function borrarDe(s,fuente){try{await tienda('readwrite',t=>t.delete(clave(s,fuente)));}catch(err){}}
 
- /* ---------- paso 4: mapa polar con el eje del estudiante ---------- */
- async function abrirMapa(){
-  if(!c.x)return;const R=Reorientar.estado,marco=R.marcoFijo||CardiacoCore.marco(R.az,R.el),aviso=$('reoEstado'),b=$('a7Mapa');
-  b.disabled=true;
-  try{
-   Progreso.abrir('Mapa polar con tu eje',null);Progreso.avance(null,'Bordes de la pared, límite normal y resultados…');
-   try{await Qps.abrirCaso7({s:c.s,reg:c.reg,ref:c.x,fuente:c.fuente,marco:{a:marco.a,u:marco.u,v:marco.v},centro:R.Cv.slice()});}finally{Progreso.cerrar();}
-   MovilCardiaco.mostrarSolo('qps');marcar(3);window.scrollTo(0,0);
-  }catch(err){aviso.className='estado error';aviso.textContent='No se pudo construir el mapa polar: '+(err.message||err);console.error(err);}
-  finally{b.disabled=false;}
- }
  function iniciar(){
-  $('a7Reconstruir').addEventListener('click',reconstruir);$('a7Mapa').addEventListener('click',()=>c.fase==='gat'?abrirQgs():abrirMapa());$('a7Gatillado').addEventListener('click',gatillar);
-  $('volverQgs').addEventListener('click',()=>{Gatillado7.parar();MovilCardiaco.mostrarSolo('reo');});
-  new MutationObserver(()=>{if(!c.activo)return;const v=id=>!$(id).classList.contains('oculta');if(v('qc'))marcar(0);else if(v('reg'))marcar(1);else if(v('caja')||v('reo'))marcar(c.fase==='gat'?4:2);else if(v('qps'))marcar(3);else if(v('qgs7'))marcar(5);const vq=v('qgs7');if(c.vioQgs&&!vq)Gatillado7.parar();c.vioQgs=vq;}).observe(document.querySelector('main'),{subtree:true,attributes:true,attributeFilter:['class']});
+  $('a7Reconstruir').addEventListener('click',reconstruir);$('a7Mapa').addEventListener('click',siguiente);
+  $('a7Qgs').addEventListener('click',()=>conBloqueo(()=>abrirQgs(c.vista.qgs)));$('a7MapaDesdePantallas').addEventListener('click',()=>conBloqueo(()=>abrirMapa(c.vista.mapa)));
+  $('volverQgs').addEventListener('click',()=>{Gatillado7.parar();conBloqueo(()=>abrirMapa(c.vista.mapa));});
+  document.querySelectorAll('#qpsFase [data-fase7]').forEach(b=>b.addEventListener('click',()=>conBloqueo(()=>abrirMapa(b.dataset.fase7))));
+  document.querySelectorAll('#qgsFase [data-fase7]').forEach(b=>b.addEventListener('click',()=>conBloqueo(()=>abrirQgs(b.dataset.fase7))));
+  new MutationObserver(()=>{if(!c.activo)return;const v=id=>!$(id).classList.contains('oculta');
+   if(v('qc'))marcar(base());else if(v('reg'))marcar(base()+1);else if(v('caja')||v('reo'))marcar(base()+(c.sub==='gat'?3:2));else if(v('pantallas7'))marcar(I.pantallas);else if(v('qps'))marcar(I.mapa);else if(v('qgs7'))marcar(I.qgs);
+   const vq=v('qgs7');if(c.vioQgs&&!vq)Gatillado7.parar();c.vioQgs=vq;}).observe(document.querySelector('main'),{subtree:true,attributes:true,attributeFilter:['class']});
  }
- // Paso 2: el registro parte con la configuracion elegida por el docente.
+ // Paso 2: el registro parte con la configuracion elegida por el docente (en las dos fases).
  const REGISTRO={plano:'axial',corte:{axial:42},mezcla:.5,nivel:.51,ancho:.82,ventana:'blando'};
- return {REGISTRO,iniciar,entrar,esCaso7,torcer,debeTorcer,volverDesdeCaja,guardarCompleta,estado:c,get activo(){return c.activo;}};
+ function volverDesdeMapa(){conBloqueo(()=>abrirPantallas(false));}
+ return {REGISTRO,iniciar,entrar,esCaso7,torcer,debeTorcer,alAbrirReo,volverDesdeCaja,volverDesdeMapa,guardarCompleta,estado:c,get activo(){return c.activo;},get fase(){return c.fase;}};
 })();
 window.Caso7=Caso7;
