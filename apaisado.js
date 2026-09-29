@@ -13,8 +13,8 @@ const Apaisado=(()=>{
   cmp:{izq:[':scope > .rejilla']},
   caja:{izq:[':scope > .rejilla',':scope > .refProy']},
   reo:{izq:[':scope > .rejilla',':scope > #reoEq',':scope > .refProy']},
-  qps:{der:[':scope > .saberMas','#volverQps',':scope > .columna','#qpsTipo','#qpsEstado','#qpsAviso',':scope > .controles.fijo','#qpsEje','#qpsReceta','#qpsTablaT','#qpsTabla','#qpsRevelar','#qpsReferencia','#a7Qgs','#qpsFase',':scope > .vermas']},
-  qgs7:{der:[':scope > .saberMas','#volverQgs',':scope > .columna','#qgsFase','#qgsEstado','#qgsTablaT','#qgsTabla','#qgsRevelar','#qgsNota']},
+  qps:{der:[':scope > .ayudaPaso','#volverQps',':scope > .columna','#qpsTipo','#qpsEstado','#qpsAviso',':scope > .controles.fijo','#qpsEje','#qpsReceta','#qpsTablaT','#qpsTabla','#qpsRevelar','#qpsReferencia','#a7Qgs','#qpsFase',':scope > .vermas']},
+  qgs7:{der:[':scope > .ayudaPaso','#volverQgs',':scope > .columna','#qgsFase','#qgsEstado','#qgsTablaT','#qgsTabla','#qgsRevelar','#qgsNota']},
   pantallas7:{izq:['figure.pantalla']}
  };
  const secciones={};let activo=false;

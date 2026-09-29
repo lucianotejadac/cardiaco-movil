@@ -621,3 +621,15 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - Los rangos se presentan como de uso habitual y dependientes del protocolo; el primer paso aclara que el informe lo hace el médico con todo el estudio.
 
 **Validación.** Recorrido completo con clics: «Pantalla final tutorial» en QPS sin atenuación (11 resultados), QGS del estrés (10) y QPS con atenuación (12), con flecha y marco en cada uno, explicación de la falla de máscara y del TID con atenuación, y de la fracción de eyección en el QGS. Sin errores de JavaScript.
+
+## 2026-09-29 · Caso 7: botón «Preguntas» en cada etapa, desde la clase de cardiología
+
+**Contexto.** El docente pidió buscar en U-Cursos la clase de cardiología, hacer preguntas atingentes en el contexto del simulador y poner un botón «Preguntas» en cada etapa, sin que sean tantas.
+
+**Decisiones.**
+- Fuente: «CT13. Exploraciones de MN en Cardiología» (material docente del curso TM08315, 149 láminas), leída con la sesión del docente. El PDF queda solo en el computador; no se sube al repositorio.
+- `preguntas7.js`: botón «Preguntas» junto a «Saber más», arriba de cada etapa del caso 7 (control de calidad, registro, caja, orientación, pantallas finales, mapa polar y QGS). Dos o tres preguntas por etapa, que cambian según la fase (estrés o reposo) y el paso (estático o gatillado). Cada pregunta dice de qué lámina viene.
+- Temas: movimiento del paciente y control con cine y sinograma; parámetros de adquisición; atenuación diafragmática y mamaria; actividad extracardiaca hepatobiliar; mala y buena reorientación; correspondencia de cortes entre esfuerzo y reposo; gatillado en 8 o 16 intervalos y tolerancia R-R; Splash; SSS, SRS y SDS; criterio de posible riesgo vital (SDS > 12 o extensión > 30 %); patrones reversible, fijo, parcialmente reversible y paradójico; territorio coronario por pared; límite normal de la fracción de eyección (50 %); curva de volumen y llenado; movimiento y engrosamiento para distinguir infarto de atenuación.
+- Sin respuestas en la aplicación: las respuestas son evidencia del estudiante en la rúbrica del APG.
+
+**Validación.** Recorrido completo con clics: control de calidad con 2 preguntas, pantallas finales con 3 y QGS con 3, todas con su lámina. Sin errores de JavaScript.

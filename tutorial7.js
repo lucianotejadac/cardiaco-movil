@@ -14,6 +14,7 @@ const Tutorial7=(()=>{
   qc:[
    {o:'#pasos7',t:'Este es el recorrido del caso 7. Arriba están los pasos: A. Estrés, B. Reposo y, al final, los resultados. Puedes volver a cualquier paso ya hecho tocándolo.'},
    {o:'.saberMas',t:'En cada paso, «Saber más» explica las siglas, las unidades y los conceptos que se ven en ese momento en la pantalla.'},
+   {o:'.preguntasBtn',t:'«Preguntas» muestra unas pocas preguntas de la clase de cardiología aplicadas a esta etapa. Respóndelas con lo que ves en el simulador.'},
    {o:'#rejilla',t:()=>`Control de calidad de las proyecciones del ${fase()}. El cine muestra el giro de la cámara y el sinograma, una fila a lo largo de todas las vistas. Un salto del paciente se ve como un corte brusco en la sinusoide del sinograma y como un escalón en el linograma.`},
    {o:'#qc .controles',t:'«Vista» recorre el cine y «Fila» elige qué fila muestra el sinograma. También puedes tocar las imágenes.'},
    {o:'#modo',si:()=>!MovilCardiaco.estado.corr,t:'Pulsa «Corregir»: la aplicación busca los saltos y los corrige. Después verás dos columnas, sin corregir y corregido.',hasta:()=>!!MovilCardiaco.estado.corr,espera:'Esperando que pulses «Corregir»…'},
