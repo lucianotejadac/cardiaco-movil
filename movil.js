@@ -469,8 +469,9 @@ async function aQps(){
  try{
   await new Promise(q=>setTimeout(q,30));
   const r=Registro.estado,reg=r.s===s&&r.confirmado&&r.ct?r:{ct:Lab95.prepareCT(estado.ct.map(b=>Lab95.ct(dicomParser.parseDicom(b))),s),off:[0,0,0]};
-  const x=await EjeEquipo.ejecutar({s,reg,fuente});if(!x){aviso.textContent='';return;}
-  Progreso.abrir('Calibrando',null);Progreso.avance(null,'Bordes de la pared, límite normal y factores…');
+  // Si la reconstruccion de referencia ya esta guardada en el dispositivo, no se reconstruye.
+  const x=await Qps.leerReferencia(s,fuente)||await EjeEquipo.ejecutar({s,reg,fuente});if(!x){aviso.textContent='';return;}
+  Progreso.abrir(x.guardada?'Recuperando lo guardado':'Calibrando',null);Progreso.avance(null,'Bordes de la pared, límite normal y factores…');
   try{await Qps.abrir({s,reg,ref:x,fuente});}finally{Progreso.cerrar();}
   Registro.cancelar();OsemMovil.cancelar();mostrarSolo('qps');document.body.classList.remove('comparar');aviso.textContent='';window.scrollTo(0,0);
  }catch(err){const det=EjeEquipo.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción detenida.':'No se pudo abrir la sección: '+(err.message||err);if(!det)console.error(err);}

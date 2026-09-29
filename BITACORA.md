@@ -461,3 +461,18 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **DICOM anonimizados.** Se vaciaron nombre, identificador, fecha de nacimiento, número de acceso e identificador de estudio; se quitaron institución, médicos, operador, estación, número de serie y todas las etiquetas privadas. Se conservan sexo, edad, fechas del examen y los identificadores de estudio, serie y marco de referencia, porque el simulador reconoce el caso por el marco. Se comprobó que ningún archivo contiene el nombre, el identificador ni la institución del original.
 - **El simulador toma del ZIP los ejes cortos del equipo** de las mismas proyecciones que abre, y los entrega a la sección del mapa polar. Antes solo los tomaba al cargar por carpeta.
 
+## 2026-09-29 · Mapa polar en vivo: ejes a la vista y reconstrucciones guardadas
+
+**Contexto.** El docente pidió ver los ejes al manipularlos y que la reconstrucción quede guardada, para no reconstruir cada vez.
+
+**Decisiones.**
+- **Dos imágenes junto a los deslizadores, dentro del bloque fijo.** Corte transversal, donde se ve el azimut, y plano vertical que contiene el eje del equipo, donde se ve la elevación. Eje actual en celeste con un punto en el ápex; eje del equipo en blanco punteado; centro en amarillo. Se redibujan con cada movimiento.
+- **Guardado en el dispositivo.** Base propia en IndexedDB (`cardiaco-movil-recon`), separada de la que guarda los archivos, para no cambiarle la versión. Se guardan la reconstrucción de referencia con su calibración y cada receta que se reconstruye.
+- **Cada volumen se guarda recortado** a la caja que tiene datos: fuera de la máscara del equipo todo es cero. Pesa menos de medio megabyte en vez de 8.
+- **La clave incluye** una versión, la huella del marco de referencia, si las proyecciones están corregidas y la receta. Si cambia el algoritmo se sube la versión y lo guardado deja de usarse.
+- **Las recetas guardadas aparecen como botones** y se muestran sin reconstruir. Hay un botón para borrarlas.
+- **La calibración guardada se reutiliza**: el núcleo acepta una calibración previa y no vuelve a buscar la base.
+- **Bloque fijo con el candado abierto.** El candado abierto bloqueaba el desplazamiento con `overflow:hidden` en `html` y en `body`; eso convertía el cuerpo en el contenedor del bloque fijo, que volvía a su lugar al abrir el candado. Ahora solo se bloquea `html`: el bloque de ejes queda arriba en los dos modos.
+
+**Validación.** En local, emulación de teléfono, con el ZIP del caso 7. Primera vez: 45 s hasta la sección. Recargando la página, sin volver a elegir el ZIP: 0,3 s, mismos resultados. Receta ya probada: menos de 1 s. Bajando 1400 px, con el candado cerrado o abierto, los ejes siguen a la vista.
+

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=27">
+<link rel="stylesheet" href="movil.css?v=29">
 </head>
 <body>
 <header class="barra">
@@ -224,6 +224,11 @@
   <div class="columna">Mapa polar y resultados en vivo · estrés con atenuación</div>
   <p id="qpsEstado" class="estado"></p>
   <div class="controles fijo">
+   <div class="ejesVivo">
+    <figure><figcaption>Transversal · azimut</figcaption><canvas id="qpsEjeAxial" class="libre" aria-label="Corte transversal con el eje actual y el del equipo."></canvas></figure>
+    <figure><figcaption>Plano vertical · elevación</figcaption><canvas id="qpsEjeVertical" class="libre" aria-label="Plano vertical con el eje actual y el del equipo."></canvas></figure>
+    <p class="clave"><span class="celeste">━●</span> eje actual, el punto es el ápex<br><span style="color:#fff">┅</span> eje del equipo<br><span class="amarilla">●</span> centro</p>
+   </div>
    <div class="fila"><span class="etq">Azimut</span><button id="qpsAzMenos" type="button" class="paso" aria-label="Azimut menos 1°">−</button><input id="qpsAz" type="range" min="-25" max="25" step="1" value="0" aria-label="Cambio de azimut respecto del eje del equipo"><button id="qpsAzMas" type="button" class="paso" aria-label="Azimut más 1°">+</button><span id="qpsAzTexto" class="valor">0°</span></div>
    <div class="fila"><span class="etq">Elevación</span><button id="qpsElMenos" type="button" class="paso" aria-label="Elevación menos 1°">−</button><input id="qpsEl" type="range" min="-25" max="25" step="1" value="0" aria-label="Cambio de elevación respecto del eje del equipo"><button id="qpsElMas" type="button" class="paso" aria-label="Elevación más 1°">+</button><span id="qpsElTexto" class="valor">0°</span></div>
   </div>
@@ -242,6 +247,9 @@
    <p id="qpsPendiente" class="estado error" hidden>Cambiaste la receta: pulsa «Reconstruir» para verla.</p>
    <button id="qpsReconstruir" type="button" class="boton ancho">Reconstruir con esta receta</button>
    <div class="recetas"><button id="qpsRecetaEquipo" type="button" class="mini">Poner la receta del equipo</button></div>
+   <p id="qpsGuardadasTexto" class="clave"></p>
+   <div id="qpsGuardadas" class="recetas"></div>
+   <button id="qpsBorrar" type="button" class="mini">Borrar las reconstrucciones guardadas</button>
   </details>
   <button id="qpsReferencia" type="button" class="vermas ancho">Volver al eje y a la receta del equipo</button>
 
@@ -397,6 +405,10 @@
   <dd>El defecto sigue en el mismo lugar del corazón, pero los segmentos se definen respecto del eje. Al girarlo, el defecto pasa de un segmento al vecino. Cambia dónde se informa, más que cuánto hay.</dd>
   <dt>Por qué cambia al cambiar la receta</dt>
   <dd>Más iteraciones dan una pared más angosta y más ruido. Un filtro más ancho la engrosa y borra los defectos. La extensión se sigue comparando con el límite de la receta del equipo, así que cambia aunque la perfusión del paciente sea la misma. Por eso la receta y la base de normales tienen que corresponderse.</dd>
+  <dt>Los ejes a la vista</dt>
+  <dd>Arriba hay dos imágenes pequeñas. En el corte transversal se ve el azimut: cuánto apunta el eje hacia la izquierda del paciente. En el plano vertical se ve la elevación: cuánto baja el ápex. La línea celeste es tu eje y la blanca punteada es el del equipo.</dd>
+  <dt>Lo que queda guardado</dt>
+  <dd>Cada reconstrucción se guarda en este dispositivo, dentro del navegador. La próxima vez la sección se abre sin reconstruir, y las recetas que ya probaste aparecen como botones. No se envía nada a ningún servidor. Se pueden borrar con el botón de la receta.</dd>
   <dt>Lo que es una estimación</dt>
   <dd>El equipo no guardó su mapa polar con atenuación. La zona anormal de referencia se armó dentro de los segmentos que el equipo puntuó, hasta completar la extensión que informó. Los puntajes se calculan con una referencia por segmento que es de este paciente.</dd>
  </dl>
@@ -647,8 +659,8 @@
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=4"></script>
-<script src="qps-nucleo.js?v=2"></script>
-<script src="qps.js?v=2"></script>
-<script src="movil.js?v=28"></script>
+<script src="qps-nucleo.js?v=3"></script>
+<script src="qps.js?v=3"></script>
+<script src="movil.js?v=29"></script>
 </body>
 </html>

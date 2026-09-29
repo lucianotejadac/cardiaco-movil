@@ -12,7 +12,43 @@ const Qps=(()=>{
  const Q=QpsNucleo,$=id=>document.getElementById(id),dec=(x,d=0)=>Number(x).toFixed(d).replace('.',',');
  // Lo que informo el equipo en el caso de referencia (pantalla «Splash AC»).
  const EQUIPO={'22d4f455':{serie:'Stress [Recon - AC ]',normales:'symbiaMaleStressTc_AC',volumen:43,pared:120,cuentas:1105,defecto:25,extension:21,tpd:16,forma:.46,excentricidad:.86,puntajes:{6:2,14:1,16:2,11:3,5:2,10:2,4:1}}};
- const N=192,q={listo:false,ocupado:false,dAz:0,dEl:0,t:null};
+ const N=192,q={listo:false,ocupado:false,dAz:0,dEl:0,t:null,guardadas:new Map()};
+
+ /* ---------- reconstrucciones guardadas en el dispositivo ---------- */
+ // Base de datos propia del navegador (IndexedDB). Cada reconstruccion se guarda recortada a la
+ // caja que tiene datos (el resto es cero por la mascara), asi pesa menos de medio megabyte.
+ const BD={nombre:'cardiaco-movil-recon',tienda:'recon',version:'v1'};
+ function bd(){return new Promise((ok,mal)=>{const r=indexedDB.open(BD.nombre,1);r.onupgradeneeded=()=>r.result.createObjectStore(BD.tienda);r.onsuccess=()=>ok(r.result);r.onerror=()=>mal(r.error);});}
+ async function tienda(modo,f){const b=await bd();try{return await new Promise((ok,mal)=>{const t=b.transaction(BD.tienda,modo),r=f(t.objectStore(BD.tienda));t.oncomplete=()=>ok(r&&r.result);t.onerror=()=>mal(t.error);t.onabort=()=>mal(t.error);});}finally{b.close();}}
+ function empacar(vol,n){
+  let x0=n,x1=-1,y0=n,y1=-1,z0=n,z1=-1;const p=n*n;
+  for(let z=0;z<n;z++)for(let y=0;y<n;y++){const o=z*p+y*n;for(let x=0;x<n;x++)if(vol[o+x]!==0){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;if(z<z0)z0=z;if(z>z1)z1=z;}}
+  if(x1<0)return {n,caja:[0,0,0,0,0,0],datos:new Float32Array(1)};
+  const w=x1-x0+1,h=y1-y0+1,k=z1-z0+1,d=new Float32Array(w*h*k);for(let z=0;z<k;z++)for(let y=0;y<h;y++)d.set(vol.subarray((z+z0)*p+(y+y0)*n+x0,(z+z0)*p+(y+y0)*n+x0+w),(z*h+y)*w);
+  return {n,caja:[x0,x1,y0,y1,z0,z1],datos:d};
+ }
+ function desempacar(e){const n=e.n,p=n*n,[x0,x1,y0,y1,z0,z1]=e.caja,w=x1-x0+1,h=y1-y0+1,k=z1-z0+1,vol=new Float32Array(n*p);for(let z=0;z<k;z++)for(let y=0;y<h;y++)vol.set(e.datos.subarray((z*h+y)*w,(z*h+y)*w+w),(z+z0)*p+(y+y0)*n+x0);return vol;}
+ const claveReceta=r=>`${r.it}x${r.sub}|${Number(r.fwhm).toFixed(1)}|${r.ac?'ac':'noac'}|${r.dispersion?'disp':'sin'}`;
+ const prefijo=(s,fuente)=>`${BD.version}|${cardiacoHash(s.frame)}|${fuente}|`;
+ async function leerReferencia(s,fuente){
+  try{const e=await tienda('readonly',t=>t.get(prefijo(s,fuente)+'referencia'));if(!e||!e.vol)return null;return {...e.meta,sim:desempacar(e.vol),guardada:true};}
+  catch(err){console.warn('No se pudo leer lo guardado',err);return null;}
+ }
+ async function guardarReferencia(s,fuente,x,cal){
+  const meta={marco:x.marco,centro:x.centro,factor:x.factor,receta:x.receta,descripcion:x.descripcion,recetaEquipo:x.recetaEquipo,nombre:x.nombre,cal:cal||null,fecha:Date.now()};
+  try{await tienda('readwrite',t=>t.put({meta,vol:empacar(x.sim,s.n)},prefijo(s,fuente)+'referencia'));if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});return true;}
+  catch(err){console.warn('No se pudo guardar la referencia',err);return false;}
+ }
+ async function guardarReceta(r,vol){try{await tienda('readwrite',t=>t.put({receta:r,vol:empacar(vol,q.s.n),fecha:Date.now()},prefijo(q.s,q.fuente)+'receta|'+claveReceta(r)));}catch(err){console.warn('No se pudo guardar la reconstrucción',err);}}
+ async function leerRecetas(){
+  q.guardadas=new Map();
+  try{const p=prefijo(q.s,q.fuente)+'receta|',b=await bd();try{await new Promise((ok,mal)=>{const c=b.transaction(BD.tienda,'readonly').objectStore(BD.tienda).openCursor(IDBKeyRange.bound(p,p+'\uffff'));c.onsuccess=()=>{const k=c.result;if(!k){ok();return;}q.guardadas.set(claveReceta(k.value.receta),{receta:k.value.receta,vol:desempacar(k.value.vol)});k.continue();};c.onerror=()=>mal(c.error);});}finally{b.close();}}
+  catch(err){console.warn('No se pudieron leer las reconstrucciones guardadas',err);}
+ }
+ async function borrarGuardadas(){
+  try{const p=prefijo(q.s,q.fuente);await tienda('readwrite',t=>t.delete(IDBKeyRange.bound(p,p+'\uffff')));}catch(err){console.warn(err);}
+  q.guardadas=new Map();aReferencia();
+ }
  const PAL=[[0,0,0],[0,15,14],[0,51,50],[0,85,84],[0,119,118],[26,99,154],[60,65,188],[94,31,222],[130,2,246],[164,36,178],[198,70,110],[234,106,38],[254,140,26],[254,174,94],[254,210,166],[254,240,225]],PX=[0,3.5,10.4,17.4,24.3,31.3,38.3,45.2,52.2,59.1,66.1,73,80,87,93.9,100];
  function color(v){v=Math.min(100,Math.max(0,v||0));let i=1;while(i<PX.length-1&&PX[i]<v)i++;const f=(v-PX[i-1])/(PX[i]-PX[i-1]);return [0,1,2].map(c=>PAL[i-1][c]+(PAL[i][c]-PAL[i-1][c])*f);}
  const TABLA=new Uint8Array(1001*3);for(let i=0;i<=1000;i++){const c=color(i/10);TABLA[i*3]=c[0];TABLA[i*3+1]=c[1];TABLA[i*3+2]=c[2];}
@@ -25,7 +61,9 @@ const Qps=(()=>{
   q.recetaEquipo={...ref.receta};q.receta={...ref.receta};q.volRef=ref.sim;q.vol=ref.sim;q.dAz=0;q.dEl=0;
   q.obj=EQUIPO[cardiacoHash(s.frame)]||null;
   avance&&avance('Calibrando con la reconstrucción de referencia…');await new Promise(r=>setTimeout(r,30));
-  const c=Q.calibrar(q.volRef,q.d,q.marco,q.O0,q.sp,q.obj,N);q.cal=c.cal;q.calibrado=c.calibrado;
+  const c=Q.calibrar(q.volRef,q.d,q.marco,q.O0,q.sp,q.obj,N,ref.cal||null);q.cal=c.cal;q.calibrado=c.calibrado;q.deMemoria=!!ref.guardada;
+  if(!ref.guardada)await guardarReferencia(s,fuente,ref,c.cal);else if(!ref.cal)await guardarReferencia(s,fuente,ref,c.cal);
+  await leerRecetas();
   const R=Q.medir(q.volRef,q.d,c.E,c.P,c.W,c.S,c.cal,q.sp,N);q.R0=R;
   if(q.obj){
    const z=Q.zonaPorPuntajes(R,q.obj.puntajes,q.obj.extension);q.L=Q.limiteDesdeZona(R,z.zona);q.umbral=z.umbral;const p=Q.perfusion(R,q.L);
@@ -68,7 +106,8 @@ const Qps=(()=>{
   q.ocupado=true;$('qpsReconstruir').disabled=true;
   try{
    if(mismaReceta(r,q.recetaEquipo)){q.vol=q.volRef;q.receta={...q.recetaEquipo};}
-   else{const v=await EjeEquipo.reconstruirCon({s:q.s,reg:q.reg,receta:r,factor:q.factor});if(!v)return;q.vol=v.sim;q.receta=r;q.segundos=v.segundos;}
+   else if(q.guardadas.has(claveReceta(r))){q.vol=q.guardadas.get(claveReceta(r)).vol;q.receta=r;}
+   else{const v=await EjeEquipo.reconstruirCon({s:q.s,reg:q.reg,receta:r,factor:q.factor});if(!v)return;q.vol=v.sim;q.receta=r;q.segundos=v.segundos;q.guardadas.set(claveReceta(r),{receta:r,vol:v.sim});await guardarReceta(r,v.sim);}
    calcular();
   }catch(err){const det=EjeEquipo.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción detenida.':'No se pudo reconstruir: '+(err.message||err);if(!det)console.error(err);}
   finally{q.ocupado=false;$('qpsReconstruir').disabled=false;}
@@ -157,13 +196,36 @@ const Qps=(()=>{
   $('qpsEje').textContent=`Eje actual: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Eje del equipo: ${dec(a0.azimut,1)}° y ${dec(a0.elevacion,1)}°.`;
   $('qpsRecetaTexto').textContent=`Reconstrucción en pantalla: ${textoReceta(q.receta)}${mismaReceta(q.receta,q.recetaEquipo)?' (la del equipo)':''}.`;
   $('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);
+  ejes(a);guardadas();
   tabla();polar('qpsPolar',a,300,a.porcentaje||a.valor);polar('qpsPolarRef',q.ref,300,q.ref.porcentaje||q.ref.valor);
   $('qpsPolarTitulo').textContent=a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';$('qpsPolarRefTitulo').textContent=a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
   miniatura('qpsPuntajes',a.puntajes,150);miniatura('qpsPuntajesRef',q.ref.puntajes,150);$('qpsPuntajesCaja').hidden=!a.puntajes;
   cortes(a);splash(a);
   $('qpsNota').textContent=q.obj?`Base de normales del equipo: ${q.obj.normales}. El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. La zona anormal de referencia es una estimación: el equipo no guardó su mapa polar con atenuación.`:'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
  }
+ /* Los ejes a la vista mientras se mueven: corte transversal (se ve el azimut) y plano vertical que
+    contiene el eje del equipo (se ve la elevacion). Celeste, el eje actual con un punto en el apex;
+    blanco, el del equipo; amarillo, el centro. */
+ function ejes(r){
+  const E=r.X.E,m=q.marco,C=q.R0.E.O,lado=132,semi=24,vm=vmaxDe(q.vol),k=lado/(2*semi),L=.8*E.a,dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const h=Math.hypot(m.a[0],m.a[1])||1,hor=[m.a[0]/h,m.a[1]/h,0],planos=[['qpsEjeAxial',[1,0,0],[0,1,0]],['qpsEjeVertical',hor,[0,0,-1]]];
+  for(const [id,der,aba] of planos){
+   const ctx=lienzo(id,lado,lado);corte(ctx,0,0,lado,q.vol,C,der,aba,semi,vm);
+   const linea=(e,O,col,ancho,punto)=>{const o=[0,1,2].map(i=>O[i]-C[i]),x=(dot(o,der)+semi)*k,y=(dot(o,aba)+semi)*k,dx=dot(e,der)*L*k,dy=dot(e,aba)*L*k;ctx.strokeStyle=col;ctx.lineWidth=ancho;ctx.beginPath();ctx.moveTo(x-dx,y-dy);ctx.lineTo(x+dx,y+dy);ctx.stroke();if(punto){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x+dx,y+dy,4,0,2*Math.PI);ctx.fill();}return [x,y];};
+   ctx.setLineDash([5,4]);linea(m.a,q.R0.E.O,'rgba(255,255,255,.9)',2,false);ctx.setLineDash([]);
+   const c=linea(E.eje,E.O,'#4dd0e1',2.5,true);ctx.fillStyle='#ffee58';ctx.beginPath();ctx.arc(c[0],c[1],3.5,0,2*Math.PI);ctx.fill();
+  }
+ }
+ function guardadas(){
+  const caja=$('qpsGuardadas');caja.replaceChildren();
+  const boton=(texto,r,activa)=>{const b=document.createElement('button');b.type='button';b.className='mini'+(activa?' activa':'');b.textContent=texto;b.addEventListener('click',()=>{if(q.ocupado)return;if(mismaReceta(r,q.recetaEquipo)){q.vol=q.volRef;q.receta={...q.recetaEquipo};}else{const g=q.guardadas.get(claveReceta(r));if(!g)return;q.vol=g.vol;q.receta={...r};}controles();calcular();});caja.append(b);};
+  boton('Equipo · '+textoCorto(q.recetaEquipo),q.recetaEquipo,mismaReceta(q.receta,q.recetaEquipo));
+  for(const g of q.guardadas.values())boton(textoCorto(g.receta),g.receta,mismaReceta(q.receta,g.receta));
+  $('qpsGuardadasTexto').textContent=`Reconstrucciones guardadas en este dispositivo: ${q.guardadas.size+1}. Tocar una la muestra sin reconstruir.${q.deMemoria?' La de referencia se recuperó de lo guardado.':''}`;
+ }
+ const textoCorto=r=>`${r.it}×${r.sub}, ${r.fwhm>0?dec(r.fwhm,1)+' mm':'sin filtro'}${r.ac?', AC':''}${r.dispersion?', disp.':''}`;
  function iniciar(){
+  $('qpsBorrar').addEventListener('click',borrarGuardadas);
   let t=null;const vivo=()=>{clearTimeout(t);t=setTimeout(calcular,60);};
   $('qpsAz').addEventListener('input',e=>{q.dAz=+e.target.value;$('qpsAzTexto').textContent=`${q.dAz>0?'+':''}${q.dAz}°`;vivo();});
   $('qpsEl').addEventListener('input',e=>{q.dEl=+e.target.value;$('qpsElTexto').textContent=`${q.dEl>0?'+':''}${q.dEl}°`;vivo();});
@@ -173,6 +235,6 @@ const Qps=(()=>{
   $('qpsRecetaEquipo').addEventListener('click',()=>{if(!q.listo)return;const r=q.recetaEquipo;$('qpsIter').value=r.it;$('qpsSub').value=String(r.sub);$('qpsFwhm').value=r.fwhm;$('qpsAC').checked=!!r.ac;$('qpsDisp').checked=!!r.dispersion;$('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);});
  }
  function olvidar(){q.listo=false;q.vol=q.volRef=null;q.R0=null;q.act=q.ref=null;q.L=null;}
- return {iniciar,abrir,calcular,reconstruir,aReferencia,olvidar,estado:q};
+ return {iniciar,abrir,calcular,reconstruir,aReferencia,olvidar,leerReferencia,borrarGuardadas,estado:q};
 })();
 window.Qps=Qps;

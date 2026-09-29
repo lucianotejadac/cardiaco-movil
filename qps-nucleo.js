@@ -173,8 +173,10 @@ const QpsNucleo=(()=>{
  }
  // Calibracion en la condicion de referencia: bordes que dan el volumen y la pared del equipo; si
  // hay cuentas del equipo, la base es la que ademas da sus cuentas.
- function calibrar(V,d,marco,O0,sp,obj,N=192){
+ // previa: calibracion ya hecha y guardada ({base, fe, fp}); si viene, no se busca de nuevo.
+ function calibrar(V,d,marco,O0,sp,obj,N=192,previa=null){
   const E=elipsoideConEje(V,d,O0,marco),P=perfiles(V,d,E),W=pared(P),S={mid:suavizar(W.mid),si:suavizar(W.sin),so:suavizar(W.sout)},ml=sp**3/1000;
+  if(previa&&Number.isFinite(previa.base)&&Number.isFinite(previa.fe)&&Number.isFinite(previa.fp))return {E,P,W,S,cal:{base:previa.base,fe:previa.fe,fp:previa.fp},calibrado:!!obj};
   if(!obj)return {E,P,W,S,cal:{base:limiteBasal(P,W),fe:.45,fp:.56},calibrado:false};
   const vols=(base,fe,fp)=>{const nsel=anillosHasta(P,base),n=NT*NF,de=new Float32Array(n),dp=new Float32Array(n);for(let q=0;q<n;q++){de[q]=S.mid[q]-fe*S.si[q];dp[q]=S.mid[q]+fp*S.so[q];}const c=volumenMalla(superficie(P,de,nsel),nsel)*ml;return [c,volumenMalla(superficie(P,dp,nsel),nsel)*ml-c];};
   const biseccion=(f,a,b)=>{let fa=f(a),fb=f(b);if(fa*fb>0)return null;for(let i=0;i<40;i++){const m=(a+b)/2,fm=f(m);if(fa*fm<=0){b=m;fb=fm;}else{a=m;fa=fm;}}return (a+b)/2;};

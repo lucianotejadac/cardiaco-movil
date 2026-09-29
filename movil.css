@@ -141,7 +141,7 @@ dialog.progreso h2{font-size:1rem;margin-bottom:10px}
 .candadoAviso{position:fixed;right:74px;bottom:24px;z-index:30;max-width:calc(100vw - 96px);background:#0d1114;color:var(--texto);border:1px solid var(--linea);border-radius:8px;padding:7px 10px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
 .candadoAviso.visible{opacity:1}
 html.bloqueado main,html.bloqueado header{pointer-events:none}
-html.fijo,html.fijo body{overflow:hidden;overscroll-behavior:none}
+html.fijo{overflow:hidden;overscroll-behavior:none}
 html.fijo main,html.fijo header{touch-action:none}
 html.fijo main input[type=range]{touch-action:none}
 /* Que el boton no tape lo ultimo de la pagina */
@@ -191,3 +191,9 @@ footer{padding-bottom:76px}
 canvas.libre{aspect-ratio:auto;height:auto;image-rendering:auto;touch-action:pan-y;cursor:default}
 canvas.libre.ancho{width:100%}
 canvas.libre.clara{background:var(--fondo);max-width:170px;margin:0 auto}
+.ejesVivo{display:grid;grid-template-columns:auto auto 1fr;gap:6px 8px;align-items:center;margin-bottom:4px}
+.ejesVivo figure{width:104px}
+.ejesVivo figcaption{font-size:.62rem;color:var(--texto2);font-weight:600}
+.ejesVivo canvas{width:104px;height:104px;border-radius:6px}
+.ejesVivo .clave{font-size:.68rem;line-height:1.5;margin:0}
+.mini.activa{border-color:var(--acento);color:var(--acento);font-weight:700}
