@@ -134,7 +134,7 @@ const EjeEquipo=(()=>{
   const escalaVentana=disp&&w[0]&&w[1]&&w[1].high>w[1].low?(w[0].high-w[0].low)/(w[1].high-w[1].low):1;
   const nombre=`OSEM ${R.it} × ${R.sub}${R.ac?' con atenuación':''}${disp?' y dispersión':''}${R.fwhm?`, gaussiano ${String(R.fwhm).replace('.',',')} mm`:''}`;
   e.ocupado=true;e.detenido=false;const t0=performance.now(),pausa=()=>new Promise(q=>setTimeout(q,0));
-  Progreso.abrir(`Receta del equipo: ${nombre}`,cancelar,R.ac?'La atenuación de cada vista es la parte lenta: puede tardar minutos en el teléfono.':'');
+  Progreso.abrir(`Receta del equipo: ${nombre}`,cancelar,R.ac?'La atenuación de cada vista es la parte lenta: puede tardar minutos en la tablet.':'');
   try{
    const n=s.n,p=n*n,filas=filasDe(D,s,Math.max(6,Math.ceil(R.fwhm/s.spacing)+2));let mu=null;
    if(R.ac){
@@ -165,7 +165,7 @@ const EjeEquipo=(()=>{
   const hayVentana=s.views.some(v=>v.window===2),disp=R.dispersion&&hayVentana,w=s.windows||[],escalaVentana=disp&&w[0]&&w[1]&&w[1].high>w[1].low?(w[0].high-w[0].low)/(w[1].high-w[1].low):1;
   const nombre=`OSEM ${R.it} × ${R.sub}${R.ac?' con atenuación':''}${disp?' y dispersión':''}${R.fwhm>0?`, gaussiano ${String(R.fwhm).replace('.',',')} mm`:', sin filtro'}`;
   e.ocupado=true;e.detenido=false;const t0=performance.now(),pausa=()=>new Promise(q=>setTimeout(q,0));
-  Progreso.abrir(`Reconstruyendo: ${nombre}`,cancelar,R.ac?'La atenuación de cada vista es la parte lenta: puede tardar minutos en el teléfono.':'');
+  Progreso.abrir(`Reconstruyendo: ${nombre}`,cancelar,R.ac?'La atenuación de cada vista es la parte lenta: puede tardar minutos en la tablet.':'');
   try{
    const n=s.n,p=n*n,filas=filasDe(D,s,Math.max(6,Math.ceil(R.fwhm/s.spacing)+2));let mu=null;
    if(R.ac){

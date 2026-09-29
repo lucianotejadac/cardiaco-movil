@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=34">
+<link rel="stylesheet" href="movil.css?v=36">
 </head>
 <body>
 <header class="barra">
@@ -263,7 +263,7 @@
   <button id="qpsRevelar" type="button" class="boton ancho otro" hidden>Ver el resultado del equipo</button>
   <button id="qpsReferencia" type="button" class="vermas ancho">Volver al eje y a la receta del equipo</button>
 
-  <h3 class="qpsT">Resultados</h3>
+  <h3 class="qpsT" id="qpsTablaT">Resultados</h3>
   <table id="qpsTabla" class="qpsTabla"></table>
 
   <h3 class="qpsT">Mapa polar</h3>
@@ -303,7 +303,7 @@
   <h3 class="qpsT">Ventrículo en 3D</h3>
   <canvas id="qgs3d" class="libre gira" aria-label="Ventrículo en 3D: superficie interna que late y externa en alambre. Arrastra para girarlo."></canvas>
   <div class="recetas"><button id="qgsLatir" type="button" class="mini">■ Parar</button><span class="clave">Arrastra la imagen para girarlo. Gris, la superficie interna en cada intervalo; naranja, la externa en fin de diástole.</span></div>
-  <h3 class="qpsT">Resultados</h3>
+  <h3 class="qpsT" id="qgsTablaT">Resultados</h3>
   <table id="qgsTabla" class="qpsTabla"></table>
   <button id="qgsRevelar" type="button" class="boton ancho otro">Ver el resultado del equipo</button>
   <h3 class="qpsT">Volumen del ventrículo en el ciclo</h3>
@@ -402,13 +402,13 @@
 </main>
 <button id="candado" type="button" class="candado" aria-pressed="false" aria-label="Candado abierto: los deslizadores y los ejes en pantalla se pueden mover. Toca para cerrarlo."><span aria-hidden="true">🔓</span></button>
 <div id="candadoAviso" class="candadoAviso" role="status" aria-live="polite"></div>
-<footer><p>Uso educativo · Los DICOM no salen del teléfono · Versión móvil</p></footer>
+<footer><p>Uso educativo · Los DICOM no salen de la tablet · Versión tablet</p></footer>
 
 <dialog id="dCarga">
  <h2>Qué se carga</h2>
  <dl class="leyenda">
   <dt>El ZIP de U-Cursos</dt>
-  <dd>Es el mismo que descargaste para el computador. No hace falta descomprimirlo en el teléfono: la aplicación lo abre y lee solo un archivo de la carpeta Caso 1 › Estres.</dd>
+  <dd>Es el mismo que descargaste para el computador. No hace falta descomprimirlo en la tablet: la aplicación lo abre y lee solo un archivo de la carpeta Caso 1 › Estres.</dd>
   <dt>NM_estres.dcm, sin corregir</dt>
   <dd>Las proyecciones tal como salieron de la gammacámara, sin ninguna corrección.</dd>
   <dt>La corrección la hace la aplicación</dt>
@@ -418,9 +418,9 @@
   <dt>Lo que no se usa todavía</dt>
   <dd>El ZIP trae además una adquisición sincronizada con el electrocardiograma y el reposo. Aquí no se abren.</dd>
   <dt>Archivos sueltos o una carpeta</dt>
-  <dd>Es una forma provisional de cargar. Puedes elegir varios archivos DICOM o una carpeta con subcarpetas, aunque los archivos no tengan extensión. La aplicación lee el encabezado de cada uno y se queda con las proyecciones tomográficas originales que no están sincronizadas con el electrocardiograma ni reconstruidas. Si hay varias, prefiere la de estrés y la que no fue corregida por el equipo. Después busca la tomografía computada, la adquisición sincronizada y las reconstrucciones del equipo que comparten el mismo marco de referencia con esas proyecciones. Con una reconstrucción del equipo en eje corto, la reorientación ofrece «Usar el eje y la receta del equipo». La aplicación no muestra el nombre ni los datos del paciente. En algunos teléfonos el botón de carpeta no está disponible: en ese caso usa «Elegir archivos» y marca todos.</dd>
+  <dd>Es una forma provisional de cargar. Puedes elegir varios archivos DICOM o una carpeta con subcarpetas, aunque los archivos no tengan extensión. La aplicación lee el encabezado de cada uno y se queda con las proyecciones tomográficas originales que no están sincronizadas con el electrocardiograma ni reconstruidas. Si hay varias, prefiere la de estrés y la que no fue corregida por el equipo. Después busca la tomografía computada, la adquisición sincronizada y las reconstrucciones del equipo que comparten el mismo marco de referencia con esas proyecciones. Con una reconstrucción del equipo en eje corto, la reorientación ofrece «Usar el eje y la receta del equipo». La aplicación no muestra el nombre ni los datos del paciente. En algunas tablets el botón de carpeta no está disponible: en ese caso usa «Elegir archivos» y marca todos.</dd>
   <dt>Privacidad</dt>
-  <dd>El archivo se lee dentro del teléfono y no se envía a ningún servidor. Las proyecciones y el CT que la aplicación saca del ZIP quedan guardados en el navegador de este teléfono, así no hay que volver a elegir el ZIP cada vez que se abre la página o se publica una versión nueva. Para usar otro archivo, toca «Cambiar archivo».</dd>
+  <dd>El archivo se lee dentro de la tablet y no se envía a ningún servidor. Las proyecciones y el CT que la aplicación saca del ZIP quedan guardados en el navegador de esta tablet, así no hay que volver a elegir el ZIP cada vez que se abre la página o se publica una versión nueva. Para usar otro archivo, toca «Cambiar archivo».</dd>
  </dl>
  <details id="antecedente" hidden>
   <summary>Antecedente clínico del caso</summary>
@@ -695,20 +695,21 @@
 <script src="simulador95-psf.js?v=1"></script>
 <script src="simulador95-osem.js?v=1"></script>
 <script src="simulador95-pool.js?v=1"></script>
-<script src="osem-movil.js?v=4"></script>
+<script src="osem-movil.js?v=5"></script>
 <script src="cardiaco-core.js?v=1"></script>
 <script src="reorientar.js?v=8"></script>
 <script src="referencia.js?v=1"></script>
 <script src="caja.js?v=3"></script>
-<script src="comparador.js?v=3"></script>
+<script src="comparador.js?v=4"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="eje-equipo.js?v=5"></script>
+<script src="eje-equipo.js?v=6"></script>
 <script src="qps-nucleo.js?v=5"></script>
 <script src="qps.js?v=6"></script>
 <script src="caso7-constantes.js?v=1"></script>
 <script src="caso7-gatillado-constantes.js?v=1"></script>
 <script src="caso7-gatillado.js?v=3"></script>
 <script src="caso7.js?v=3"></script>
-<script src="movil.js?v=34"></script>
+<script src="apaisado.js?v=1"></script>
+<script src="movil.js?v=36"></script>
 </body>
 </html>

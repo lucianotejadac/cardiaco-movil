@@ -58,7 +58,7 @@ const OsemMovil=(()=>{
  const receta=x=>`OSEM ${x.iteraciones} × ${x.subconjuntos} ${x.ac?'con':'sin'} atenuación${x.filtro?`, gaussiano ${dec(x.fwhm,1)} mm`:', sin filtro'}`;
  async function reconstruir(x){
   if(o.ocupado)return null;o.ocupado=true;o.detenido=false;$('osemCorrer').disabled=true;
-  Progreso.abrir(receta(x),cancelar,x.ac?'La corrección de atenuación calcula, para cada una de las 64 vistas, cuánto tejido atraviesa cada punto hasta el detector: en el teléfono puede tardar unos minutos.':'');
+  Progreso.abrir(receta(x),cancelar,x.ac?'La corrección de atenuación calcula, para cada una de las 64 vistas, cuánto tejido atraviesa cada punto hasta el detector: en la tablet puede tardar unos minutos.':'');
   // Reparto de la barra: mapa μ 10 % (si hay atenuación), OSEM, filtro final 10 % (si hay filtro).
   const base=x.ac?.1:0,peso=1-base-(x.filtro?.1:0);
   const aviso=$('osemEstado'),s=o.s,t0=performance.now();

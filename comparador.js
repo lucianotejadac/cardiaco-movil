@@ -130,7 +130,7 @@ const Comparador=(()=>{
  async function reconstruir(){
   if(k.ocupado||!k.s)return;const modo=k.modo,metodo=k.metodo[modo],D=k.datos[modo];if(!D)return;
   detener();k.ocupado=true;k.detenido=false;$('cmpCorrer').disabled=true;const t0=performance.now(),nombre=nombreSim(modo,metodo);
-  Progreso.abrir(`Simulador: ${nombre}`,cancelar,modo==='saac'?'La atenuación de cada vista es la parte lenta: puede tardar minutos en el teléfono.':modo==='gat'?'Ocho reconstrucciones, una por intervalo del ciclo cardíaco.':'');
+  Progreso.abrir(`Simulador: ${nombre}`,cancelar,modo==='saac'?'La atenuación de cada vista es la parte lenta: puede tardar minutos en la tablet.':modo==='gat'?'Ocho reconstrucciones, una por intervalo del ciclo cardíaco.':'');
   try{
    const pausa=()=>new Promise(q=>setTimeout(q,0)),vols=[];
    if(modo==='trans'){

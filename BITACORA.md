@@ -536,3 +536,16 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **Paso 6.** Al pulsar «Ver el resultado del equipo» aparecen, junto a lo del estudiante, la curva de volumen y llenado del equipo y sus cuatro mapas polares. Son recortes del savescreen QGS de estrés que dejan fuera el bloque de identidad, guardados como `caso7-qgs-equipo-curva.png` y `caso7-qgs-equipo-mapas.png`. Siguen ocultos mientras el estudiante trabaja, igual que la tabla.
 
 **Validación.** Recorrido local en emulación de teléfono con el ZIP con saltos: registro inicial correcto, imágenes del equipo visibles al revelar, sin errores.
+
+## 2026-09-29 · Diseño para tablet apaisada
+
+**Contexto.** La aplicación deja de usarse en teléfono: se usará en una tablet en horizontal.
+
+**Decisiones.**
+- **Dos columnas desde 900 px de ancho.** `apaisado.js` reparte cada paso en un lienzo a la izquierda, con las imágenes, y un panel a la derecha, con controles, textos y botones. El panel queda fijo en pantalla y tiene su propio desplazamiento. Bajo 900 px todo vuelve a su orden original, así que la versión angosta sigue funcionando.
+- **Tamaños por paso**, para que cada imagen quepa en la altura sin desplazar: la fusión del registro es cuadrada y ocupa el alto; la reorientación muestra dos imágenes arriba y tres abajo; la caja muestra sus dos cortes y las dos proyecciones de referencia.
+- **Control de calidad comparando:** cuatro columnas, cine y sinograma arriba, suma y linograma abajo, sin corregir junto a corregido.
+- **Mapa polar y QGS:** los resultados a la izquierda se recorren con la página, y el panel deja a mano los ejes, la receta y la tabla. En QGS, el ventrículo 3D y la curva van lado a lado.
+- Los textos que decían «teléfono» ahora dicen «tablet».
+
+**Validación.** Recorrido del caso 7 en 1180 × 820 y en 390 × 844, sin errores.

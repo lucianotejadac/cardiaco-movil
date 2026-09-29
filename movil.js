@@ -99,7 +99,7 @@ async function memoria(modo,valor){
 }
 async function guardar(bytes,origen,ct,gat,equipo,ejes){
  try{await memoria('guardar',{bytes,origen,ct,gat,equipo,ejes:ejes||null,fecha:Date.now()});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}
- catch(err){console.warn('No se pudo guardar en el teléfono',err);}
+ catch(err){console.warn('No se pudo guardar en la tablet',err);}
 }
 async function recuperar(){
  let m=null;try{m=await memoria('leer');}catch(err){console.warn('No se pudo leer lo guardado',err);}
@@ -194,9 +194,9 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes){
   // advertencia en rojo y sin los antecedentes del caso 1.
   const propio=!esDelCaso&&String(origen).startsWith(PROPIO);estado.esDelCaso=esDelCaso;
   estado.aviso=esDelCaso?'':propio?'Archivo propio, no es el caso 1. ':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
-  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+(esDelCaso?String(origen).replace(PROPIO,''):origen)+(recuperado?' (guardado en este teléfono)':''),esDelCaso||propio?'ok':'error');
+  mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+(esDelCaso?String(origen).replace(PROPIO,''):origen)+(recuperado?' (guardado en esta tablet)':''),esDelCaso||propio?'ok':'error');
   $('titulo').textContent=esDelCaso?'SPECT cardíaco · Caso 1 · Estrés':'SPECT cardíaco · '+(crudo.description||'archivo propio');
-  Caso7.entrar(Caso7.esCaso7(crudo.frame));if(Caso7.activo){estado.aviso='';mensaje('Caso 7, estrés: '+origen+(recuperado?' (guardado en este teléfono)':''),'ok');}
+  Caso7.entrar(Caso7.esCaso7(crudo.frame));if(Caso7.activo){estado.aviso='';mensaje('Caso 7, estrés: '+origen+(recuperado?' (guardado en esta tablet)':''),'ok');}
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=!esDelCaso;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
@@ -289,10 +289,13 @@ function armar(){
   for(const tipo of ['cine','suma','sino','lino']){const f=figura(tipo,'',TIPOS[tipo]);f.append(verMas(DIALOGO[tipo],'Ver más'));r.append(f);}
   $('resumen').textContent=estado.resumen;
  }else{
-  const t1=document.createElement('div'),t2=document.createElement('div');t1.className=t2.className='columna';t1.textContent='Sin corregir';t2.textContent='Corregido';r.append(t1,t2);
-  // Primera fila las proyecciones, segunda el sinograma; bajando, suma y linograma.
-  for(const tipo of ['cine','sino','suma','lino']){r.append(figura(tipo,'',TIPOS[tipo]),figura(tipo,'C',TIPOS[tipo]),verMas(DIALOGO[tipo],'Ver más sobre '+TIPOS[tipo].toLowerCase().replace('imagen suma','la imagen suma').replace(/^(cine|sinograma|linograma)$/,'el $1'),'doble'));}
-  r.append(verMas('dCorregido','Ver más sobre la corrección','doble'));
+  const cab=(t,x)=>{const d=document.createElement('div');d.className='columna'+(x?' apaisada':'');d.textContent=t;return d;};
+  r.append(cab('Sin corregir'),cab('Corregido'),cab('Sin corregir',1),cab('Corregido',1));
+  const mas=tipo=>verMas(DIALOGO[tipo],'Ver más sobre '+TIPOS[tipo].toLowerCase().replace('imagen suma','la imagen suma').replace(/^(cine|sinograma|linograma)$/,'el $1'),'doble');
+  // Telefono: una fila por tipo (sin corregir y corregido). Tablet apaisada: dos tipos por fila, en cuatro columnas.
+  const grupos=typeof Apaisado!=='undefined'&&Apaisado.activo?[['cine','sino'],['suma','lino']]:[['cine'],['sino'],['suma'],['lino']];
+  for(const g of grupos){for(const tipo of g)r.append(figura(tipo,'',TIPOS[tipo]),figura(tipo,'C',TIPOS[tipo]));for(const tipo of g)r.append(mas(tipo));}
+  r.append(verMas('dCorregido','Ver más sobre la corrección','doble total'));
   $('resumen').textContent=estado.aviso+estado.correccion.resumen+' Toca «Ver más sobre la corrección».';
  }
  const f=estado.crudo;$('frame').max=f.frames.length-1;$('fila').max=f.n-1;
@@ -541,3 +544,5 @@ candado(false,false);
 window.MovilCardiaco={aQps,mostrarSolo,prepararCaso7,aQc7,estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo,aComparar};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();
+// Al pasar entre tablet apaisada y pantalla angosta, la rejilla del control de calidad se rearma.
+document.addEventListener('apaisado',()=>{if(estado.crudo)armar();});

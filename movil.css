@@ -217,3 +217,51 @@ body.caso7 #aQps,body.caso7 #aDirecto,body.caso7 #directoEstado,body.caso7 #equi
 html.bloqueado #qgs3d{pointer-events:none;touch-action:auto}
 /* Pantallas del equipo en el paso 6 del caso 7 (recortes del savescreen de QGS, sin identidad). */
 .equipoQgs{margin:.8rem 0;text-align:center}.equipoQgs figcaption{font-size:.85rem;color:#9ad;margin-bottom:.3rem}.equipoQgs img{max-width:100%;height:auto;border-radius:6px;display:block;margin:0 auto}
+
+/* ===== Tablet apaisada (apaisado.js reparte cada paso en lienzo y panel) ===== */
+.columna.apaisada{display:none}
+@media (min-width:900px){
+ :root{--arriba:96px}
+ .barra,.pasos7{max-width:none;padding-left:18px;padding-right:18px}
+ main{max-width:none;padding:4px 18px 8px}
+ #carga{max-width:720px;margin:8px auto}
+ section.dividida:not(.oculta){display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,420px);gap:18px;align-items:start}
+ .lienzo{min-width:0}
+ .panel{position:sticky;top:8px;max-height:calc(100vh - var(--arriba) - 8px);overflow-y:auto;overscroll-behavior:contain;padding:0 4px 80px 0;scrollbar-width:thin}
+ .panel>.cambio:first-child{margin-top:0}
+ .panel .controles{margin-top:8px}
+ body.comparar .controles{position:static;box-shadow:none}
+ body.comparar .clave{display:block}
+ #qps .controles.fijo{position:static;box-shadow:none}
+ body .lienzo .rejilla{max-width:none;margin:0}
+ /* Control de calidad: una rejilla de 2 x 2 que cabe en la altura; comparando, 4 columnas */
+ body:not(.comparar) #qc .lienzo .rejilla{max-width:calc(100vh - var(--arriba) - 140px);margin:0 auto}
+ body.comparar #qc .lienzo .rejilla{grid-template-columns:repeat(4,1fr)}
+ body.comparar #qc .lienzo .columna.apaisada{display:block}
+ body.comparar #qc .lienzo .vermas.doble{grid-column:span 2}
+ body.comparar #qc .lienzo .vermas.total{grid-column:1/-1}
+ /* Registro: la fusion, cuadrada, del alto de la pantalla */
+ #reg .lienzo .fusion{max-width:calc(100vh - var(--arriba) - 40px);margin:0 auto}
+ /* Reorientacion: dos imagenes arriba y tres abajo, todo a la vista */
+ #reo .lienzo{max-width:calc((100vh - var(--arriba) - 90px) / .84);margin:0 auto;width:100%}
+ #osem .lienzo,#cmp .lienzo{max-width:calc(2 * (100vh - var(--arriba) - 70px));margin:0 auto;width:100%}
+ /* Caja: las dos imagenes y, debajo, las dos proyecciones de referencia, todo a la vista */
+ #caja .lienzo{max-width:calc(100vh - var(--arriba) - 110px);margin:0 auto;width:100%}
+ #caja .lienzo .refProy{margin-top:4px}
+ #caja .lienzo .refProy .clave{margin:0 0 2px}
+ #gat .lienzo .rango canvas{max-width:420px}
+ /* Mapa polar y QGS: resultados a la izquierda, se recorren con la pagina; controles a la derecha */
+ #qps .lienzo>.qpsT:first-child{margin-top:0}
+ /* QGS: el ventriculo 3D y la curva lado a lado; debajo, mapas y cortes a todo el ancho */
+ #qgs7 .lienzo{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
+ #qgs7 .lienzo>*{grid-column:1/-1}
+ #qgs7 .lienzo>h3:nth-of-type(1){grid-column:1;grid-row:1;margin-top:0}
+ #qgs7 .lienzo>#qgs3d{grid-column:1;grid-row:2;max-width:100%}
+ #qgs7 .lienzo>.recetas{grid-column:1;grid-row:3}
+ #qgs7 .lienzo>h3:nth-of-type(2){grid-column:2;grid-row:1;margin-top:0}
+ #qgs7 .lienzo>#qgsCurva{grid-column:2;grid-row:2}
+ #qgs7 .lienzo>#qgsCurvaEquipo{grid-column:2;grid-row:3;margin-top:6px}
+ .ejesVivo figure,.ejesVivo canvas{width:120px}
+ .ejesVivo canvas{height:120px}
+ dialog{width:min(80vw,680px)}
+}
