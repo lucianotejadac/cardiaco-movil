@@ -103,6 +103,8 @@ const Caso7=(()=>{
   $('volverQgs').addEventListener('click',()=>{Gatillado7.parar();MovilCardiaco.mostrarSolo('reo');});
   new MutationObserver(()=>{if(!c.activo)return;const v=id=>!$(id).classList.contains('oculta');if(v('qc'))marcar(0);else if(v('reg'))marcar(1);else if(v('caja')||v('reo'))marcar(c.fase==='gat'?4:2);else if(v('qps'))marcar(3);else if(v('qgs7'))marcar(5);const vq=v('qgs7');if(c.vioQgs&&!vq)Gatillado7.parar();c.vioQgs=vq;}).observe(document.querySelector('main'),{subtree:true,attributes:true,attributeFilter:['class']});
  }
- return {iniciar,entrar,esCaso7,torcer,debeTorcer,volverDesdeCaja,guardarCompleta,estado:c,get activo(){return c.activo;}};
+ // Paso 2: el registro parte con la configuracion elegida por el docente.
+ const REGISTRO={plano:'axial',corte:{axial:42},mezcla:.5,nivel:.51,ancho:.82,ventana:'blando'};
+ return {REGISTRO,iniciar,entrar,esCaso7,torcer,debeTorcer,volverDesdeCaja,guardarCompleta,estado:c,get activo(){return c.activo;}};
 })();
 window.Caso7=Caso7;

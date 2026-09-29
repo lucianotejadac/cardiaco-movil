@@ -215,3 +215,5 @@ body.caso7 .solo7:not([hidden]){display:block}
 body.caso7 #aQps,body.caso7 #aDirecto,body.caso7 #directoEstado,body.caso7 #equipoBotones,body.caso7 #qc .tipoEquipo,body.caso7 #aOsem,body.caso7 #reo .otra.equipo,body.caso7 #reoEquipo,body.caso7 #reo .refProy{display:none}
 #qgs3d{width:100%;max-width:340px;aspect-ratio:1;margin:0 auto;border-radius:8px;touch-action:none;cursor:grab}
 html.bloqueado #qgs3d{pointer-events:none;touch-action:auto}
+/* Pantallas del equipo en el paso 6 del caso 7 (recortes del savescreen de QGS, sin identidad). */
+.equipoQgs{margin:.8rem 0;text-align:center}.equipoQgs figcaption{font-size:.85rem;color:#9ad;margin-bottom:.3rem}.equipoQgs img{max-width:100%;height:auto;border-radius:6px;display:block;margin:0 auto}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=33">
+<link rel="stylesheet" href="movil.css?v=34">
 </head>
 <body>
 <header class="barra">
@@ -308,6 +308,7 @@
   <button id="qgsRevelar" type="button" class="boton ancho otro">Ver el resultado del equipo</button>
   <h3 class="qpsT">Volumen del ventrículo en el ciclo</h3>
   <canvas id="qgsCurva" class="libre ancho" aria-label="Curva de volumen y de llenado en los ocho intervalos."></canvas>
+  <figure id="qgsCurvaEquipo" class="equipoQgs" hidden><figcaption>Curva del equipo: volumen en rojo (ml, eje izquierdo) y llenado en negro (ml/s, eje derecho)</figcaption><img src="caso7-qgs-equipo-curva.png?v=1" alt="Curva de volumen y de llenado que calculó el equipo en los ocho intervalos." loading="lazy"></figure>
   <h3 class="qpsT">Mapas polares</h3>
   <div class="rejilla">
    <figure><figcaption>Perfusión en fin de diástole (%)</figcaption><canvas id="qgsEd" class="libre"></canvas></figure>
@@ -315,6 +316,7 @@
    <figure><figcaption>Movimiento (0 a 10 mm)</figcaption><canvas id="qgsMov" class="libre"></canvas></figure>
    <figure><figcaption>Engrosamiento (%)</figcaption><canvas id="qgsEng" class="libre"></canvas></figure>
   </div>
+  <figure id="qgsMapasEquipo" class="equipoQgs" hidden><figcaption>Mapas polares del equipo: perfusión en fin de diástole y de sístole, movimiento y engrosamiento</figcaption><img src="caso7-qgs-equipo-mapas.png?v=1" alt="Los cuatro mapas polares que calculó el equipo para el gatillado de estrés." loading="lazy"></figure>
   <h3 class="qpsT">Fin de diástole y fin de sístole</h3>
   <canvas id="qgsCortes" class="libre ancho" aria-label="Eje corto, largo vertical y largo horizontal en fin de diástole y en fin de sístole."></canvas>
   <p id="qgsNota" class="dato"></p>
@@ -688,7 +690,7 @@
 <script src="cardiaco-casos.js?v=1"></script>
 <script src="correccion.js?v=2"></script>
 <script src="progreso.js?v=1"></script>
-<script src="registro.js?v=7"></script>
+<script src="registro.js?v=8"></script>
 <script src="algorithm.js?v=1"></script>
 <script src="simulador95-psf.js?v=1"></script>
 <script src="simulador95-osem.js?v=1"></script>
@@ -705,8 +707,8 @@
 <script src="qps.js?v=6"></script>
 <script src="caso7-constantes.js?v=1"></script>
 <script src="caso7-gatillado-constantes.js?v=1"></script>
-<script src="caso7-gatillado.js?v=2"></script>
-<script src="caso7.js?v=2"></script>
-<script src="movil.js?v=33"></script>
+<script src="caso7-gatillado.js?v=3"></script>
+<script src="caso7.js?v=3"></script>
+<script src="movil.js?v=34"></script>
 </body>
 </html>

@@ -180,6 +180,7 @@ const Gatillado7=(()=>{
   polar('qgsEd',res.mapas.ed,res.rho,100,res.segv.ed);polar('qgsEs',res.mapas.es,res.rho,100,res.segv.es);polar('qgsMov',res.mapas.mov,res.rho,10,res.segv.mov,true);polar('qgsEng',res.mapas.eng,res.rho,100,res.segv.eng);
   const E=res.E,a=CardiacoCore.angulosDe(E.eje[0],E.eje[1],E.eje[2]);
   $('qgsEstado').className='estado ok';$('qgsEstado').textContent=`Tu eje del gatillado: azimut ${dec(a.azimut,1)}°, elevación ${dec(a.elevacion,1)}°. Receta del equipo para el gatillado: OSEM 4 × 4, gaussiano 8,4 mm.${g.deMemoria?' Reconstrucción recuperada de lo guardado.':''}`;
+  $('qgsCurvaEquipo').hidden=$('qgsMapasEquipo').hidden=!g.revelar;
   $('qgsRevelar').textContent=g.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';
   $('qgsNota').textContent=g.revelar?`El equipo informó para el estrés: volumen de fin de diástole ${EQUIPO.edv} ml, de fin de sístole ${EQUIPO.esv} ml, fracción de eyección ${EQUIPO.ef} %. Los cuatro mapas del equipo traen un número por segmento; la calibración de esta sección se hizo con ellos, con el eje del equipo y sin los saltos.`:'Los números del equipo se ven al pulsar «Ver el resultado del equipo».';
  }

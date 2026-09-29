@@ -52,7 +52,7 @@ const Registro=(()=>{
  }
 
  // Entra al paso: s son las proyecciones (corregidas o no), ctBytes los cortes del ZIP.
- async function abrir({s,fuente,ctBytes,filaCorazon}){
+ async function abrir({s,fuente,ctBytes,filaCorazon,config}){
   const aviso=$('regEstado');
   if(!ctBytes||!ctBytes.length){aviso.textContent='Para el registro hace falta el CT, que viene en el ZIP. Toca «Cambiar archivo» y elige el ZIP «Cardiaco …» una vez más: desde ahí queda guardado con el CT.';aviso.className='estado error';return false;}
   if(r.s===s&&r.vol){pintar();return true;}
@@ -75,6 +75,11 @@ const Registro=(()=>{
    // axial, la posicion del maximo de la reconstruccion.
    const n=s.n,z=Math.max(0,Math.min(n-1,filaCorazon));let mi=0;for(let i=0;i<n*n;i++)if(sv[z*n*n+i]>sv[z*n*n+mi])mi=i;
    r.corte={axial:z,coronal:Math.floor(mi/n),sagital:mi%n};
+   // Configuracion de partida propia de un caso (plano, corte, mezcla, ventanas del SPECT y del CT).
+   r.ini={nivel:.65,ancho:.7};
+   if(config){if(config.plano)r.plano=config.plano;if(config.corte)Object.assign(r.corte,config.corte);for(const k of ['mezcla','nivel','ancho','ventana'])if(config[k]!=null)r[k]=config[k];r.ini={nivel:r.nivel,ancho:r.ancho};}
+   else{r.plano='axial';r.mezcla=.6;r.nivel=.65;r.ancho=.7;r.ventana='contorno';}
+   $('regVentana').value=r.ventana;
    r.listo=true;
    aviso.className='estado ok';aviso.textContent=`FBP con filtro rampa de las proyecciones ${fuente}, suavizada con un gaussiano de ${dec(FWHM,1)} mm. Tomó ${dec((performance.now()-t0)/1000,1)} s.`;
    pintar();return true;
@@ -162,7 +167,7 @@ const Registro=(()=>{
   $('regMezcla').addEventListener('input',e=>{r.mezcla=+e.target.value/100;pintar();});
   $('regNivel').addEventListener('input',e=>{r.nivel=+e.target.value/100;pintar();});
   $('regAncho').addEventListener('input',e=>{r.ancho=Math.max(.01,+e.target.value/100);pintar();});
-  $('regSpectInicial').addEventListener('click',()=>{r.nivel=.65;r.ancho=.7;pintar();});
+  $('regSpectInicial').addEventListener('click',()=>{const q=r.ini||{nivel:.65,ancho:.7};r.nivel=q.nivel;r.ancho=q.ancho;pintar();});
   $('regVentana').addEventListener('change',e=>{r.ventana=e.target.value;pintar();});
   $('regConfirmar').addEventListener('click',confirmar);
  }

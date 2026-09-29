@@ -528,3 +528,11 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 
 **Pendiente.** Paso 7, pantallas finales con el reposo.
 
+
+## 2026-09-29 · Caso 7: registro con configuración de partida y pantallas del equipo en el paso 6
+
+**Decisiones.**
+- **Paso 2.** En el caso 7 el registro parte en axial, corte 43 de 128, mezcla SPECT 50 %, ventana del SPECT de 10 % a 92 % (nivel 51, ancho 82) y CT en tejido blando, como pidió el docente. La configuración vive en `Caso7.REGISTRO` y se pasa a `Registro.abrir`. «Restablecer» vuelve a esa ventana, no a la general. Fuera del caso 7 el registro parte con los valores de siempre.
+- **Paso 6.** Al pulsar «Ver el resultado del equipo» aparecen, junto a lo del estudiante, la curva de volumen y llenado del equipo y sus cuatro mapas polares. Son recortes del savescreen QGS de estrés que dejan fuera el bloque de identidad, guardados como `caso7-qgs-equipo-curva.png` y `caso7-qgs-equipo-mapas.png`. Siguen ocultos mientras el estudiante trabaja, igual que la tabla.
+
+**Validación.** Recorrido local en emulación de teléfono con el ZIP con saltos: registro inicial correcto, imágenes del equipo visibles al revelar, sin errores.

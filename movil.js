@@ -353,7 +353,7 @@ async function aRegistro(){
  if(!estado.crudo||estado.ocupado)return;detener();
  $('qc').classList.add('oculta');$('reg').classList.remove('oculta');document.body.classList.remove('comparar');window.scrollTo(0,0);
  const f=estado.corr||estado.crudo;
- await Registro.abrir({s:f.s,fuente:estado.corr?'corregidas por la aplicación':'sin corregir',ctBytes:estado.ct,filaCorazon:estado.crudo.filaInicial});
+ await Registro.abrir({s:f.s,fuente:estado.corr?'corregidas por la aplicación':'sin corregir',ctBytes:estado.ct,filaCorazon:estado.crudo.filaInicial,config:Caso7.activo?Caso7.REGISTRO:null});
 }
 async function aOsem(){
  if(!Registro.estado.confirmado)return;Registro.cancelar();
