@@ -279,3 +279,10 @@ body.caso7 .segmento.solo7:not([hidden]){display:flex}
 dialog.grande{width:98vw;max-width:none;max-height:96vh;padding:8px;overflow:auto}
 dialog.grande img{display:block;width:100%;height:auto;margin-top:6px;cursor:zoom-out}
 dialog.grande .boton{margin:0}
+/* Aviso de la falla de mascara del reposo con atenuacion */
+.aviso{background:#2a1416;border:1px solid #ff8a80;border-left:4px solid #ff5252;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:.88rem;color:var(--texto)}
+.aviso p{margin:0 0 6px}
+.aviso b{color:#ffb3ab}
+#qpsTipo{margin:0 0 6px}
+body.caso7 p.aviso.solo7:not([hidden]){display:block}
+

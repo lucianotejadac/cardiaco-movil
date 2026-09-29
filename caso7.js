@@ -5,8 +5,9 @@
       del equipo, caja y orientacion de los ejes, que parten torcidos al azar; 4. reconstruccion
       del gatillado, caja y orientacion de sus ejes.
    B. Reposo: los mismos cuatro pasos con las proyecciones, el CT y la gatillada del reposo.
-   Despues: pantallas finales generadas con los ejes del estudiante; mapa polar y mapa QGS, cada
-   uno con un menu para ver el estres o el reposo.
+   Despues: pantallas finales generadas con los ejes del estudiante, con y sin atenuacion (la
+   reconstruccion sin atenuacion de cada fase se hace ahi, con la receta del equipo); mapa polar con
+   menus de fase y de atenuacion, y mapa QGS con menu de fase.
    Cada fase guarda lo suyo (reconstruccion, registro, ejes, correccion) para poder volver a ella.
    El caso se reconoce por la huella del marco de referencia de sus proyecciones de estres. */
 'use strict';
@@ -20,8 +21,8 @@ const Caso7=(()=>{
  const I={pantallas:8,mapa:9,qgs:10};
  // Receta con que el equipo reconstruyo cada fase (leida de sus DICOM de eje corto con atenuacion).
  const RECETA={estres:'OSEM 6 × 4 con corrección de atenuación y de dispersión, filtro gaussiano de 9 mm',reposo:'OSEM 6 × 4 con corrección de atenuación, filtro gaussiano de 9 mm'};
- const nueva=()=>({x:null,s:null,fuente:'',reg:null,inicial:null,inicialGat:null,entradaEstatica:null,entradaGat:null,ejes:null,ejesGat:null,gatBytes:null,correccion:null,estado:null,restaurar:false,restaurarGat:false});
- const c={activo:false,paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',qgs:'estres'},ocupado:false};
+ const nueva=()=>({x:null,xNoAC:null,xNoACfuente:'',s:null,fuente:'',reg:null,inicial:null,inicialGat:null,entradaEstatica:null,entradaGat:null,ejes:null,ejesGat:null,gatBytes:null,correccion:null,estado:null,restaurar:false,restaurarGat:false});
+ const c={activo:false,paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',tipo:'ac',qgs:'estres'},ocupado:false};
  const F=()=>c.F[c.fase],base=()=>c.fase==='reposo'?4:0;
  // Compatibilidad: lo de la fase activa se lee como antes (Caso7.estado.x, .s, .fuente, .reg).
  for(const k of ['x','s','fuente','reg'])Object.defineProperty(c,k,{get:()=>F()[k],enumerable:false});
@@ -32,7 +33,7 @@ const Caso7=(()=>{
  function entrar(activo,fase){
   if(fase&&c.activo){c.fase=fase;c.sub='estatico';titulo();receta();pintarPasos();return;}
   c.activo=!!activo;document.body.classList.toggle('caso7',c.activo);$('pasos7').hidden=!c.activo;
-  if(!c.activo)return;Object.assign(c,{paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',qgs:'estres'}});
+  if(!c.activo)return;Object.assign(c,{paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',tipo:'ac',qgs:'estres'}});
   if(window.Pantallas7)Pantallas7.olvidar();titulo();receta();pintarPasos();
  }
  function receta(){const p=$('a7Receta');if(p)p.textContent=`Receta del equipo para el ${MINUS[c.fase]}: ${RECETA[c.fase]}. Se reconstruye sobre las proyecciones que dejaste en el control de calidad, corregidas o no.`;}
@@ -56,7 +57,7 @@ const Caso7=(()=>{
    else if(P.id==='ejes'){if(!Fx.x)return;Fx.restaurar=true;abrirCajaEstatica();}
    else if(P.id==='ejesGat'){if(!Fx.entradaGat)return;Fx.restaurarGat=true;abrirCajaGat();}
    else if(P.id==='pantallas'){await abrirPantallas(false);return;}
-   else if(P.id==='mapa'){await abrirMapa(c.vista.mapa);return;}
+   else if(P.id==='mapa'){await abrirMapa(c.vista.mapa,c.vista.tipo);return;}
    else if(P.id==='qgs'){await abrirQgs(c.vista.qgs);return;}
    marcar(i);
   });
@@ -86,7 +87,7 @@ const Caso7=(()=>{
    const Fx=F(),mismo=Fx.x&&Fx.s===s&&Fx.fuente===fuente;
    Object.assign(Fx,{x,s,fuente,reg,entradaEstatica:null});
    // Con las mismas proyecciones la reconstruccion es la misma: se recupera el eje que ya habia dejado.
-   if(!mismo)Object.assign(Fx,{inicial:null,ejes:null,entradaGat:null,ejesGat:null,inicialGat:null,restaurar:false,restaurarGat:false});
+   if(!mismo)Object.assign(Fx,{xNoAC:null,inicial:null,ejes:null,entradaGat:null,ejesGat:null,inicialGat:null,restaurar:false,restaurarGat:false});
    else Fx.restaurar=true;
    abrirCajaEstatica();marcar(base()+2);
   }catch(err){const det=EjeEquipo.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción detenida.':'No se pudo reconstruir: '+(err.message||err);if(!det)console.error(err);}
@@ -96,10 +97,12 @@ const Caso7=(()=>{
  function abrirCajaEstatica(){
   const Fx=F(),s=Fx.s,n=s.n;c.sub='estatico';configurarRef(s);MovilCardiaco.prepararCaso7({s:{n,spacing:s.spacing}});
   Caja.abrir({entrada:Fx.entradaEstatica||(Fx.entradaEstatica={tipo:'osem',zArriba:true,data:Fx.x.completa,etiqueta:'receta del equipo'}),s:{n,spacing:s.spacing}});
+  const nota=$('a7NotaReposo');if(nota)nota.hidden=c.fase!=='reposo';
   botonSiguiente();MovilCardiaco.mostrarSolo('caja');
  }
  function abrirCajaGat(){
   const Fx=F(),s=Fx.s,n=s.n;c.sub='gat';configurarRef(s);MovilCardiaco.prepararCaso7({s:{n,spacing:s.spacing}});$('volverOsem').textContent=`← Volver a los ejes del ${MINUS[c.fase]}`;
+  const nota=$('a7NotaReposo');if(nota)nota.hidden=true;
   Caja.abrir({entrada:Fx.entradaGat,s:{n,spacing:s.spacing}});botonSiguiente();MovilCardiaco.mostrarSolo('caja');
  }
  function botonSiguiente(){
@@ -148,16 +151,28 @@ const Caso7=(()=>{
 
  /* ---------- resultados: pantallas finales, mapa polar y mapa QGS, con menu estres / reposo ---------- */
  const listo=f=>!!(c.F[f].x&&c.F[f].ejes),listoGat=f=>!!(c.F[f].entradaGat&&c.F[f].ejesGat);
- function datosMapa(f){const Fx=c.F[f];return {s:Fx.s,reg:Fx.reg,ref:Fx.x,fuente:Fx.fuente,marco:Fx.ejes.marco,centro:Fx.ejes.Cv.slice()};}
+ function datosMapa(f,tipo){const Fx=c.F[f];return {s:Fx.s,reg:Fx.reg,ref:tipo==='noac'?Fx.xNoAC:Fx.x,fuente:Fx.fuente,marco:Fx.ejes.marco,centro:Fx.ejes.Cv.slice(),fase:f,tipo:tipo||'ac'};}
+ // Reconstruccion sin atenuacion de una fase, con la receta del equipo para su eje corto sin
+ // atenuacion (EjeEquipo elige ese DICOM por el marco de referencia y el tipo). Se usa tus ejes.
+ async function reconstruirNoAC(f){
+  const Fx=c.F[f];if(Fx.xNoAC&&Fx.xNoACfuente===Fx.fuente)return Fx.xNoAC;
+  EjeEquipo.fijarTipo('noac');
+  try{const x=await EjeEquipo.ejecutar({s:Fx.s,reg:Fx.reg,fuente:Fx.fuente});if(!x)throw Error('se detuvo la reconstrucción sin atenuación del '+MINUS[f]);Fx.xNoAC=x;Fx.xNoACfuente=Fx.fuente;return x;}
+  finally{EjeEquipo.fijarTipo('ac');}
+ }
  async function cargarGat(f){const Fx=c.F[f];return Gatillado7.reconstruir({est:{gat:Fx.gatBytes,correccion:Fx.correccion},s:Fx.s,fuente:Fx.fuente,centro:Fx.x.centro});}
  function menu(id,f){document.querySelectorAll(`#${id} [data-fase7]`).forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.fase7===f));b.disabled=!(id==='qgsFase'?listoGat(b.dataset.fase7):listo(b.dataset.fase7));});}
- async function abrirMapa(f){
-  if(!listo(f))return;const aviso=$('qpsEstado');c.vista.mapa=f;titulo('Mapa polar · '+NOMBRE[f]);
+ function menuTipo(tipo){document.querySelectorAll('#qpsTipo [data-tipo7]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tipo7===tipo)));}
+ async function abrirMapa(f,tipo){
+  if(!listo(f))return;tipo=tipo||c.vista.tipo;const aviso=$('qpsEstado'),con=tipo==='noac'?'sin atenuación':'con atenuación';c.vista.mapa=f;c.vista.tipo=tipo;titulo(`Mapa polar · ${NOMBRE[f]} ${con}`);
   try{
-   Progreso.abrir(`Mapa polar del ${MINUS[f]} con tu eje`,null);Progreso.avance(null,'Bordes de la pared, límite normal y resultados…');
-   try{await Qps.abrirCaso7({...datosMapa(f),fase:f});}finally{Progreso.cerrar();}
-   const t=document.querySelector('#qps .columna');if(t)t.textContent=`Mapa polar y resultados · ${MINUS[f]} con atenuación`;
-   menu('qpsFase',f);MovilCardiaco.mostrarSolo('qps');marcar(I.mapa);
+   if(tipo==='noac')await reconstruirNoAC(f);
+   Progreso.abrir(`Mapa polar del ${MINUS[f]} ${con}, con tu eje`,null);Progreso.avance(null,'Bordes de la pared, límite normal y resultados…');
+   try{await Qps.abrirCaso7(datosMapa(f,tipo));}finally{Progreso.cerrar();}
+   // La receta en vivo reconstruye con el tipo que se esta viendo (mascara y escala del equipo).
+   EjeEquipo.fijarTipo(tipo);
+   const t=document.querySelector('#qps .columna');if(t)t.textContent=`Mapa polar y resultados · ${MINUS[f]} ${con}`;
+   menu('qpsFase',f);menuTipo(tipo);MovilCardiaco.mostrarSolo('qps');marcar(I.mapa);
   }catch(err){aviso.className='estado error';aviso.textContent='No se pudo construir el mapa polar: '+(err.message||err);console.error(err);}
  }
  async function abrirQgs(f){
@@ -174,14 +189,20 @@ const Caso7=(()=>{
  async function abrirPantallas(generar){
   if(!['estres','reposo'].every(f=>listo(f)&&listoGat(f))){$('reoEstado').className='estado error';$('reoEstado').textContent='Faltan pasos: para las pantallas finales hay que orientar los ejes del estrés y del reposo, estáticos y gatillados.';return;}
   titulo('Pantallas finales');MovilCardiaco.mostrarSolo('pantallas7');marcar(I.pantallas);
-  if(generar||!Pantallas7.hechas())await Pantallas7.generar({fases:['estres','reposo'].map(f=>({fase:f,nombre:NOMBRE[f],mapa:datosMapa(f),gat:{marco:c.F[f].ejesGat.marco,centro:c.F[f].ejesGat.Cv.slice()},cargarGat:()=>cargarGat(f)}))});
+  if(!generar&&Pantallas7.hechas())return;
+  const aviso=$('pantEstado');
+  try{for(const f of ['estres','reposo']){aviso.className='estado';aviso.textContent=`Reconstruyendo el ${MINUS[f]} sin atenuación con la receta del equipo…`;await reconstruirNoAC(f);}}
+  catch(err){const det=EjeEquipo.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción sin atenuación detenida. Pulsa «Volver a generar» para seguir.':'No se pudo reconstruir sin atenuación: '+(err.message||err);if(!det)console.error(err);return;}
+  await Pantallas7.generar({fases:['estres','reposo'].map(f=>({fase:f,nombre:NOMBRE[f],mapa:datosMapa(f,'ac'),mapaNoAC:datosMapa(f,'noac'),gat:{marco:c.F[f].ejesGat.marco,centro:c.F[f].ejesGat.Cv.slice()},cargarGat:()=>cargarGat(f)}))});
  }
 
  function iniciar(){
   $('a7Reconstruir').addEventListener('click',reconstruir);$('a7Mapa').addEventListener('click',siguiente);
-  $('a7Qgs').addEventListener('click',()=>conBloqueo(()=>abrirQgs(c.vista.qgs)));$('a7MapaDesdePantallas').addEventListener('click',()=>conBloqueo(()=>abrirMapa(c.vista.mapa)));
-  $('volverQgs').addEventListener('click',()=>{Gatillado7.parar();conBloqueo(()=>abrirMapa(c.vista.mapa));});
-  document.querySelectorAll('#qpsFase [data-fase7]').forEach(b=>b.addEventListener('click',()=>conBloqueo(()=>abrirMapa(b.dataset.fase7))));
+  $('a7Qgs').addEventListener('click',()=>conBloqueo(()=>abrirQgs(c.vista.qgs)));$('a7MapaDesdePantallas').addEventListener('click',()=>conBloqueo(()=>abrirMapa(c.vista.mapa,c.vista.tipo)));
+  $('pantRegenerar').addEventListener('click',()=>conBloqueo(()=>abrirPantallas(true)));
+  $('volverQgs').addEventListener('click',()=>{Gatillado7.parar();conBloqueo(()=>abrirMapa(c.vista.mapa,c.vista.tipo));});
+  document.querySelectorAll('#qpsFase [data-fase7]').forEach(b=>b.addEventListener('click',()=>conBloqueo(()=>abrirMapa(b.dataset.fase7,c.vista.tipo))));
+  document.querySelectorAll('#qpsTipo [data-tipo7]').forEach(b=>b.addEventListener('click',()=>conBloqueo(()=>abrirMapa(c.vista.mapa,b.dataset.tipo7))));
   document.querySelectorAll('#qgsFase [data-fase7]').forEach(b=>b.addEventListener('click',()=>conBloqueo(()=>abrirQgs(b.dataset.fase7))));
   new MutationObserver(()=>{if(!c.activo)return;const v=id=>!$(id).classList.contains('oculta');
    if(v('qc'))marcar(base());else if(v('reg'))marcar(base()+1);else if(v('caja')||v('reo'))marcar(base()+(c.sub==='gat'?3:2));else if(v('pantallas7'))marcar(I.pantallas);else if(v('qps'))marcar(I.mapa);else if(v('qgs7'))marcar(I.qgs);

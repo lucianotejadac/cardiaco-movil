@@ -12,15 +12,23 @@ const Qps=(()=>{
  const Q=QpsNucleo,$=id=>document.getElementById(id),dec=(x,d=0)=>Number(x).toFixed(d).replace('.',',');
  // Lo que informo el equipo en el caso de referencia (pantalla «Splash AC»).
  const INFORME='El informe médico describe un defecto inferolateral apical, medio y basal, de cerca de 10 % del ventrículo, reversible por completo en reposo, en las imágenes sin corrección de atenuación. Las imágenes con corrección de atenuación no se usaron para interpretar, por actividad intestinal en la fase de reposo.';
- const EQUIPO={'22d4f455':{serie:'Stress [Recon - AC ]',normales:'symbiaMaleStressTc_AC',volumen:43,pared:120,cuentas:1105,defecto:25,extension:21,tpd:16,forma:.46,excentricidad:.86,puntajes:{6:2,14:1,16:2,11:3,5:2,10:2,4:1},
+ const ZONA_ESTRES_NOAC='2914,2,89,1,1,6,88,8,87,10,87,9,87,10,85,12,84,11,84,12,84,13,82,15,82,15,81,16,81,15,81,15,81,15,33,1,47,14,27,2,1,6,46,14,26,10,46,14,26,10,47,11,28,10,48,9,29,11,48,4,33,15,81,16,79,18,78,18,78,18,78,17,80,16,80,16,80,15,80,16,79,17,79,16,79,17,79,16,80,16,81,14,82,9,1,3,83,7,89,6,12,1,76,3,93,1,2334',ZONA_REPOSO_NOAC='3968,1,94,2,92,4,91,6,90,7,93,2,4766';
+ // Clave: huella de la fase; con «|noac», la reconstruccion sin atenuacion.
+ const EQUIPO={'22d4f455':{serie:'Stress [Recon - AC ]',estado:'QC=1.38, IR=0.31',normales:'symbiaMaleStressTc_AC',volumen:43,pared:120,cuentas:1105,defecto:25,extension:21,tpd:16,forma:.46,excentricidad:.86,puntajes:{6:2,14:1,16:2,11:3,5:2,10:2,4:1},
   // Zona bajo el limite normal que dibujo QPS en el estres SIN atenuacion (96 x 96, largos de
   // corrida alternando fuera y dentro). El equipo no guardo el mapa con atenuacion.
-  zonaSinAtenuacion:'2914,2,89,1,1,6,88,8,87,10,87,9,87,10,85,12,84,11,84,12,84,13,82,15,82,15,81,16,81,15,81,15,81,15,33,1,47,14,27,2,1,6,46,14,26,10,46,14,26,10,47,11,28,10,48,9,29,11,48,4,33,15,81,16,79,18,78,18,78,18,78,17,80,16,80,16,80,15,80,16,79,17,79,16,79,17,79,16,80,16,81,14,82,9,1,3,83,7,89,6,12,1,76,3,93,1,2334',
+  zonaSinAtenuacion:ZONA_ESTRES_NOAC,
   informe:INFORME},
   // Reposo con atenuacion (pantalla «Splash AC»). El equipo marco «Mask Failure: QC=4.47»: su
   // mascara del ventriculo fallo. La referencia reproduce ese resultado tal como lo informo.
-  '474e44e4':{serie:'Rest [Recon - AC ]',normales:'symbiaMaleRestTc_AC',volumen:87,pared:197,cuentas:2173,defecto:18,extension:9,tpd:7,forma:.46,excentricidad:.93,puntajes:{6:2,11:2,5:2,4:1},
-  aviso:'Mask Failure: QC=4.47',informe:INFORME}};
+  '474e44e4':{serie:'Rest [Recon - AC ]',estado:'Mask Failure: QC=4.47',normales:'symbiaMaleRestTc_AC',volumen:87,pared:197,cuentas:2173,defecto:18,extension:9,tpd:7,forma:.46,excentricidad:.93,puntajes:{6:2,11:2,5:2,4:1},
+  aviso:'Mask Failure: QC=4.47',informe:INFORME},
+  // Sin atenuacion (pantalla QGS+QPS: QPS). El equipo si guardo estos mapas polares: la zona bajo el
+  // limite es la que dibujo y su imagen se muestra al revelar el resultado.
+  '22d4f455|noac':{serie:'Stress [Recon - NoAC ]',estado:'QC=1.12, IR=0.33',normales:'symbiaMaleStressTc_NC_F3D',volumen:42,pared:110,cuentas:356,defecto:12,extension:11,tpd:9,forma:.55,excentricidad:.81,puntajes:{14:2,16:1,11:2,5:1},
+  zonaSinAtenuacion:ZONA_ESTRES_NOAC,zonaPropia:true,imagen:'caso7-qps-noac-estres.png',informe:INFORME},
+  '474e44e4|noac':{serie:'Rest [Recon - NoAC ]',estado:'QC=1.41, IR=0.29',normales:'symbiaMaleRestTc_NC_F3D',volumen:52,pared:128,cuentas:557,defecto:1,extension:1,tpd:1,forma:.53,excentricidad:.83,puntajes:{14:1},
+  zonaSinAtenuacion:ZONA_REPOSO_NOAC,zonaPropia:true,imagen:'caso7-qps-noac-reposo.png',informe:INFORME}};
  const desplegar=(rle,n)=>{const z=new Uint8Array(n*n);let o=0,v=0;for(const k of rle.split(',').map(Number)){if(v)z.fill(1,o,o+k);o+=k;v^=1;}return z;};
  const N=192,q={listo:false,ocupado:false,dAz:0,dEl:0,t:null,guardadas:new Map()};
 
@@ -39,14 +47,15 @@ const Qps=(()=>{
  }
  function desempacar(e){const n=e.n,p=n*n,[x0,x1,y0,y1,z0,z1]=e.caja,w=x1-x0+1,h=y1-y0+1,k=z1-z0+1,vol=new Float32Array(n*p);for(let z=0;z<k;z++)for(let y=0;y<h;y++)vol.set(e.datos.subarray((z*h+y)*w,(z*h+y)*w+w),(z+z0)*p+(y+y0)*n+x0);return vol;}
  const claveReceta=r=>`${r.it}x${r.sub}|${Number(r.fwhm).toFixed(1)}|${r.ac?'ac':'noac'}|${r.dispersion?'disp':'sin'}`;
- const prefijo=(s,fuente)=>`${BD.version}|${cardiacoHash(s.frame)}|${fuente}|`;
- async function leerReferencia(s,fuente){
-  try{const e=await tienda('readonly',t=>t.get(prefijo(s,fuente)+'referencia'));if(!e||!e.vol)return null;return {...e.meta,sim:desempacar(e.vol),guardada:true};}
+ // Con atenuacion, la clave de siempre; sin atenuacion lleva «noac|» (otra mascara y otra escala).
+ const prefijo=(s,fuente,tipo=q.tipo)=>`${BD.version}|${cardiacoHash(s.frame)}|${fuente}|${tipo==='noac'?'noac|':''}`;
+ async function leerReferencia(s,fuente,tipo='ac'){
+  try{const e=await tienda('readonly',t=>t.get(prefijo(s,fuente,tipo)+'referencia'));if(!e||!e.vol)return null;return {...e.meta,sim:desempacar(e.vol),guardada:true};}
   catch(err){console.warn('No se pudo leer lo guardado',err);return null;}
  }
- async function guardarReferencia(s,fuente,x,cal){
+ async function guardarReferencia(s,fuente,x,cal,tipo='ac'){
   const meta={marco:x.marco,centro:x.centro,factor:x.factor,receta:x.receta,descripcion:x.descripcion,recetaEquipo:x.recetaEquipo,nombre:x.nombre,cal:cal||null,fecha:Date.now()};
-  try{await tienda('readwrite',t=>t.put({meta,vol:empacar(x.sim,s.n)},prefijo(s,fuente)+'referencia'));if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});return true;}
+  try{await tienda('readwrite',t=>t.put({meta,vol:empacar(x.sim,s.n)},prefijo(s,fuente,tipo)+'referencia'));if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});return true;}
   catch(err){console.warn('No se pudo guardar la referencia',err);return false;}
  }
  async function guardarReceta(r,vol){try{await tienda('readwrite',t=>t.put({receta:r,vol:empacar(vol,q.s.n),fecha:Date.now()},prefijo(q.s,q.fuente)+'receta|'+claveReceta(r)));}catch(err){console.warn('No se pudo guardar la reconstrucción',err);}}
@@ -67,7 +76,7 @@ const Qps=(()=>{
  /* ---------- preparacion: referencia y calibracion ---------- */
  // ref: resultado de EjeEquipo.ejecutar (simulador con la receta del equipo, en su escala y con su mascara).
  async function abrir({s,reg,ref,fuente,avance}){
-  const n=s.n;q.s=s;q.reg=reg;q.fuente=fuente;q.d={nx:n,ny:n,nz:n};q.sp=s.spacing;q.x=ref;q.marco=ref.marco;q.O0=ref.centro.slice();q.factor=ref.factor;
+  const n=s.n;q.caso7=false;q.tipo='ac';q.s=s;q.reg=reg;q.fuente=fuente;q.d={nx:n,ny:n,nz:n};q.sp=s.spacing;q.x=ref;q.marco=ref.marco;q.O0=ref.centro.slice();q.factor=ref.factor;
   q.recetaEquipo={...ref.receta};q.receta={...ref.receta};q.volRef=ref.sim;q.vol=ref.sim;q.dAz=0;q.dEl=0;
   q.obj=EQUIPO[cardiacoHash(s.frame)]||null;
   avance&&avance('Calibrando con la reconstrucción de referencia…');await new Promise(r=>setTimeout(r,30));
@@ -85,11 +94,11 @@ const Qps=(()=>{
  /* Caso 7: el eje de partida es el del estudiante; la calibracion viene congelada (constantes
     obtenidas con los datos sin saltos y el eje del equipo) o, si faltan, se hace aqui con el eje del
     equipo. La referencia del equipo queda oculta hasta que se pide. */
- async function abrirCaso7({s,reg,ref,fuente,marco,centro,fase}){
+ async function abrirCaso7({s,reg,ref,fuente,marco,centro,fase,tipo}){
   const n=s.n;q.caso7=true;q.revelar=false;q.s=s;q.reg=reg;q.fuente=fuente;q.d={nx:n,ny:n,nz:n};q.sp=s.spacing;q.x=ref;q.factor=ref.factor;
-  q.recetaEquipo={...ref.receta};q.receta={...ref.receta};q.volRef=ref.sim;q.vol=ref.sim;q.dAz=0;q.dEl=0;q.obj=EQUIPO[cardiacoHash(s.frame)]||null;
+  q.recetaEquipo={...ref.receta};q.receta={...ref.receta};q.volRef=ref.sim;q.vol=ref.sim;q.dAz=0;q.dEl=0;q.tipo=tipo==='noac'?'noac':'ac';const clave=cardiacoHash(s.frame)+(q.tipo==='noac'?'|noac':'');q.obj=EQUIPO[clave]||null;
   q.marcoEquipo=ref.marco;q.marco=marco;q.O0=centro.slice();
-  q.fase=fase||'estres';const KK=window.CASO7_CONSTANTES,kk=KK&&KK[cardiacoHash(s.frame)],K=kk?constantesDesde(kk):null;
+  q.fase=fase||'estres';const KK=window.CASO7_CONSTANTES,kk=KK&&KK[clave],K=kk?constantesDesde(kk):null;
   if(K){q.cal=K.cal;q.f=K.f;q.refSeg=K.refSeg;q.L=K.L;q.congelado=true;q.R0=Q.evaluar(q.volRef,q.d,ref.marco,ref.centro,q.cal,q.sp,N);}
   else{
    const c=Q.calibrar(q.volRef,q.d,ref.marco,ref.centro,q.sp,q.obj,N,ref.cal||null);q.cal=c.cal;q.congelado=false;const R=Q.medir(q.volRef,q.d,c.E,c.P,c.W,c.S,c.cal,q.sp,N);q.R0=R;
@@ -97,7 +106,7 @@ const Qps=(()=>{
    q.f={cuentas:q.obj.cuentas/R.medidas.cuentas,forma:q.obj.forma/R.medidas.forma,excentricidad:q.obj.excentricidad/R.medidas.excentricidad,extension:q.obj.extension/p.extension,severidad:q.obj.tpd/p.extensionArea};
    q.refSeg={};for(let k=1;k<=17;k++)q.refSeg[k]=p.valor[k]/(1.05-.1*(q.obj.puntajes[k]||0));
   }
-  if(!ref.guardada)await guardarReferencia(s,fuente,ref,q.cal);
+  if(!ref.guardada)await guardarReferencia(s,fuente,ref,q.cal,q.tipo);
   await leerRecetas();q.ref=resultado(q.R0);
   if(q.obj){const o=q.obj;Object.assign(q.ref,{volumen:o.volumen,pared:o.pared,cuentas:o.cuentas,defecto:o.defecto,extension:o.extension,tpd:o.tpd,forma:o.forma,excentricidad:o.excentricidad,puntajes:Object.fromEntries(Array.from({length:17},(_,i)=>[i+1,o.puntajes[i+1]||0])),sss:Object.values(o.puntajes).reduce((a,b)=>a+b,0)});}
   q.listo=true;controles();calcular();
@@ -248,7 +257,11 @@ const Qps=(()=>{
   $('qpsPolarTitulo').textContent=a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';$('qpsPolarRefTitulo').textContent=q.caso7?'Eje del equipo sobre esta reconstrucción':a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
   miniatura('qpsPuntajes',a.puntajes,150);miniatura('qpsPuntajesRef',q.ref.puntajes,150);$('qpsPuntajesCaja').hidden=!a.puntajes;
   cortes(a);splash(a);
-  $('qpsNota').textContent=q.obj?`${q.obj.informe} Base de normales del equipo: ${q.obj.normales}. El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. El equipo no guardó su mapa polar con atenuación: la zona de referencia ${q.obj.zonaSinAtenuacion?'parte de la que dibujó sin atenuación, que es la misma anatomía, y ':''}se extiende dentro de los segmentos que el equipo puntuó con atenuación hasta su ${q.obj.extension} %.${q.obj.aviso?` En este estudio el equipo marcó «${q.obj.aviso}»: su máscara del ventrículo falló e informó ${q.obj.volumen} ml de volumen, frente a 52 ml del mismo reposo sin atenuación. La referencia reproduce ese resultado tal como lo informó el equipo; compáralo con el tuyo.`:''}`:'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
+  const o=q.obj,estadoTxt=o&&o.estado?` Estado que informó el equipo: «${o.estado}».`:'';
+  $('qpsNota').textContent=o?`${o.informe} Serie del equipo: ${o.serie.trim()}, base de normales ${o.normales}.${estadoTxt} El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. `+(o.zonaPropia?'La zona bajo el límite de referencia es la que dibujó el equipo en su mapa polar sin atenuación; al pulsar «Ver el resultado del equipo» aparece su mapa.':`El equipo no guardó su mapa polar con atenuación: la zona de referencia ${o.zonaSinAtenuacion?'parte de la que dibujó sin atenuación, que es la misma anatomía, y ':''}se extiende dentro de los segmentos que el equipo puntuó con atenuación hasta su ${o.extension} %.`)+(o.aviso?' En este estudio el equipo marcó una falla de máscara: lee el aviso de arriba.':''):'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
+  // Falla de mascara del equipo: aviso siempre visible, con su explicacion.
+  const av=$('qpsAviso');if(av){av.hidden=!(q.caso7&&o&&o.aviso);if(!av.hidden)$('qpsAvisoTexto').innerHTML=`<b>El equipo marcó «${o.aviso}» en este estudio.</b> Su máscara del ventrículo se equivocó: informó ${o.volumen} ml de volumen y ${o.pared} ml de pared, cuando el mismo reposo sin atenuación da 52 ml y 128 ml. La causa es la actividad intestinal pegada a la cara inferior del corazón. La referencia de esta sección reproduce ese resultado fallido, así que tu resultado con atenuación en reposo también sale inflado. Compáralo con el reposo sin atenuación.`;}
+  const fe=$('qpsPolarEquipo');if(fe){const ver=q.caso7&&!oculto()&&o&&o.imagen;fe.hidden=!ver;if(ver){const im=fe.querySelector('img');if(im.getAttribute('src')!==o.imagen)im.src=o.imagen;$('qpsPolarEquipoTitulo').textContent=`Mapa polar que guardó el equipo · ${o.serie.trim()}`;}}
  }
  /* Los ejes a la vista mientras se mueven: corte transversal (se ve el azimut) y plano vertical que
     contiene el eje del equipo (se ve la elevacion). Celeste, el eje actual con un punto en el apex;

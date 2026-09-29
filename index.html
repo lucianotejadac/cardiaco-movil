@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=37">
+<link rel="stylesheet" href="movil.css?v=38">
 </head>
 <body>
 <header class="barra">
@@ -226,7 +226,9 @@
   <button id="volverQps" type="button" class="cambio">← Volver al control de calidad</button>
   <div class="columna">Mapa polar y resultados en vivo · estrés con atenuación</div>
   <div id="qpsFase" class="segmento solo7" role="group" aria-label="Fase"><button type="button" data-fase7="estres" aria-pressed="true">Estrés</button><button type="button" data-fase7="reposo" aria-pressed="false">Reposo</button></div>
+  <div id="qpsTipo" class="segmento solo7" role="group" aria-label="Corrección de atenuación"><button type="button" data-tipo7="ac" aria-pressed="true">Con atenuación</button><button type="button" data-tipo7="noac" aria-pressed="false">Sin atenuación</button></div>
   <p id="qpsEstado" class="estado"></p>
+  <div id="qpsAviso" class="aviso" hidden><p id="qpsAvisoTexto"></p><button type="button" class="vermas ancho" data-dialogo="dMascara">Ver más sobre la falla de máscara</button></div>
   <div class="controles fijo">
    <div class="ejesVivo">
     <figure><figcaption>Transversal · azimut</figcaption><canvas id="qpsEjeAxial" class="libre" aria-label="Corte transversal con el eje actual y el del equipo."></canvas></figure>
@@ -272,6 +274,7 @@
    <figure><figcaption id="qpsPolarTitulo">Ahora</figcaption><canvas id="qpsPolar" class="libre" aria-label="Mapa polar con el eje y la receta actuales."></canvas></figure>
    <figure><figcaption id="qpsPolarRefTitulo">Referencia</figcaption><canvas id="qpsPolarRef" class="libre" aria-label="Mapa polar de referencia, con el eje y la receta del equipo."></canvas></figure>
   </div>
+  <figure id="qpsPolarEquipo" class="equipoQgs" hidden><figcaption id="qpsPolarEquipoTitulo">Mapa polar que guardó el equipo</figcaption><img alt="Mapa polar que guardó el equipo, sin atenuación." loading="lazy"></figure>
   <p class="clave">Arriba, pared anterior; abajo, inferior; izquierda, septum; derecha, pared lateral. Centro, ápex; borde, base. En negro, la zona bajo el límite normal. Los números son el porcentaje anormal de cada segmento.</p>
 
   <div id="qpsPuntajesCaja">
@@ -329,6 +332,7 @@
   <div id="pantMenu" class="menuPant" role="group" aria-label="Pantalla"></div>
   <figure class="pantalla"><figcaption id="pantTitulo"></figcaption><canvas id="pantLienzo" class="libre ancho" aria-label="Pantalla final generada con tus resultados."></canvas></figure>
   <p id="pantNota" class="clave"></p>
+  <button id="pantMascara" type="button" class="vermas ancho" data-dialogo="dMascara" hidden>Ver más sobre la falla de máscara del reposo con atenuación</button>
   <button id="pantDescargar" type="button" class="boton ancho otro">Descargar esta pantalla (PNG)</button>
   <button id="pantRegenerar" type="button" class="vermas ancho">Volver a generar con los ejes guardados</button>
   <button id="a7MapaDesdePantallas" type="button" class="boton ancho solo7">Siguiente: mapa polar →</button>
@@ -338,6 +342,7 @@
   <button id="volverOsem" type="button" class="cambio">← Volver a la OSEM</button>
   <div class="columna">Segunda parte · ubicar el corazón</div>
   <p id="cajaEstado" class="estado"></p>
+  <p id="a7NotaReposo" class="aviso solo7" hidden>Fíjate en la actividad que queda bajo el corazón, en el intestino. En el reposo con atenuación esa actividad hizo fallar la máscara del ventrículo en el equipo («Mask Failure»). Lo verás en las pantallas finales y en el mapa polar.</p>
   <div class="rejilla">
    <figure><figcaption>Coronal</figcaption><canvas id="cajaCoronal" aria-label="Corte coronal con la caja. Toca dentro para moverla, en una esquina para cambiar su tamaño."></canvas></figure>
    <figure><figcaption>Sagital</figcaption><canvas id="cajaSagital" aria-label="Corte sagital con la caja. Toca dentro para moverla, en una esquina para cambiar su tamaño."></canvas></figure>
@@ -461,12 +466,39 @@
   <dd>Arriba hay dos imágenes pequeñas. En el corte transversal se ve el azimut: cuánto apunta el eje hacia la izquierda del paciente. En el plano vertical se ve la elevación: cuánto baja el ápex. La línea celeste es tu eje y la blanca punteada es el del equipo.</dd>
   <dt>Eje corto, largo vertical y largo horizontal</dt>
   <dd>Debajo de las dos imágenes del eje están los tres cortes estándar por el centro del ventrículo, con los bordes de la pared: en amarillo el interno, en naranja el externo y en blanco la base. Se rehacen cada vez que mueves un deslizador. Si ocupan mucho espacio, «Ocultar imágenes» deja solo los deslizadores.</dd>
+  <dt>Con y sin atenuación, estrés y reposo</dt>
+  <dd>En el caso 7, los dos menús de arriba eligen la fase y la corrección de atenuación. La reconstrucción sin atenuación la hace la aplicación al generar las pantallas finales, con la receta del equipo y tus ejes.</dd>
   <dt>De dónde sale el mapa con atenuación</dt>
-  <dd>El equipo no guardó su mapa polar con atenuación y el informe médico no usó esas imágenes. El mapa de referencia se armó con lo que sí hay: la zona que el equipo dibujó sin atenuación, que es la misma anatomía, extendida dentro de los segmentos que el equipo puntuó con atenuación hasta completar la extensión que informó, 21 %.</dd>
+  <dd>El equipo no guardó sus mapas polares con atenuación y el informe médico no usó esas imágenes. En el estrés, el mapa de referencia se armó con la zona que el equipo dibujó sin atenuación, que es la misma anatomía, extendida dentro de los segmentos que el equipo puntuó con atenuación hasta completar la extensión que informó, 21 %. En el reposo, dentro de los segmentos que puntuó, hasta su 9 %.</dd>
+  <dt>El mapa sin atenuación</dt>
+  <dd>El equipo sí guardó sus mapas polares sin atenuación. La zona bajo el límite de referencia es la que dibujó, y su imagen aparece al pulsar «Ver el resultado del equipo».</dd>
+  <dt>La falla de máscara del reposo con atenuación</dt>
+  <dd>El equipo marcó «Mask Failure: QC=4.47» en ese estudio y su volumen quedó inflado. La referencia reproduce ese resultado. «Ver más sobre la falla de máscara» lo explica.</dd>
   <dt>Lo que queda guardado</dt>
   <dd>Cada reconstrucción se guarda en este dispositivo, dentro del navegador. La próxima vez la sección se abre sin reconstruir, y las recetas que ya probaste aparecen como botones. No se envía nada a ningún servidor. Se pueden borrar con el botón de la receta.</dd>
   <dt>Lo que es una estimación</dt>
   <dd>El equipo no guardó su mapa polar con atenuación. La zona anormal de referencia se armó dentro de los segmentos que el equipo puntuó, hasta completar la extensión que informó. Los puntajes se calculan con una referencia por segmento que es de este paciente.</dd>
+ </dl>
+ <button type="button" class="boton" data-cerrar>Cerrar</button>
+</dialog>
+
+<dialog id="dMascara">
+ <h2>La falla de máscara del reposo con atenuación</h2>
+ <dl class="leyenda">
+  <dt>Qué es la máscara</dt>
+  <dd>Antes de medir, el programa del equipo (QPS y QGS) separa el ventrículo izquierdo del resto de la imagen con una máscara: una región que encierra al ventrículo y deja fuera todo lo demás. Dentro de ella busca la pared, el eje, la base y los bordes. Si la máscara encierra algo que no es ventrículo, todo lo que se mide después sale mal.</dd>
+  <dt>Qué avisó el equipo</dt>
+  <dd>En el reposo con corrección de atenuación, el programa escribió «Mask Failure: QC=4.47» en el lugar donde normalmente pone su control de calidad. QC es el indicador de calidad de esa segmentación. En los otros estudios estáticos de este paciente fue 1,12 (estrés sin atenuación), 1,41 (reposo sin atenuación) y 1,38 (estrés con atenuación). En este subió a 4,47 y el programa avisó que la máscara falló.</dd>
+  <dt>Por qué falló</dt>
+  <dd>En la fase de reposo hay actividad intestinal pegada a la cara inferior del corazón. Puedes verla en la caja del reposo, bajo el ventrículo. La corrección de atenuación sube las cuentas de lo que está más profundo en el cuerpo, como el intestino. Esa actividad queda unida a la pared, la máscara la incluye y el borde de la base se corre hacia abajo.</dd>
+  <dt>Cómo se reconoce en los números</dt>
+  <dd>Un corazón no cambia de tamaño por corregir la atenuación. Aquí el volumen del reposo salta de 52 ml sin atenuación a 87 ml con atenuación, y la pared de 128 ml a 197 ml. La dilatación transitoria (TID) con atenuación da 0,50, cuando sin atenuación da 0,86: el reposo parece el doble de grande que el estrés. La extensión del reposo pasa de 1 % a 9 %, con defectos en el borde de la base del mapa polar. Cuando dos series del mismo estudio dan tamaños tan distintos, el problema es la segmentación, no el paciente.</dd>
+  <dt>Qué hizo el médico</dt>
+  <dd>El informe no usó las imágenes con corrección de atenuación para interpretar, por la actividad intestinal del reposo. La interpretación se hizo con las imágenes sin atenuación, que segmentaron bien.</dd>
+  <dt>Qué hace el simulador</dt>
+  <dd>La referencia del reposo con atenuación reproduce lo que informó el equipo, con la falla incluida. Para llegar a sus 87 ml, la calibración deja la base en 150° (en el estrés con atenuación queda en 128°) y un borde interno muy delgado: 0,14 sigmas del perfil, frente a 0,43 en el estrés. El mismo reposo sin atenuación, que el equipo segmentó bien, queda con la base en 128° y 0,42 sigmas, como el estrés. Por eso tu resultado del reposo con atenuación también sale inflado, aunque tus ejes estén bien. Compáralo con el reposo sin atenuación.</dd>
+  <dt>Qué hacer en la práctica</dt>
+  <dd>Revisar la máscara cada vez que el programa avisa, o cuando el volumen cambia mucho entre series del mismo estudio. Se puede ajustar a mano o reprocesar la serie. Si no se logra una buena segmentación, se interpreta con las imágenes que sí segmentaron bien, como hizo el médico en este caso.</dd>
  </dl>
  <button type="button" class="boton" data-cerrar>Cerrar</button>
 </dialog>
@@ -716,13 +748,13 @@
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=7"></script>
 <script src="qps-nucleo.js?v=5"></script>
-<script src="qps.js?v=7"></script>
-<script src="caso7-constantes.js?v=2"></script>
+<script src="qps.js?v=8"></script>
+<script src="caso7-constantes.js?v=3"></script>
 <script src="caso7-gatillado-constantes.js?v=2"></script>
 <script src="caso7-gatillado.js?v=5"></script>
-<script src="pantallas7.js?v=1"></script>
-<script src="caso7.js?v=5"></script>
-<script src="apaisado.js?v=2"></script>
+<script src="pantallas7.js?v=2"></script>
+<script src="caso7.js?v=6"></script>
+<script src="apaisado.js?v=3"></script>
 <script src="movil.js?v=37"></script>
 </body>
 </html>

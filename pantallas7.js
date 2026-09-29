@@ -1,14 +1,15 @@
 /* Caso 7: pantallas finales generadas con los ejes que dejo el estudiante en las dos fases.
    Replican la disposicion de las pantallas que guardo el equipo, con los resultados de la
-   aplicacion: «Splash» y «QPS» con atenuacion (estres y reposo) y «QGS» de cada fase. Los rotulos
+   aplicacion: «Splash» y «QPS» sin y con atenuacion (estres y reposo) y «QGS» de cada fase. En las
+   de atenuacion se marca la falla de mascara que el equipo informo en el reposo. Los rotulos
    de las pantallas van como en el programa del equipo; cada pantalla dice arriba que la genero la
    aplicacion y que no es del equipo. No lleva datos de identidad. */
 'use strict';
 const Pantallas7=(()=>{
  const $=id=>document.getElementById(id),W=1600,H=900,NEGRO_X=1270,PANEL_X=1280;
  const VERDE='#00ff00',AMARILLO='#ffee00',ROJO='#c80000';
- const TIPOS=[['splash','Splash · con atenuación'],['qps','QPS · con atenuación'],['qgs_estres','QGS · estrés'],['qgs_reposo','QGS · reposo']];
- const p={hechas:false,lienzos:{},actual:'qps',ultimo:null,datos:null};
+ const TIPOS=[['splash_noac','Splash · sin atenuación'],['splash','Splash · con atenuación'],['qps_noac','QPS · sin atenuación'],['qps','QPS · con atenuación'],['qgs_estres','QGS · estrés'],['qgs_reposo','QGS · reposo']];
+ const p={hechas:false,lienzos:{},actual:'qps_noac',ultimo:null,datos:null};
  const f2=x=>Number(x).toFixed(2),f0=x=>String(Math.round(x));
  const nuevo=(w=W,h=H)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;};
 
@@ -60,16 +61,21 @@ const Pantallas7=(()=>{
   const sss=suma(ps),srs=suma(pr),sds=suma(rev),pc=x=>f0(100*x/68);
   return {rev,sss,srs,sds,filas:[['Results','tus ejes · simulador',true],['TID',f2(S.act.volumen/Rp.act.volumen)],['SSS',`${sss}     SRS  ${srs}     SDS  ${sds}`],['SS%',`${pc(sss)}     SR%  ${pc(srs)}     SD%  ${pc(sds)}`]]};
  }
- const filasQps=(F,nombre)=>{const a=F.act;return [['Dataset',nombre==='Estrés'?'Stress [Recon - AC ]':'Rest [Recon - AC ]'],['Recipe',`OSEM ${F.receta.it}×${F.receta.sub}, ${F.receta.fwhm} mm${F.receta.dispersion?', SC':''}`],['Volume',`${f0(a.volumen)}ml`],['Wall',`${f0(a.pared)}ml, ${f0(a.cuentas)}k`],['Defect',`${f0(a.defecto)}ml`],['Extent',`${f0(a.extension)}%`,a.extension>=5],['TPD',`${f0(a.tpd)}%`,a.tpd>=5],['Shape',`${f2(a.forma)} [SI],  ${f2(a.excentricidad)} [Ecc]`]];};
+ const filasQps=(F,nombre)=>{const a=F.act,ac=!!F.receta.ac,o=F.obj||{};return [['Dataset',`${nombre==='Estrés'?'Stress':'Rest'} [Recon - ${ac?'AC':'NoAC'} ]`],...(o.aviso?[['Equipo',o.aviso,true]]:[]),['Recipe',`OSEM ${F.receta.it}×${F.receta.sub}, ${F.receta.fwhm} mm${ac?', AC':''}${F.receta.dispersion?', SC':''}`],['Volume',`${f0(a.volumen)}ml`],['Wall',`${f0(a.pared)}ml, ${f0(a.cuentas)}k`],['Defect',`${f0(a.defecto)}ml`],['Extent',`${f0(a.extension)}%`,a.extension>=5],['TPD',`${f0(a.tpd)}%`,a.tpd>=5],['Shape',`${f2(a.forma)} [SI],  ${f2(a.excentricidad)} [Ecc]`]];};
  function panelQps(ctx,S,Rp){
   const g=globales(S,Rp);let y=66;y=recuadro(ctx,y,g.filas);y=recuadro(ctx,y,filasQps(S,'Estrés'));y=recuadro(ctx,y,filasQps(Rp,'Reposo'));
   const l=98;diana(ctx,PANEL_X+8,y+4,l,S.act.puntajes||{},'Str');diana(ctx,PANEL_X+8+l+6,y+4,l,Rp.act.puntajes||{},'Rst');diana(ctx,PANEL_X+8+2*(l+6),y+4,l,g.rev,'Rev');
+  // Falla de mascara que informo el equipo (reposo con atenuacion): recuadro rojo con lo que hay que saber.
+  const o=[S,Rp].map(F=>F.obj).find(x=>x&&x.aviso);
+  if(o&&[S,Rp].some(F=>F.receta.ac)){let yy=y+l+30;const w=W-PANEL_X-10,lineas=[`El equipo marcó «${o.aviso}»`,'en el reposo con atenuación: su máscara',`incluyó actividad intestinal. Informó ${o.volumen} ml`,'de volumen, frente a 52 ml sin atenuación.','Los números del reposo con atenuación y','el TID quedan inflados: interpreta con las','imágenes sin atenuación, como el informe.'];
+   ctx.fillStyle='#ffe3e0';ctx.fillRect(PANEL_X+4,yy,w,14+lineas.length*18);ctx.strokeStyle=ROJO;ctx.lineWidth=2;ctx.strokeRect(PANEL_X+5,yy+1,w-2,12+lineas.length*18);ctx.lineWidth=1;
+   lineas.forEach((s,i)=>texto(ctx,s,PANEL_X+12,yy+20+i*18,i?'#000':ROJO,i?13:14));}
   return g;
  }
 
  /* ---------- las cuatro pantallas ---------- */
  function pantallaQps(S,Rp){
-  const c=nuevo(),ctx=c.getContext('2d');fondo(ctx,'QGS+QPS: QPS · con atenuación · Stress [Recon - AC] / Rest [Recon - AC]');
+  const ac=!!S.receta.ac,k=ac?'AC':'NoAC',c=nuevo(),ctx=c.getContext('2d');fondo(ctx,`QGS+QPS: QPS · ${ac?'con':'sin'} atenuación · Stress [Recon - ${k}] / Rest [Recon - ${k}]`);
   const w=520,h=S.cortes.height*w/S.cortes.width;
   texto(ctx,'Stress',14,82,VERDE,17);ctx.drawImage(S.cortes,12,90,w,h);texto(ctx,'Rest',14,90+h+30,VERDE,17);ctx.drawImage(Rp.cortes,12,98+h+22,w,h);
   const L=320;texto(ctx,'Stress Extent (%)',570+L/2,84,VERDE,17,'center');ctx.drawImage(S.polar,570,92,L,L);
@@ -79,12 +85,12 @@ const Pantallas7=(()=>{
   panelQps(ctx,S,Rp);return c;
  }
  function pantallaSplash(S,Rp){
-  const c=nuevo(),ctx=c.getContext('2d');fondo(ctx,'Splash AC · Stress [Recon - AC] / Rest [Recon - AC]');
+  const ac=!!S.receta.ac,k=ac?'AC':'NoAC',c=nuevo(),ctx=c.getContext('2d');fondo(ctx,`Splash ${ac?'AC':'NO AC'} · Stress [Recon - ${k}] / Rest [Recon - ${k}]`);
   const lado=84,x0=12,fila=(img,desde,n,y,rot)=>{ctx.drawImage(img,desde*lado,0,n*lado,lado,x0,y,n*lado,lado);texto(ctx,rot,x0+2,y-3,VERDE,13);for(let k=0;k<n;k++)texto(ctx,String(desde+k+1),x0+k*lado+lado-4,y+13,VERDE,11,'right');};
   let y=80;const paso=lado+19;
-  for(const [F,n] of [[S,'Stress'],[Rp,'Rest']]){fila(F.filas.corto,0,14,y,`${n} [Recon - AC] · SAX, del ápex a la base`);y+=paso;fila(F.filas.corto,14,14,y,`${n} [Recon - AC] · SAX`);y+=paso;}
-  for(const [F,n] of [[S,'Stress'],[Rp,'Rest']]){fila(F.filas.vertical,0,14,y,`${n} [Recon - AC] · VLA, del septum a la pared lateral`);y+=paso;}
-  for(const [F,n] of [[S,'Stress'],[Rp,'Rest']]){fila(F.filas.horizontal,0,14,y,`${n} [Recon - AC] · HLA, de la pared anterior a la inferior`);y+=paso;}
+  for(const [F,n] of [[S,'Stress'],[Rp,'Rest']]){fila(F.filas.corto,0,14,y,`${n} [Recon - ${k}] · SAX, del ápex a la base`);y+=paso;fila(F.filas.corto,14,14,y,`${n} [Recon - ${k}] · SAX`);y+=paso;}
+  for(const [F,n] of [[S,'Stress'],[Rp,'Rest']]){fila(F.filas.vertical,0,14,y,`${n} [Recon - ${k}] · VLA, del septum a la pared lateral`);y+=paso;}
+  for(const [F,n] of [[S,'Stress'],[Rp,'Rest']]){fila(F.filas.horizontal,0,14,y,`${n} [Recon - ${k}] · HLA, de la pared anterior a la inferior`);y+=paso;}
   panelQps(ctx,S,Rp);return c;
  }
  function pantallaQgs(G,nombre){
@@ -106,29 +112,32 @@ const Pantallas7=(()=>{
   opciones=opciones||p.ultimo;if(!opciones)return;p.ultimo=opciones;const aviso=$('pantEstado'),t0=performance.now();
   aviso.className='estado';aviso.textContent='Generando las pantallas con tus ejes…';$('pantRegenerar').disabled=true;$('a7MapaDesdePantallas').disabled=true;
   try{
-   const qps={},qgs={};
+   const qps={},noac={},qgs={};
    for(const F of opciones.fases){
-    Progreso.abrir('Pantallas finales',null);Progreso.avance(null,`Mapa polar del ${F.nombre.toLowerCase()} con tu eje…`);await new Promise(r=>setTimeout(r,30));
-    try{await Qps.abrirCaso7({...F.mapa,fase:F.fase});qps[F.fase]=Qps.instantanea();}finally{Progreso.cerrar();}
+    Progreso.abrir('Pantallas finales',null);Progreso.avance(null,`Mapas polares del ${F.nombre.toLowerCase()}, con y sin atenuación, con tu eje…`);await new Promise(r=>setTimeout(r,30));
+    try{await Qps.abrirCaso7({...F.mapa,fase:F.fase,tipo:'ac'});qps[F.fase]=Qps.instantanea();await Qps.abrirCaso7({...F.mapaNoAC,fase:F.fase,tipo:'noac'});noac[F.fase]=Qps.instantanea();}finally{Progreso.cerrar();}
     if(!await F.cargarGat())throw Error('No se pudo recuperar el gatillado del '+F.nombre.toLowerCase()+'.');
     Progreso.abrir('Pantallas finales',null);Progreso.avance(null,`Mapa QGS del ${F.nombre.toLowerCase()} con tu eje…`);await new Promise(r=>setTimeout(r,30));
     try{await Gatillado7.abrir(F.gat);Gatillado7.parar();qgs[F.fase]=Gatillado7.instantanea();}finally{Progreso.cerrar();}
    }
    Progreso.abrir('Pantallas finales',null);Progreso.avance(null,'Armando las pantallas…');await new Promise(r=>setTimeout(r,30));
-   try{p.lienzos={splash:pantallaSplash(qps.estres,qps.reposo),qps:pantallaQps(qps.estres,qps.reposo),qgs_estres:pantallaQgs(qgs.estres,'Estrés'),qgs_reposo:pantallaQgs(qgs.reposo,'Reposo')};}finally{Progreso.cerrar();}
-   p.datos={qps,qgs};p.hechas=true;menu();mostrar(p.actual);
-   aviso.className='estado ok';aviso.textContent=`Cuatro pantallas generadas con tus ejes en ${(performance.now()-t0)/1000>=10?Math.round((performance.now()-t0)/1000):((performance.now()-t0)/1000).toFixed(1).replace('.',',')} s. Compáralas con las que guardó el equipo; en el mapa polar y en el mapa QGS puedes ver el resultado del equipo.`;
+   try{p.lienzos={splash_noac:pantallaSplash(noac.estres,noac.reposo),splash:pantallaSplash(qps.estres,qps.reposo),qps_noac:pantallaQps(noac.estres,noac.reposo),qps:pantallaQps(qps.estres,qps.reposo),qgs_estres:pantallaQgs(qgs.estres,'Estrés'),qgs_reposo:pantallaQgs(qgs.reposo,'Reposo')};}finally{Progreso.cerrar();}
+   p.datos={qps,noac,qgs};p.hechas=true;menu();mostrar(p.actual);
+   aviso.className='estado ok';aviso.textContent=`Seis pantallas generadas con tus ejes en ${(performance.now()-t0)/1000>=10?Math.round((performance.now()-t0)/1000):((performance.now()-t0)/1000).toFixed(1).replace('.',',')} s. Compáralas con las que guardó el equipo; en el mapa polar y en el mapa QGS puedes ver el resultado del equipo.`;
   }catch(err){aviso.className='estado error';aviso.textContent='No se pudieron generar las pantallas: '+(err.message||err);console.error(err);}
   finally{$('pantRegenerar').disabled=false;$('a7MapaDesdePantallas').disabled=false;}
  }
  function menu(){const m=$('pantMenu');m.replaceChildren(...TIPOS.map(([k,t])=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.dataset.pant=k;b.setAttribute('aria-pressed',String(k===p.actual));b.addEventListener('click',()=>mostrar(k));return b;}));}
- const NOTAS={splash:'Toca la pantalla para verla ampliada. Cortes de las dos fases con tus ejes: 28 ejes cortos del ápex a la base, 14 largos verticales y 14 largos horizontales por fase. Cada fase va en su propia escala de color, como en el equipo.',
-  qps:'Toca la pantalla para verla ampliada. Mapas polares con atenuación de las dos fases, con tu eje y la receta del equipo. En negro, bajo el límite normal. La reversibilidad es lo que está bajo el límite en estrés y no en reposo. A la derecha, los números y los puntajes por segmento.',
+ const MASCARA=' Ojo con el reposo con atenuación: el equipo marcó «Mask Failure: QC=4.47». Su máscara incluyó actividad intestinal y el volumen del reposo quedó en 87 ml, frente a 52 ml sin atenuación. Por eso el TID con atenuación sale cerca de 0,5 y aparecen defectos en la base del reposo. La referencia reproduce esa falla, así que tus números del reposo con atenuación también salen inflados.';
+ const NOTAS={splash_noac:'Toca la pantalla para verla ampliada. Cortes sin atenuación de las dos fases con tus ejes: 28 ejes cortos del ápex a la base, 14 largos verticales y 14 largos horizontales por fase. Estas son las imágenes con que se interpretó el estudio.',
+  splash:'Toca la pantalla para verla ampliada. Cortes con atenuación de las dos fases con tus ejes: 28 ejes cortos del ápex a la base, 14 largos verticales y 14 largos horizontales por fase. Cada fase va en su propia escala de color, como en el equipo.'+MASCARA,
+  qps_noac:'Toca la pantalla para verla ampliada. Mapas polares sin atenuación de las dos fases, con tu eje y la receta del equipo. En negro, bajo el límite normal. La reversibilidad es lo que está bajo el límite en estrés y no en reposo. El equipo guardó esta misma pantalla: compárala.',
+  qps:'Toca la pantalla para verla ampliada. Mapas polares con atenuación de las dos fases, con tu eje y la receta del equipo. En negro, bajo el límite normal. La reversibilidad es lo que está bajo el límite en estrés y no en reposo. A la derecha, los números y los puntajes por segmento.'+MASCARA,
   qgs_estres:'Toca la pantalla para verla ampliada. Gatillado del estrés con tu eje: cortes en fin de diástole y de sístole, ventrículo en fin de diástole, los cuatro mapas de QGS, curva de volumen y llenado.',
   qgs_reposo:'Toca la pantalla para verla ampliada. Gatillado del reposo con tu eje: cortes en fin de diástole y de sístole, ventrículo en fin de diástole, los cuatro mapas de QGS, curva de volumen y llenado.'};
  function mostrar(k){
   if(!p.lienzos[k])return;p.actual=k;const src=p.lienzos[k],c=$('pantLienzo');c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);
-  $('pantTitulo').textContent=TIPOS.find(t=>t[0]===k)[1];$('pantNota').textContent=NOTAS[k];document.querySelectorAll('#pantMenu [data-pant]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pant===k)));
+  $('pantTitulo').textContent=TIPOS.find(t=>t[0]===k)[1];$('pantNota').textContent=NOTAS[k];$('pantMascara').hidden=!(k==='splash'||k==='qps');document.querySelectorAll('#pantMenu [data-pant]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pant===k)));
  }
  function descargar(){const c=p.lienzos[p.actual];if(!c)return;c.toBlob(b=>{if(!b)return;const a=document.createElement('a'),u=URL.createObjectURL(b);a.href=u;a.download=`caso7_${p.actual}.png`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);},'image/png');}
  // Tocar la pantalla la abre ampliada, a todo el ancho de la tablet.
@@ -137,7 +146,8 @@ const Pantallas7=(()=>{
   if(!d){d=document.createElement('dialog');d.id='dPantallaGrande';d.className='grande';const b=document.createElement('button');b.type='button';b.className='boton otro';b.textContent='Cerrar';b.addEventListener('click',()=>d.close());const im=document.createElement('img');im.alt='Pantalla final ampliada.';im.addEventListener('click',()=>d.close());d.append(b,im);document.body.append(d);}
   d.querySelector('img').src=c.toDataURL('image/png');d.showModal();
  }
- function iniciar(){$('pantDescargar').addEventListener('click',descargar);$('pantRegenerar').addEventListener('click',()=>generar());$('pantLienzo').addEventListener('click',ampliar);}
+ // «Volver a generar» lo maneja el recorrido (caso7.js): primero asegura las reconstrucciones sin atenuacion.
+ function iniciar(){$('pantDescargar').addEventListener('click',descargar);$('pantLienzo').addEventListener('click',ampliar);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
  function olvidar(){p.hechas=false;p.lienzos={};p.ultimo=null;p.datos=null;}
  return {generar,mostrar,olvidar,hechas:()=>p.hechas,estado:p};

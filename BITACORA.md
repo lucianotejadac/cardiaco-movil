@@ -575,3 +575,16 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - Se quitó el guardado de la reconstrucción completa sin máscara, que ya nadie leía.
 
 **Validación.** Recorrido completo con clics: volver del paso 3 al registro y pulsar otra vez el paso 3 reconstruye de nuevo (53 s en el computador); el paso 4 reconstruye el gatillado en las dos fases.
+
+## 2026-09-29 · Caso 7: sin atenuación y falla de máscara explicada
+
+**Contexto.** El docente pidió incluir las imágenes sin atenuación, ser explícito con la falla de máscara del reposo con atenuación y explicarla dentro del simulador.
+
+**Decisiones.**
+- **Reconstrucción sin atenuación de cada fase** al generar las pantallas finales, con la receta del equipo leída de su eje corto sin atenuación (OSEM 6 × 4, 9 mm) y los ejes del estudiante. El equipo usó el mismo eje para sus series con y sin atenuación.
+- **Pantallas finales: seis.** Splash y QPS sin atenuación (las que el equipo guardó y con las que se interpretó), Splash y QPS con atenuación, QGS del estrés y del reposo.
+- **Mapa polar con dos menús**: fase (estrés, reposo) y atenuación (con, sin). Sin atenuación, la referencia se calibra contra la pantalla QPS sin atenuación del equipo, con la zona bajo el límite que dibujó, y al revelar el resultado se ve el mapa polar que guardó el equipo (recortes sin identidad). Constantes congeladas `22d4f455|noac` y `474e44e4|noac`, obtenidas con el ZIP sin saltos y el eje del equipo.
+- **Falla de máscara, explícita**: aviso rojo siempre visible en el mapa polar del reposo con atenuación; fila «Equipo: Mask Failure: QC=4.47» y recuadro rojo en las pantallas con atenuación; nota en la caja del reposo que señala la actividad intestinal; y un diálogo «La falla de máscara del reposo con atenuación»: qué es la máscara, qué avisó el equipo (QC 4,47 frente a 1,12, 1,41 y 1,38 en los otros estudios), por qué falló, cómo se reconoce en los números (52 → 87 ml, TID 0,50 frente a 0,86, extensión 1 % → 9 %), qué hizo el médico, qué hace el simulador (base en 150° y borde interno de 0,14 sigmas para reproducir los 87 ml; el mismo reposo sin atenuación queda en 128° y 0,42) y qué hacer en la práctica.
+- Las reconstrucciones guardadas del mapa polar llevan el tipo en la clave, para no mezclar con y sin atenuación.
+
+**Validación.** Recorrido completo con clics. Con los ejes del equipo y sin saltos, los mapas sin atenuación dan los números del equipo (estrés 42 ml, extensión 11 %, SSS 6; reposo 52 ml, 1 %, SRS 1). Con el estudiante simulado (centro corrido un vóxel por eje y eje a 2°), el estrés sin atenuación da SSS 15 frente a 6: los puntajes son sensibles al centro.
