@@ -476,3 +476,13 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 
 **Validación.** En local, emulación de teléfono, con el ZIP del caso 7. Primera vez: 45 s hasta la sección. Recargando la página, sin volver a elegir el ZIP: 0,3 s, mismos resultados. Receta ya probada: menos de 1 s. Bajando 1400 px, con el candado cerrado o abierto, los ejes siguen a la vista.
 
+## 2026-09-29 · El candado solo bloquea deslizadores y ejes en pantalla
+
+**Contexto.** El docente indicó que el candado solo debe bloquear los deslizadores y los ejes en pantalla. Antes, cerrado dejaba solo desplazar la página y abierto impedía desplazarla.
+
+**Decisiones.**
+- **La página siempre se desplaza y los botones siempre funcionan**, con el candado abierto o cerrado.
+- **Cerrado bloquea** los deslizadores, sus botones − y +, y las imágenes donde se arrastran ejes, centros o cursores (todas las del simulador salvo las marcadas como solo de lectura, `canvas.libre`). Los deslizadores bloqueados se ven atenuados.
+- **Abierto, un deslizador deja pasar el gesto vertical** (`touch-action: pan-y`): arrastrarlo hacia el lado lo mueve y deslizar hacia arriba o abajo sobre él desplaza la página. Las imágenes de ejes siguen tomando el arrastre en cualquier dirección, porque ahí el gesto es mover el eje.
+- La aplicación sigue partiendo con el candado abierto.
+

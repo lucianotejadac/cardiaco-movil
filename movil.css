@@ -140,10 +140,11 @@ dialog.progreso h2{font-size:1rem;margin-bottom:10px}
 .candado[aria-pressed=true]{background:var(--acento)}
 .candadoAviso{position:fixed;right:74px;bottom:24px;z-index:30;max-width:calc(100vw - 96px);background:#0d1114;color:var(--texto);border:1px solid var(--linea);border-radius:8px;padding:7px 10px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
 .candadoAviso.visible{opacity:1}
-html.bloqueado main,html.bloqueado header{pointer-events:none}
-html.fijo{overflow:hidden;overscroll-behavior:none}
-html.fijo main,html.fijo header{touch-action:none}
-html.fijo main input[type=range]{touch-action:none}
+/* Candado: solo actua sobre los deslizadores, sus botones − y +, y las imagenes donde se arrastran
+   ejes, centros o cursores. La pagina siempre se desplaza y los demas botones siempre funcionan. */
+main input[type=range]{touch-action:pan-y}
+html.bloqueado main input[type=range],html.bloqueado main button.paso,html.bloqueado main canvas:not(.libre){pointer-events:none;touch-action:auto}
+html.bloqueado main input[type=range],html.bloqueado main button.paso{opacity:.45}
 /* Que el boton no tape lo ultimo de la pagina */
 footer{padding-bottom:76px}
 /* Gatillado */

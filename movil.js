@@ -526,10 +526,10 @@ document.querySelectorAll('dialog:not(#dProgreso)').forEach(d=>{d.addEventListen
 // quieta (un arrastre no la mueve). Los dialogos quedan fuera: funcionan en los dos modos.
 let avisoCandado=null;
 function candado(cerrado,avisar){
- document.documentElement.classList.toggle('bloqueado',cerrado);document.documentElement.classList.toggle('fijo',!cerrado);
+ document.documentElement.classList.toggle('bloqueado',cerrado);
  const b=$('candado');b.setAttribute('aria-pressed',String(cerrado));b.firstElementChild.textContent=cerrado?'🔒':'🔓';
- b.setAttribute('aria-label',cerrado?'Candado cerrado: solo se desplaza la página. Toca para abrirlo y manejar botones, deslizadores e imágenes.':'Candado abierto: se manejan botones, deslizadores e imágenes y la página no se desplaza. Toca para cerrarlo y solo desplazar la página.');
- if(avisar){const a=$('candadoAviso');a.textContent=cerrado?'Candado cerrado: solo desplazar la página':'Candado abierto: manejar botones, deslizadores e imágenes';a.classList.add('visible');clearTimeout(avisoCandado);avisoCandado=setTimeout(()=>a.classList.remove('visible'),1800);}
+ b.setAttribute('aria-label',cerrado?'Candado cerrado: los deslizadores y los ejes en pantalla no se mueven. Toca para abrirlo.':'Candado abierto: los deslizadores y los ejes en pantalla se pueden mover. Toca para cerrarlo.');
+ if(avisar){const a=$('candadoAviso');a.textContent=cerrado?'Candado cerrado: deslizadores y ejes bloqueados':'Candado abierto: deslizadores y ejes se pueden mover';a.classList.add('visible');clearTimeout(avisoCandado);avisoCandado=setTimeout(()=>a.classList.remove('visible'),1800);}
 }
 $('candado').addEventListener('click',()=>candado(!document.documentElement.classList.contains('bloqueado'),true));
 candado(false,false);
