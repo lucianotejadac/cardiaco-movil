@@ -205,7 +205,7 @@ const Gatillado7=(()=>{
   const res=g.res,nuevo=()=>document.createElement('canvas'),m={};
   for(const [k,vm,d1] of [['ed',100],['es',100],['mov',10,true],['eng',100]]){m[k]=nuevo();polar(m[k],res.mapas[k],res.rho,vm,res.segv[k],d1,280);}
   const cu=nuevo();curva(cu);const t=g.t;g.t=res.ed;const v3=nuevo();ventriculo(v3);g.t=t;const co=nuevo();cortes(co);
-  return {r:{...res.r},V:res.V.slice(),mapas:m,curva:cu,ventriculo:v3,cortes:co,equipo:EQUIPO};
+  return {r:{...res.r},V:res.V.slice(),segv:{ed:res.segv.ed.slice(),es:res.segv.es.slice(),mov:res.segv.mov.slice(),eng:res.segv.eng.slice()},mapas:m,curva:cu,ventriculo:v3,cortes:co,equipo:EQUIPO};
  }
  return {instantanea,iniciar,reconstruir,abrir,parar,exportarConstantes,cancelar,estado:g,get EQUIPO(){return EQUIPO;},EQUIPOS,calcular};
 })();

@@ -610,3 +610,14 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **«Saber más»** (`glosario.js`): botón arriba de cada sección. Al pulsarlo lee el texto visible de la sección, el paso actual, los rótulos de las imágenes y los términos dibujados dentro de los lienzos y de las pantallas finales. Muestra solo las entradas del glosario que aparecen, en tres grupos: siglas y rótulos, unidades de medida y conceptos. Son 103 entradas, incluidos los rótulos en inglés de las pantallas del equipo.
 
 **Validación.** Recorrido completo con clics en 1180 × 820: el tutorial parte solo con flecha y marco, se arrastra, avanza solo al corregir y sigue al registro; «Saber más» muestra lo de cada pantalla (sinograma y linograma en el control de calidad; TID y SSS en las pantallas; TPD, extensión y falla de máscara en el mapa polar; EDV, fracción de eyección y PER en el QGS); los mapas del equipo quedan a la derecha de los del estudiante en QPS y QGS. Sin errores de JavaScript.
+
+## 2026-09-29 · Caso 7: tutoriales de resultados y «Pantalla final tutorial»
+
+**Contexto.** El docente pidió tutoriales para las pantallas finales, el mapa polar y el mapa QGS, y en las pantallas finales un botón «Pantalla final tutorial» que ponga una flecha en cada concepto y explique qué significa ese resultado, para cada pantalla.
+
+**Decisiones.**
+- **Tutoriales más completos** de las tres secciones de resultados: pantallas finales 8 pasos, mapa polar 17 y mapa QGS 13, con cada control y cada figura (menús, aviso, ejes a la vista, deslizadores, receta, tabla, comparación par a par, puntajes, cortes, tabla por segmento, notas; 3D, curva, cada mapa del QGS).
+- **«Pantalla final tutorial»**: al dibujar cada pantalla se anota la zona de cada resultado (título, cortes, mapas, reversibilidad, TID, puntajes, recuadros de estrés y reposo, dianas, aviso de falla; en QGS cortes, 3D, cuatro mapas, datos, curva y llenado). El tutorial acepta esas zonas como objetivos y apunta con la flecha dentro de la imagen. Cada paso explica qué es y qué significa el valor del estudiante: segmentos más afectados, reversibilidad y defecto fijo, TID, SSS, SDS y TPD con los rangos de uso habitual en QPS, fracción de eyección, menor y mayor movimiento y engrosamiento por segmento, llenado. Con atenuación se explica que el reposo arrastra la falla de máscara y que su TID no se puede usar. Al cambiar de pantalla en el menú, la explicación sigue con la nueva.
+- Los rangos se presentan como de uso habitual y dependientes del protocolo; el primer paso aclara que el informe lo hace el médico con todo el estudio.
+
+**Validación.** Recorrido completo con clics: «Pantalla final tutorial» en QPS sin atenuación (11 resultados), QGS del estrés (10) y QPS con atenuación (12), con flecha y marco en cada uno, explicación de la falla de máscara y del TID con atenuación, y de la fracción de eyección en el QGS. Sin errores de JavaScript.

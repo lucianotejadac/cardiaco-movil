@@ -6,7 +6,8 @@
 const Tutorial7=(()=>{
  const $=id=>document.getElementById(id);
  const est=()=>window.Caso7?Caso7.estado:{},gat=()=>est().sub==='gat',fase=()=>est().fase==='reposo'?'reposo':'estrés';
- const visible=el=>!!el&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';
+ // Un objetivo puede ser un elemento o una zona dentro de un lienzo ({virtual:true, getBoundingClientRect, visible}).
+ const visible=el=>!!el&&(el.virtual?el.visible():el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden');
  // Pasos por seccion. o: selector del objetivo. t: texto. si: el paso se muestra solo si se cumple.
  // hasta: el paso avanza solo cuando se cumple. espera: lo que se muestra mientras tanto.
  const PASOS={
@@ -35,27 +36,48 @@ const Tutorial7=(()=>{
    {o:'#reoCorto',t:'Revisa los cortes: el eje corto tiene que quedar como un anillo parejo, el largo vertical como una «C» y el largo horizontal como una «U» invertida.'},
    {o:'#a7Mapa',t:()=>`Cuando estés conforme, sigue: «${($('a7Mapa').textContent||'').replace(/\s*→\s*$/,'')}».`}],
   pantallas7:[
-   {o:'#pantMenu',t:'Seis pantallas generadas con tus ejes, con la misma disposición que las del equipo: sin y con atenuación, y el QGS de cada fase.'},
-   {o:'#pantLienzo',t:'Toca la pantalla para verla ampliada. Con «Descargar» la guardas en PNG.'},
+   {o:'#pantMenu',t:'Seis pantallas generadas con tus ejes, con la misma disposición que las del equipo: Splash y QPS sin atenuación (con estas se interpretó el estudio), las mismas con atenuación, y el QGS del estrés y del reposo.'},
+   {o:'#pantTutorial',t:'«Pantalla final tutorial» recorre la pantalla que estás viendo: pone una flecha en cada resultado y explica qué significa tu valor. Úsalo en cada una de las seis pantallas.'},
+   {o:'#pantLienzo',t:'La pantalla elegida. Arriba dice que la generó la aplicación y no el equipo. Tócala para verla ampliada.'},
+   {o:'#pantNota',t:'Bajo la pantalla, una nota con lo más importante de lo que muestra.'},
    {o:'#pantMascara',si:()=>visible($('pantMascara')),t:'En las pantallas con atenuación, el reposo trae la falla de máscara del equipo. Este botón la explica.'},
+   {o:'#pantDescargar',t:'Descarga la pantalla en PNG, para tu informe o para compararla con la del equipo.'},
+   {o:'#pantRegenerar',t:'Si volviste a un paso y cambiaste un eje, vuelve a generar las pantallas con los ejes nuevos.'},
    {o:'#a7MapaDesdePantallas',t:'Después, revisa el mapa polar en detalle.'}],
   qps:[
-   {o:'#qpsFase',t:'Elige la fase y, debajo, si ves la reconstrucción con o sin atenuación.'},
+   {o:'#qpsFase',t:'Elige la fase: estrés o reposo.'},
+   {o:'#qpsTipo',t:'Y la reconstrucción: con o sin atenuación. Sin atenuación es con la que se interpretó el estudio; con atenuación, el reposo trae la falla de máscara del equipo.'},
    {o:'#qpsAviso',si:()=>visible($('qpsAviso')),t:'Este estudio trae una falla de máscara del equipo. Lee el aviso y toca «Ver más» para la explicación completa.'},
-   {o:'#qps .controles.fijo',t:'Tu eje, a la vista. Los deslizadores lo giran desde el que dejaste y todo se recalcula al momento.'},
-   {o:'#qpsTabla',t:'Tus resultados: volumen, pared, cuentas, defecto, extensión, TPD, forma y puntajes.'},
+   {o:'#qpsEstado',t:'Aquí dice con qué eje se calculó y cuánto tardó. Si con un eje el ajuste de la pared deja de ser confiable, lo avisa en rojo.'},
+   {o:'#qps .ejesVivo',t:'El eje, a la vista: en el transversal se ve el azimut y en el plano vertical, la elevación. La línea celeste es tu eje; después de revelar el resultado, la blanca punteada es la del equipo.'},
+   {o:'#qps .ejesVivo2',t:'Eje corto, largo vertical y largo horizontal por el centro del ventrículo, con los bordes de la pared: amarillo el interno, naranja el externo.'},
+   {o:'#qps .controles.fijo .fila',t:'Azimut y elevación giran tu eje hasta 25° a cada lado y todo se recalcula al momento. Así ves cuánto cambian los resultados con el eje.'},
+   {o:'#qpsReceta',t:'Receta de reconstrucción: puedes probar otras iteraciones, otro filtro o quitar correcciones. La extensión cambia porque el límite normal vale para la receta del equipo.'},
+   {o:'#qpsTabla',t:'Tus resultados. Volumen: la cavidad. Pared: el miocardio. Cuentas: lo que suma la pared. Defecto: ml bajo el límite normal. Extensión: porcentaje del ventrículo bajo el límite. TPD: combina extensión y severidad. Forma y excentricidad: la geometría. SSS y SS%: los puntajes.'},
    {o:'#qpsRevelar',si:()=>!Qps.estado.revelar,t:'Pulsa «Ver el resultado del equipo» para comparar par a par: tus números junto a los del equipo, y tu mapa junto al suyo.',hasta:()=>!!Qps.estado.revelar,espera:'Esperando que pulses «Ver el resultado del equipo»…'},
-   {o:'#qpsMapas',t:'A la izquierda tu mapa; a la derecha el del equipo. En negro, lo que queda bajo el límite normal.'},
+   {o:'#qpsMapas',t:'Tu mapa a la izquierda y el del equipo a la derecha. El centro es el ápex y el borde la base; arriba anterior, abajo inferior, a la izquierda el septum y a la derecha la pared lateral. En negro, bajo el límite normal; los números son el porcentaje anormal de cada segmento.'},
+   {o:'#qpsPuntajesCaja',t:'Puntajes por segmento, de 0 (normal) a 4 (sin captación): los tuyos y los del equipo. Los colores son los territorios: beige la descendente anterior, azul la coronaria derecha y verde la circunfleja.'},
+   {o:'#qpsCortes',t:'Tres ejes cortos, largo horizontal, largo vertical y la superficie del ventrículo, con los bordes que usó el cálculo. Si no siguen la pared, revisa tu eje.'},
+   {o:'#qpsSplash',t:'Todos los cortes con tu eje: 14 ejes cortos del ápex a la base, 7 largos verticales y 7 horizontales.'},
+   {o:'#qpsSegmentos',t:'Por segmento: valor medio, porcentaje anormal y puntaje, tuyos y del equipo. En amarillo, lo que difiere.'},
+   {o:'#qpsNota',t:'De dónde salen la referencia y el límite normal de este caso.'},
    {o:'#a7Qgs',t:'Sigue al mapa QGS.'}],
   qgs7:[
-   {o:'#qgsFase',t:'Elige la fase del gatillado.'},
+   {o:'#qgsFase',t:'Elige la fase del gatillado: estrés o reposo.'},
+   {o:'#qgsEstado',t:'Tu eje del gatillado y la receta del equipo con que se reconstruyó: OSEM 4 × 4, gaussiano de 8,4 mm, sin atenuación.'},
    {o:'#qgs3d',t:'El ventrículo en 3D late con los 8 intervalos: en gris la superficie interna, en naranja la externa en fin de diástole. Arrástralo para girarlo.'},
-   {o:'#qgsTabla',t:'Volúmenes, fracción de eyección, forma y llenado del ventrículo.'},
+   {o:'#qgsLatir',t:'Para o hace latir el ventrículo.'},
+   {o:'#qgsTabla',t:'EDV y ESV: el ventrículo lleno y vacío. SV: lo que expulsa en cada latido. Fracción de eyección: SV sobre EDV. Forma y excentricidad. PER, PFR, PFR2, MFR/3 y TTPF: cómo se vacía y se llena.'},
    {o:'#qgsRevelar',si:()=>!Gatillado7.estado.revelar,t:'Pulsa «Ver el resultado del equipo» para comparar par a par.',hasta:()=>!!Gatillado7.estado.revelar,espera:'Esperando que pulses «Ver el resultado del equipo»…'},
-   {o:'#qgsMapas',t:'Cada mapa tuyo junto al del equipo: perfusión en fin de diástole y de sístole, movimiento y engrosamiento.'},
-   {o:'#qgsCurvas',t:'Tu curva de volumen junto a la del equipo. Con esto termina el recorrido.'}]};
+   {o:'#qgsCurvas',t:'La curva de volumen de los 8 intervalos, en rojo, y su pendiente, en gris: el mínimo es el fin de sístole y la subida después es el llenado. Al revelar, la del equipo queda al lado.'},
+   {o:'#qgsEd',t:'Perfusión en fin de diástole, en porcentaje del máximo, por segmento.'},
+   {o:'#qgsEs',t:'Perfusión en fin de sístole: más alta que en diástole, porque la pared engrosada suma más cuentas.'},
+   {o:'#qgsMov',t:'Movimiento del borde interno, en mm. El septum se mueve menos que la pared lateral, y eso es normal.'},
+   {o:'#qgsEng',t:'Engrosamiento de la pared, en porcentaje. Un segmento con poca captación que sí engrosa sugiere artefacto de atenuación; uno que no engrosa sugiere cicatriz.'},
+   {o:'#qgsCortes',t:'Fin de diástole arriba y fin de sístole abajo: la cavidad se achica y la pared se engruesa.'},
+   {o:'#qgsNota',t:'Lo que informó el equipo y cómo se calibró esta sección. Con esto termina el recorrido.'}]};
  const NOMBRE={qc:'Control de calidad',reg:'Registro',caja:'Caja',reo:'Orientación de los ejes',pantallas7:'Pantallas finales',qps:'Mapa polar',qgs7:'Mapa QGS'};
- const t={activo:false,sec:null,i:0,movido:false,fin:false,raf:0,objetivo:null};
+ const t={activo:false,sec:null,i:0,movido:false,fin:false,raf:0,objetivo:null,custom:null};
  let V,F,L,M;
  function crear(){
   V=document.createElement('div');V.id='tut';V.className='tut';V.setAttribute('role','dialog');V.setAttribute('aria-label','Tutorial');V.hidden=true;
@@ -76,9 +98,10 @@ const Tutorial7=(()=>{
  function poner(x,y){const w=V.offsetWidth,h=V.offsetHeight;V.style.left=Math.max(4,Math.min(innerWidth-w-4,x))+'px';V.style.top=Math.max(4,Math.min(innerHeight-h-4,y))+'px';}
  const SECCIONES=Object.keys(PASOS);
  const seccion=()=>SECCIONES.find(id=>{const s=$(id);return s&&!s.classList.contains('oculta');})||null;
- const pasos=()=>(PASOS[t.sec]||[]);
+ const pasos=()=>t.custom?t.custom.pasos:(PASOS[t.sec]||[]);
+ const nombre=()=>t.custom?t.custom.nombre:(NOMBRE[t.sec]||'');
  const disponible=p=>!p.si||p.si();
- function objetivo(p){for(const el of document.querySelectorAll(p.o))if(visible(el))return el;return null;}
+ function objetivo(p){if(typeof p.o==='function'){const v=p.o();return visible(v)?v:null;}for(const el of document.querySelectorAll(p.o))if(visible(el))return el;return null;}
  function mover(d){
   const P=pasos();if(t.fin&&d<0){t.fin=false;mostrar();return;}
   let i=t.i+d;while(i>=0&&i<P.length&&!disponible(P[i]))i+=d;
@@ -86,9 +109,9 @@ const Tutorial7=(()=>{
  }
  function mostrar(){
   const P=pasos(),p=P[t.i];V.hidden=false;
-  if(!p||t.fin){$('tutTitulo').textContent=`Tutorial · ${NOMBRE[t.sec]||''}`;$('tutCuenta').textContent='';$('tutTexto').textContent=p?'Listo este paso. El tutorial sigue cuando pases al paso siguiente del recorrido. Puedes mover o cerrar esta ventana.':'Este paso no tiene indicaciones.';$('tutEspera').hidden=true;$('tutAnt').disabled=!p;$('tutSig').disabled=true;t.objetivo=null;return;}
+  if(!p||t.fin){$('tutTitulo').textContent=`Tutorial · ${nombre()}`;$('tutCuenta').textContent='';$('tutTexto').textContent=p?(t.custom&&t.custom.fin?t.custom.fin:'Listo este paso. El tutorial sigue cuando pases al paso siguiente del recorrido. Puedes mover o cerrar esta ventana.'):'Este paso no tiene indicaciones.';$('tutEspera').hidden=true;$('tutAnt').disabled=!p;$('tutSig').disabled=true;t.objetivo=null;return;}
   const vis=P.filter(disponible),k=vis.indexOf(p)+1;
-  $('tutTitulo').textContent=`Tutorial · ${NOMBRE[t.sec]}`;$('tutCuenta').textContent=`${k} de ${vis.length}`;
+  $('tutTitulo').textContent=`Tutorial · ${nombre()}`;$('tutCuenta').textContent=`${k} de ${vis.length}`;
   $('tutTexto').textContent=typeof p.t==='function'?p.t():p.t;
   $('tutEspera').hidden=!p.espera;$('tutEspera').textContent=p.espera||'';
   $('tutAnt').disabled=vis[0]===p;$('tutSig').disabled=false;$('tutSig').textContent=k===vis.length?'Terminar →':'Siguiente →';
@@ -124,16 +147,19 @@ const Tutorial7=(()=>{
   if(!t.activo)return;
   const s=seccion();
   // En cada seccion nueva la ventana vuelve a ubicarse sola, aunque antes se haya arrastrado.
+  if(t.custom&&s!==t.custom.seccion)t.custom=null;
   if(s!==t.sec){t.sec=s;t.i=0;t.fin=false;t.movido=false;const P=pasos();while(t.i<P.length&&!disponible(P[t.i]))t.i++;if(s)mostrar();else{V.hidden=true;}}
-  else if(s&&!t.fin){const p=pasos()[t.i];if(p){if(p.hasta&&p.hasta())mover(1);else if(!t.objetivo||!document.body.contains(t.objetivo)||!visible(t.objetivo))t.objetivo=objetivo(p);}}
+  else if(s&&!t.fin){const p=pasos()[t.i];if(p){if(p.hasta&&p.hasta())mover(1);else if(!t.objetivo||(t.objetivo.virtual?false:!document.body.contains(t.objetivo))||!visible(t.objetivo))t.objetivo=objetivo(p);}}
   dibujar();t.raf=requestAnimationFrame(ciclo);
  }
- function abrir(){if(!V)crear();t.activo=true;t.sec=null;t.movido=false;cancelAnimationFrame(t.raf);t.raf=requestAnimationFrame(ciclo);const b=$('tutAbrir');if(b)b.setAttribute('aria-pressed','true');}
- function cerrar(){t.activo=false;cancelAnimationFrame(t.raf);if(V){V.hidden=true;M.hidden=true;L.setAttribute('d','');$('tutSombra').setAttribute('d','');}const b=$('tutAbrir');if(b)b.setAttribute('aria-pressed','false');try{localStorage.setItem('cardiaco7-tutorial-visto','1');}catch(err){}}
+ // Recorrido a pedido dentro de una seccion (por ejemplo, la pantalla final que se esta viendo).
+ function recorrer(o){if(!V)crear();t.custom=o;t.sec=o.seccion;t.i=0;t.fin=false;t.movido=false;const P=pasos();while(t.i<P.length&&!disponible(P[t.i]))t.i++;if(!t.activo){t.activo=true;cancelAnimationFrame(t.raf);t.raf=requestAnimationFrame(ciclo);const b=$('tutAbrir');if(b)b.setAttribute('aria-pressed','true');}mostrar();}
+ function abrir(){if(!V)crear();t.activo=true;t.sec=null;t.movido=false;t.custom=null;cancelAnimationFrame(t.raf);t.raf=requestAnimationFrame(ciclo);const b=$('tutAbrir');if(b)b.setAttribute('aria-pressed','true');}
+ function cerrar(){t.activo=false;t.custom=null;cancelAnimationFrame(t.raf);if(V){V.hidden=true;M.hidden=true;L.setAttribute('d','');$('tutSombra').setAttribute('d','');}const b=$('tutAbrir');if(b)b.setAttribute('aria-pressed','false');try{localStorage.setItem('cardiaco7-tutorial-visto','1');}catch(err){}}
  // La primera vez que se abre el caso 7 en este navegador, el tutorial parte solo.
  function ofrecer(){let visto=false;try{visto=localStorage.getItem('cardiaco7-tutorial-visto')==='1';}catch(err){}if(!visto&&!t.activo)abrir();}
  function iniciar(){const b=$('tutAbrir');if(b)b.addEventListener('click',()=>t.activo?cerrar():abrir());addEventListener('resize',()=>{if(t.activo&&!t.movido)ubicar();});}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
- return {abrir,cerrar,ofrecer,estado:t,PASOS};
+ return {abrir,cerrar,ofrecer,recorrer,estado:t,PASOS};
 })();
 window.Tutorial7=Tutorial7;
