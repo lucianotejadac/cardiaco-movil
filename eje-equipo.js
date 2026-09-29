@@ -122,14 +122,15 @@ const EjeEquipo=(()=>{
 
  /* s: proyecciones (Lab95.spect). reg: estado del registro (ct preparado y desplazamiento).
     Devuelve lo que necesita la reorientacion, o lanza un Error con el motivo. */
- async function ejecutar({s,reg,fuente}){
+ // forzar: reconstruye aunque ya este hecha en esta sesion (el boton del paso 3 del caso 7).
+ async function ejecutar({s,reg,fuente,forzar}){
   if(e.ocupado)return null;
   const hayCt=!!(reg&&reg.ct);
   const D=await elegir(s,hayCt),R=D.receta;
   if(R.ac&&!hayCt)throw Error('El eje corto del equipo tiene corrección de atenuación y no hay CT cargado para repetirla.');
   if(s.views.filter(v=>v.window===1).length%R.sub)throw Error(`El equipo usó ${R.sub} subconjuntos y el número de vistas no es divisible.`);
   const clave=[D.descripcion,e.series.length,s.frame,s.data.length,fuente,hayCt?reg.off.join(','):'',e.dispersion].join('|');
-  if(e.resultado&&e.clave===clave)return e.resultado;
+  if(!forzar&&e.resultado&&e.clave===clave)return e.resultado;
   const hayVentana=s.views.some(v=>v.window===2),disp=R.dispersion&&hayVentana&&e.dispersion,w=s.windows||[];
   const escalaVentana=disp&&w[0]&&w[1]&&w[1].high>w[1].low?(w[0].high-w[0].low)/(w[1].high-w[1].low):1;
   const nombre=`OSEM ${R.it} × ${R.sub}${R.ac?' con atenuación':''}${disp?' y dispersión':''}${R.fwhm?`, gaussiano ${String(R.fwhm).replace('.',',')} mm`:''}`;

@@ -43,10 +43,11 @@ const Gatillado7=(()=>{
  const clave=(s,fuente)=>`v1|${cardiacoHash(s.frame)}|${fuente}|gatillado`;
 
  /* est: estado de la aplicacion (gat, correccion). centro: centro del corazon del estres (voxel, z hacia la cabeza). */
- async function reconstruir({est,s,fuente,centro}){
+ // forzar: reconstruye aunque este guardado (el boton del paso 4 del caso 7); sin forzar, recupera lo guardado.
+ async function reconstruir({est,s,fuente,centro,forzar}){
   if(g.ocupado)return null;
   EQUIPO=EQUIPOS[cardiacoHash(s.frame)]||EQUIPOS['22d4f455'];
-  const n=s.n;let guardado=null;try{guardado=await tienda('readonly',t=>t.get(clave(s,fuente)));}catch(err){}
+  const n=s.n;let guardado=null;if(!forzar){try{guardado=await tienda('readonly',t=>t.get(clave(s,fuente)));}catch(err){}}
   if(guardado&&guardado.caja){g.vols=extender(guardado.datos,n,guardado.caja);g.deMemoria=true;}
   else{
    if(!est.gat)throw Error(`El ZIP no trae la adquisición gatillada del ${EQUIPO.fase}.`);

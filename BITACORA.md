@@ -563,3 +563,15 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **Imágenes del equipo en QGS por fase**: recortes sin identidad de los savescreen QGS de estrés y de reposo.
 
 **Validación.** Recorrido completo en 1180 × 820, con clics: modo exportación con los ejes del equipo (números del reposo iguales a los del equipo) y modo normal con ejes a 2° del equipo. Sin errores de JavaScript.
+
+## 2026-09-29 · Caso 7: los pasos 3 y 4 siempre reconstruyen
+
+**Contexto.** El docente pulsó «Paso 3» en el estrés y la caja apareció al instante: la aplicación usaba la reconstrucción guardada en el navegador de una sesión anterior (o la de memoria, en la misma sesión) y no se veía reconstruir.
+
+**Decisiones.**
+- El botón del paso 3 siempre reconstruye con la receta del equipo (`EjeEquipo.ejecutar` con `forzar`), y el del paso 4 siempre reconstruye el gatillado (`Gatillado7.reconstruir` con `forzar`).
+- Lo guardado se sigue usando solo al volver a un paso desde la barra, en las pantallas finales y en los menús del mapa polar y del mapa QGS.
+- Si las proyecciones son las mismas (misma corrección), la reconstrucción da lo mismo y se recupera el eje que el estudiante ya había dejado.
+- Se quitó el guardado de la reconstrucción completa sin máscara, que ya nadie leía.
+
+**Validación.** Recorrido completo con clics: volver del paso 3 al registro y pulsar otra vez el paso 3 reconstruye de nuevo (53 s en el computador); el paso 4 reconstruye el gatillado en las dos fases.

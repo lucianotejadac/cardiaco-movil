@@ -80,13 +80,13 @@ const Caso7=(()=>{
   b.disabled=true;c.ocupado=true;pintarPasos();
   try{
    EjeEquipo.fijarTipo('ac');
-   const x=await Qps.leerReferencia(s,fuente)||await EjeEquipo.ejecutar({s,reg,fuente});if(!x)return;
-   if(x.completa&&!x.guardada){await guardarCompleta(s,fuente,x.completa);await Qps.guardarReferencia(s,fuente,x,null);}
-   if(!x.completa)x.completa=await leerCompleta(s,fuente);
-   if(!x.completa){aviso.className='estado error';aviso.textContent='Falta la reconstrucción completa: pulsa de nuevo para reconstruir.';await borrarDe(s,fuente);return;}
+   // El boton del paso 3 siempre reconstruye con la receta del equipo. Lo guardado solo se usa al
+   // volver a este paso desde la barra y en el mapa polar.
+   const x=await EjeEquipo.ejecutar({s,reg,fuente,forzar:true});if(!x)return;
    const Fx=F(),mismo=Fx.x&&Fx.s===s&&Fx.fuente===fuente;
-   Object.assign(Fx,{x,s,fuente,reg});
-   if(!mismo)Object.assign(Fx,{inicial:null,entradaEstatica:null,ejes:null,entradaGat:null,ejesGat:null,inicialGat:null,restaurar:false,restaurarGat:false});
+   Object.assign(Fx,{x,s,fuente,reg,entradaEstatica:null});
+   // Con las mismas proyecciones la reconstruccion es la misma: se recupera el eje que ya habia dejado.
+   if(!mismo)Object.assign(Fx,{inicial:null,ejes:null,entradaGat:null,ejesGat:null,inicialGat:null,restaurar:false,restaurarGat:false});
    else Fx.restaurar=true;
    abrirCajaEstatica();marcar(base()+2);
   }catch(err){const det=EjeEquipo.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción detenida.':'No se pudo reconstruir: '+(err.message||err);if(!det)console.error(err);}
@@ -131,9 +131,10 @@ const Caso7=(()=>{
  // paso 4: reconstruccion del gatillado con la receta del equipo
  async function gatillar(){
   const M=MovilCardiaco,Fx=F(),aviso=$('reoEstado');if(!Fx.x)return;
-  if(Fx.entradaGat){abrirCajaGat();marcar(base()+3);return;}
-  try{const suma=await Gatillado7.reconstruir({est:{gat:M.estado.gat,correccion:M.estado.correccion},s:Fx.s,fuente:Fx.fuente,centro:Fx.x.centro});if(!suma)return;
-   Object.assign(Fx,{entradaGat:{tipo:'osem',zArriba:true,data:suma,etiqueta:`gatillado del ${MINUS[c.fase]}, suma de los 8 intervalos`},inicialGat:null,ejesGat:null,gatBytes:M.estado.gat,correccion:M.estado.correccion});
+  const mismo=!!Fx.entradaGat&&Fx.gatFuente===Fx.fuente;
+  try{const suma=await Gatillado7.reconstruir({est:{gat:M.estado.gat,correccion:M.estado.correccion},s:Fx.s,fuente:Fx.fuente,centro:Fx.x.centro,forzar:true});if(!suma)return;
+   Object.assign(Fx,{entradaGat:{tipo:'osem',zArriba:true,data:suma,etiqueta:`gatillado del ${MINUS[c.fase]}, suma de los 8 intervalos`},gatFuente:Fx.fuente,gatBytes:M.estado.gat,correccion:M.estado.correccion});
+   if(mismo)Fx.restaurarGat=true;else Object.assign(Fx,{inicialGat:null,ejesGat:null});
    abrirCajaGat();marcar(base()+3);}
   catch(err){const det=Gatillado7.estado.detenido;aviso.className=det?'estado':'estado error';aviso.textContent=det?'Reconstrucción del gatillado detenida.':'No se pudo reconstruir el gatillado: '+(err.message||err);if(!det)console.error(err);}
  }
@@ -176,15 +177,6 @@ const Caso7=(()=>{
   if(generar||!Pantallas7.hechas())await Pantallas7.generar({fases:['estres','reposo'].map(f=>({fase:f,nombre:NOMBRE[f],mapa:datosMapa(f),gat:{marco:c.F[f].ejesGat.marco,centro:c.F[f].ejesGat.Cv.slice()},cargarGat:()=>cargarGat(f)}))});
  }
 
- /* ---------- guardado de la reconstruccion completa (sin la mascara del equipo) ---------- */
- const BD={nombre:'cardiaco-movil-caso7',tienda:'recon'};
- function bd(){return new Promise((ok,mal)=>{const r=indexedDB.open(BD.nombre,1);r.onupgradeneeded=()=>r.result.createObjectStore(BD.tienda);r.onsuccess=()=>ok(r.result);r.onerror=()=>mal(r.error);});}
- async function tienda(modo,f){const b=await bd();try{return await new Promise((ok,mal)=>{const t=b.transaction(BD.tienda,modo),r=f(t.objectStore(BD.tienda));t.oncomplete=()=>ok(r&&r.result);t.onerror=()=>mal(t.error);});}finally{b.close();}}
- const clave=(s,fuente)=>`v1|${cardiacoHash(s.frame)}|${fuente}|completa`;
- async function guardarCompleta(s,fuente,vol){try{await tienda('readwrite',t=>t.put(vol,clave(s,fuente)));}catch(err){console.warn('No se pudo guardar la reconstrucción completa',err);}}
- async function leerCompleta(s,fuente){try{const v=await tienda('readonly',t=>t.get(clave(s,fuente)));return v instanceof Float32Array?v:null;}catch(err){return null;}}
- async function borrarDe(s,fuente){try{await tienda('readwrite',t=>t.delete(clave(s,fuente)));}catch(err){}}
-
  function iniciar(){
   $('a7Reconstruir').addEventListener('click',reconstruir);$('a7Mapa').addEventListener('click',siguiente);
   $('a7Qgs').addEventListener('click',()=>conBloqueo(()=>abrirQgs(c.vista.qgs)));$('a7MapaDesdePantallas').addEventListener('click',()=>conBloqueo(()=>abrirMapa(c.vista.mapa)));
@@ -198,6 +190,6 @@ const Caso7=(()=>{
  // Paso 2: el registro parte con la configuracion elegida por el docente (en las dos fases).
  const REGISTRO={plano:'axial',corte:{axial:42},mezcla:.5,nivel:.51,ancho:.82,ventana:'blando'};
  function volverDesdeMapa(){conBloqueo(()=>abrirPantallas(false));}
- return {REGISTRO,iniciar,entrar,esCaso7,torcer,debeTorcer,alAbrirReo,volverDesdeCaja,volverDesdeMapa,guardarCompleta,estado:c,get activo(){return c.activo;},get fase(){return c.fase;}};
+ return {REGISTRO,iniciar,entrar,esCaso7,torcer,debeTorcer,alAbrirReo,volverDesdeCaja,volverDesdeMapa,estado:c,get activo(){return c.activo;},get fase(){return c.fase;}};
 })();
 window.Caso7=Caso7;
