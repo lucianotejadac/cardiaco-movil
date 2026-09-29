@@ -15,7 +15,7 @@
 const EjeEquipo=(()=>{
  const C=CardiacoCore;
  const K_DISPERSION=.5,FWHM_DISPERSION=10;
- const e={dispersion:true,manual:false,series:[],leidas:null,resultado:null,clave:'',tarea:null,rechazo:null,ocupado:false,detenido:false};
+ const e={dispersion:true,manual:false,tipo:'ac',series:[],leidas:null,resultado:null,clave:'',tarea:null,rechazo:null,ocupado:false,detenido:false};
  const cruz=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
  const punto=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 
@@ -103,13 +103,15 @@ const EjeEquipo=(()=>{
  async function elegir(s,hayCt){
   const lista=await series(s.frame);
   if(!lista.length){const otras=await series(null);throw Error(otras.length?'La imagen del equipo no comparte marco de referencia con estas proyecciones: es de otro estudio o de otra fase (estrés o reposo).':'No hay una imagen del equipo en eje corto reconstruida con OSEM. Cárgala con «Cargar imagen del equipo».');}
-  if(e.manual){const m=lista.filter(q=>q.manual);if(m.length)return m[m.length-1];}
-  return lista.slice().sort((a,b)=>(b.receta.ac&&hayCt?1:0)-(a.receta.ac&&hayCt?1:0)||(a.receta.ac?1:0)-(b.receta.ac?1:0))[0];
+  const conAc=e.tipo==='ac',del=lista.filter(q=>q.receta.ac===conAc);
+  if(!del.length)throw Error(`No hay una imagen del equipo ${conAc?'con':'sin'} corrección de atenuación para estas proyecciones. Las que hay: ${lista.map(q=>'«'+q.descripcion+'»').join(', ')}. Cambia el selector o carga esa imagen.`);
+  const m=del.filter(q=>q.manual);return m.length?m[m.length-1]:del[0];
  }
+ function fijarTipo(t){e.tipo=t==='noac'?'noac':'ac';}
  // Carga a mano una imagen del equipo (bytes de un DICOM). Devuelve su descripcion.
  async function agregar(bytes){
   const q=await leer(bytes);if(!q)throw Error('Ese archivo no es un eje corto reconstruido con OSEM por el equipo (medicina nuclear, cortes oblicuos, no gatillado).');
-  q.manual=true;await series(null);e.leidas.push(q);e.series.push(bytes);e.manual=true;e.resultado=null;e.clave='';return q;
+  q.manual=true;await series(null);e.leidas.push(q);e.series.push(bytes);e.manual=true;e.tipo=q.receta.ac?'ac':'noac';e.resultado=null;e.clave='';return q;
  }
  /* Compara la imagen del equipo con una reconstruccion que el simulador ya hizo (volumen con z
     hacia la cabeza), sin reconstruir de nuevo. */
@@ -149,6 +151,6 @@ const EjeEquipo=(()=>{
    return e.resultado;
   }finally{e.ocupado=false;e.tarea=null;e.rechazo=null;Progreso.cerrar();}
  }
- return {configurar,disponible,agregar,comparar,ejecutar,cancelar,estado:e};
+ return {configurar,disponible,agregar,fijarTipo,comparar,ejecutar,cancelar,estado:e};
 })();
 window.EjeEquipo=EjeEquipo;

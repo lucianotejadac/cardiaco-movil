@@ -455,9 +455,17 @@ async function aDirecto(){
  finally{$('aDirecto').disabled=false;}
 }
 $('aDirecto').addEventListener('click',aDirecto);
+// Con o sin atenuacion: un solo valor, con un selector en cada pantalla donde se usa.
+const selectoresTipo=()=>document.querySelectorAll('.tipoEquipoSel');
+function ponerTipo(t){EjeEquipo.fijarTipo(t);selectoresTipo().forEach(q=>{q.value=EjeEquipo.estado.tipo;});}
+selectoresTipo().forEach(q=>q.addEventListener('change',()=>{
+ ponerTipo(q.value);
+ // En la pantalla de comparacion, el cambio se aplica de inmediato con el mismo modo.
+ const x=Reorientar.estado.equipo;if(x&&!$('reo').classList.contains('oculta'))(x.modo==='receta'?conEquipo(recetaEquipo):compararPropia());
+}));
 $('directoImagen').addEventListener('change',async ev=>{
  const f=ev.target.files&&ev.target.files[0];ev.target.value='';if(!f)return;const aviso=$('directoEstado');
- try{aviso.className='estado';aviso.textContent='Leyendo la imagen del equipo…';await EjeEquipo.agregar(new Uint8Array(await f.arrayBuffer()));await aDirecto();}
+ try{aviso.className='estado';aviso.textContent='Leyendo la imagen del equipo…';await EjeEquipo.agregar(new Uint8Array(await f.arrayBuffer()));ponerTipo(EjeEquipo.estado.tipo);await aDirecto();}
  catch(err){aviso.className='estado error';aviso.textContent=err.message||String(err);console.error(err);}
 });
 // Desde la pantalla inicial: cargar y seguir directo a la comparacion.
@@ -468,7 +476,7 @@ for(const id of ['directoCarpeta','directoArchivos'])$(id).addEventListener('cha
 });
 $('reoArchivoEquipo').addEventListener('change',async ev=>{
  const f=ev.target.files&&ev.target.files[0];ev.target.value='';if(!f)return;
- try{botonesEquipo('Leyendo la imagen del equipo…');const q=await EjeEquipo.agregar(new Uint8Array(await f.arrayBuffer()));botonesEquipo(`Imagen del equipo cargada: «${q.descripcion}».`,'ok');await compararPropia();}
+ try{botonesEquipo('Leyendo la imagen del equipo…');const q=await EjeEquipo.agregar(new Uint8Array(await f.arrayBuffer()));ponerTipo(EjeEquipo.estado.tipo);botonesEquipo(`Imagen del equipo cargada: «${q.descripcion}».`,'ok');await compararPropia();}
  catch(err){botonesEquipo(err.message||String(err),'error');console.error(err);}
 });
 $('volverOsem').addEventListener('click',aOsemDesdeCaja);

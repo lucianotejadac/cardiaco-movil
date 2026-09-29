@@ -417,3 +417,15 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **Proyecciones:** las corregidas por la aplicación si ya se pulsó «Corregir»; si no, las crudas.
 - **La pantalla es la de reorientación**, con el eje exacto del equipo. «Volver» lleva al control de calidad. «Comparar con mi reconstrucción» no se ofrece, porque en este camino no hay reconstrucción propia.
 
+## 2026-09-28 · Comparación con la reconstrucción del equipo sin atenuación
+
+**Contexto.** El docente pidió lo mismo que el acceso directo, pero con la reconstrucción del equipo sin corrección de atenuación (NoAC).
+
+**Decisiones.**
+- **Selector «Imagen del equipo: con atenuación (AC) / sin atenuación (NoAC)»** en los tres lugares donde se usa: la tarjeta de comparación directa de la pantalla inicial, el control de calidad y la pantalla de comparación. Es un solo valor compartido.
+- **El tipo se reconoce por el DICOM**, no por el nombre del archivo: `CorrectedImage` trae `ATTN` o no.
+- **Antes la aplicación elegía sola** (prefería la que tenía atenuación si había CT). Ahora usa la que dice el selector y, si no está, avisa cuáles hay.
+- **Cargar una imagen a mano pone el selector en su tipo.**
+- **En la pantalla de comparación, cambiar el selector rehace la comparación** en el mismo modo (receta del equipo o reconstrucción propia).
+- **Sin atenuación no se usa el CT** y el cálculo es mucho más corto.
+

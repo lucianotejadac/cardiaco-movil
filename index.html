@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=25">
+<link rel="stylesheet" href="movil.css?v=26">
 </head>
 <body>
 <header class="barra">
@@ -28,7 +28,8 @@
   </div>
   <div class="otra">
    <h3>Comparación directa con el equipo (provisional)</h3>
-   <p>Elige la carpeta del examen, o sus archivos, con las proyecciones de estrés, la tomografía computada y el eje corto que reconstruyó el equipo. La aplicación reconstruye con la receta del equipo y muestra las dos imágenes una sobre otra, sin pasar por los pasos intermedios.</p>
+   <p>Elige la carpeta del examen, o sus archivos, con las proyecciones de estrés, la tomografía computada y el eje corto que reconstruyó el equipo, con o sin corrección de atenuación. La aplicación reconstruye con la receta del equipo y muestra las dos imágenes una sobre otra, sin pasar por los pasos intermedios.</p>
+   <label class="tipoEquipo">Imagen del equipo <select class="tipoEquipoSel" aria-label="Imagen del equipo con o sin corrección de atenuación"><option value="ac">con atenuación (AC)</option><option value="noac">sin atenuación (NoAC)</option></select></label>
    <label class="boton otro" for="directoCarpeta">Comparar: elegir carpeta…</label>
    <input id="directoCarpeta" type="file" webkitdirectory multiple>
    <label class="boton otro" for="directoArchivos">Comparar: elegir archivos…</label>
@@ -56,6 +57,7 @@
   <p id="resumen" class="dato"></p>
   <button type="button" class="vermas ancho" data-dialogo="dGeneral">Ver más sobre las proyecciones y estos números</button>
   <button id="aRegistro" type="button" class="boton ancho">Siguiente: registro FBP con el CT →</button>
+  <label class="tipoEquipo">Imagen del equipo <select class="tipoEquipoSel" aria-label="Imagen del equipo con o sin corrección de atenuación"><option value="ac">con atenuación (AC)</option><option value="noac">sin atenuación (NoAC)</option></select></label>
   <button id="aDirecto" type="button" class="boton ancho secundario">Ir directo: simulador con la receta del equipo frente a Siemens →</button>
   <input id="directoImagen" type="file">
   <p id="directoEstado" class="estado"></p>
@@ -273,6 +275,7 @@
    <div class="otra equipo">
     <h3>Comparar con la imagen del equipo (provisional)</h3>
     <p>Carga el eje corto que reconstruyó el equipo. El simulador adopta su eje, su posición y su zoom, se enmascara igual y se lleva a su escala de valores.</p>
+    <label class="tipoEquipo">Imagen del equipo <select class="tipoEquipoSel" aria-label="Imagen del equipo con o sin corrección de atenuación"><option value="ac">con atenuación (AC)</option><option value="noac">sin atenuación (NoAC)</option></select></label>
     <label class="boton ancho otro" for="reoArchivoEquipo">Cargar imagen del equipo…</label>
     <input id="reoArchivoEquipo" type="file">
     <p id="reoEquipoEstado" class="estado"></p>
@@ -564,7 +567,7 @@
 <script src="caja.js?v=3"></script>
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="eje-equipo.js?v=2"></script>
-<script src="movil.js?v=25"></script>
+<script src="eje-equipo.js?v=3"></script>
+<script src="movil.js?v=26"></script>
 </body>
 </html>
