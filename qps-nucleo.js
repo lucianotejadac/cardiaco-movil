@@ -238,6 +238,6 @@ const QpsNucleo=(()=>{
   return {zona:z,extension:100*sv/tv,extensionArea:100*sa/ta,porcentaje:pct,valor:medio};
  }
  const puntaje=(valor,ref)=>Math.min(4,Math.max(0,Math.ceil((1-valor/ref)*10-1e-9)));
- return {NT,NF,NOMBRES,ANILLOS,girar,elipsoideConEje,perfiles,pared,suavizar,evaluar,medir,calibrar,zonaPorPuntajes,limiteDesdeZona,limiteEn,perfusion,puntaje,disco,arco,muestra,desenfocar,anillosHasta};
+ return {NT,NF,NOMBRES,ANILLOS,segmentos,superficie,volumenMalla,limiteBasal,girar,elipsoideConEje,perfiles,pared,suavizar,evaluar,medir,calibrar,zonaPorPuntajes,limiteDesdeZona,limiteEn,perfusion,puntaje,disco,arco,muestra,desenfocar,anillosHasta};
 })();
 if(typeof module!=='undefined')module.exports=QpsNucleo;else window.QpsNucleo=QpsNucleo;

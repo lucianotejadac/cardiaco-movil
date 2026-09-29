@@ -363,7 +363,7 @@ async function aOsem(){
 }
 // Segunda parte, sin cambiar de simulador: reorientar sobre la reconstruccion de la izquierda.
 // Primero se ubica el corazon con una caja en coronal y sagital; despues se reorienta.
-const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();if(id!=='cmp')Comparador.salir();for(const q of ['qc','reg','osem','gat','caja','reo','cmp','qps'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
+const mostrarSolo=id=>{if(id!=='gat')Gatillado.salir();if(id!=='cmp')Comparador.salir();for(const q of ['qc','reg','osem','gat','caja','reo','cmp','qps','qgs7'])$(q).classList.toggle('oculta',q!==id);window.scrollTo(0,0);};
 const entradaIzquierda=()=>{const o=OsemMovil.estado;return o.historial.find(h=>h.id===o.a);};
 // De donde se vino a la caja (la OSEM o el control de calidad) y con que volumen se trabaja.
 const segunda={origen:'osem',s:null,referencia:null,directo:null};
@@ -399,9 +399,9 @@ function aComparar(i){const q=estado.equipo[i];if(!q)return;mostrarSolo('cmp');C
 function aReorientar(){
  mostrarSolo('reo');botonesEquipo();
  Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
- if(segunda.origen==='caso7'&&!Caso7.estado.inicial)Caso7.torcer();
+ if(segunda.origen==='caso7'&&Caso7.debeTorcer())Caso7.torcer();
 }
-function aOsemDesdeCaja(){if(segunda.origen==='caso7')mostrarSolo('reg');else if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
+function aOsemDesdeCaja(){if(segunda.origen==='caso7')Caso7.volverDesdeCaja();else if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
 // Caso 7: la caja y la reorientacion trabajan sobre la reconstruccion con la receta del equipo.
 function prepararCaso7({s}){Object.assign(segunda,{origen:'caso7',s,referencia:null,directo:null});$('volverOsem').textContent='← Volver al registro';}
 function aQc7(){mostrarSolo('qc');armar();}
@@ -511,7 +511,7 @@ $('reoArchivoEquipo').addEventListener('change',async ev=>{
 });
 $('volverOsem').addEventListener('click',aOsemDesdeCaja);
 $('volverCaja').addEventListener('click',aCajaDesdeReo);
-Progreso.iniciar();Qps.iniciar();Caso7.iniciar();
+Progreso.iniciar();Qps.iniciar();Caso7.iniciar();Gatillado7.iniciar();
 Registro.iniciar();
 OsemMovil.iniciar();
 Reorientar.iniciar();

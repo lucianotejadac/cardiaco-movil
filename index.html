@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=32">
+<link rel="stylesheet" href="movil.css?v=33">
 </head>
 <body>
 <header class="barra">
@@ -291,7 +291,34 @@
   <h3 class="qpsT">Por segmento</h3>
   <table id="qpsSegmentos" class="qpsTabla chica"></table>
   <p id="qpsNota" class="dato"></p>
+  <button id="a7Gatillado" type="button" class="boton ancho solo7">Paso 5: ejes del gatillado →</button>
+  <p class="clave solo7">Receta del equipo para el gatillado: OSEM 4 × 4, sin atenuación, gaussiano de 8,4 mm, ocho intervalos. Si corregiste el movimiento, se aplica la misma corrección.</p>
   <button type="button" class="vermas ancho" data-dialogo="dQps">Ver más sobre esta sección</button>
+ </section>
+
+ <section class="oculta" id="qgs7">
+  <button id="volverQgs" type="button" class="cambio">← Volver a la orientación de los ejes</button>
+  <div class="columna">Mapa QGS · estrés gatillado</div>
+  <p id="qgsEstado" class="estado"></p>
+  <h3 class="qpsT">Ventrículo en 3D</h3>
+  <canvas id="qgs3d" class="libre gira" aria-label="Ventrículo en 3D: superficie interna que late y externa en alambre. Arrastra para girarlo."></canvas>
+  <div class="recetas"><button id="qgsLatir" type="button" class="mini">■ Parar</button><span class="clave">Arrastra la imagen para girarlo. Gris, la superficie interna en cada intervalo; naranja, la externa en fin de diástole.</span></div>
+  <h3 class="qpsT">Resultados</h3>
+  <table id="qgsTabla" class="qpsTabla"></table>
+  <button id="qgsRevelar" type="button" class="boton ancho otro">Ver el resultado del equipo</button>
+  <h3 class="qpsT">Volumen del ventrículo en el ciclo</h3>
+  <canvas id="qgsCurva" class="libre ancho" aria-label="Curva de volumen y de llenado en los ocho intervalos."></canvas>
+  <h3 class="qpsT">Mapas polares</h3>
+  <div class="rejilla">
+   <figure><figcaption>Perfusión en fin de diástole (%)</figcaption><canvas id="qgsEd" class="libre"></canvas></figure>
+   <figure><figcaption>Perfusión en fin de sístole (%)</figcaption><canvas id="qgsEs" class="libre"></canvas></figure>
+   <figure><figcaption>Movimiento (0 a 10 mm)</figcaption><canvas id="qgsMov" class="libre"></canvas></figure>
+   <figure><figcaption>Engrosamiento (%)</figcaption><canvas id="qgsEng" class="libre"></canvas></figure>
+  </div>
+  <h3 class="qpsT">Fin de diástole y fin de sístole</h3>
+  <canvas id="qgsCortes" class="libre ancho" aria-label="Eje corto, largo vertical y largo horizontal en fin de diástole y en fin de sístole."></canvas>
+  <p id="qgsNota" class="dato"></p>
+  <button id="a7Finales" type="button" class="boton ancho solo7" disabled>Paso 7: pantallas finales (en preparación)</button>
  </section>
 
  <section class="oculta" id="caja">
@@ -674,10 +701,12 @@
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=5"></script>
-<script src="qps-nucleo.js?v=4"></script>
+<script src="qps-nucleo.js?v=5"></script>
 <script src="qps.js?v=6"></script>
 <script src="caso7-constantes.js?v=1"></script>
-<script src="caso7.js?v=1"></script>
-<script src="movil.js?v=32"></script>
+<script src="caso7-gatillado-constantes.js?v=1"></script>
+<script src="caso7-gatillado.js?v=2"></script>
+<script src="caso7.js?v=2"></script>
+<script src="movil.js?v=33"></script>
 </body>
 </html>

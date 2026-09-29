@@ -515,3 +515,16 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 
 **Validación.** Emulación de teléfono, ZIP con saltos. Corrigiendo y con el eje a 2° del equipo: volumen 46 ml, extensión 19 %, suma de puntajes 20 (equipo: 43 ml, 21 %, 13). Sin corregir los saltos: con el eje del equipo sobre esa reconstrucción, la extensión sube a 43 %.
 
+## 2026-09-29 · Recorrido del caso 7, pasos 5 y 6: gatillado y mapa QGS
+
+**Decisiones (`caso7-gatillado.js`).**
+- **Paso 5.** Reconstruye los 8 intervalos con la receta del equipo para el gatillado (OSEM 4 × 4, sin atenuación, gaussiano 8,4 mm), solo en 49 cortes alrededor del corazón. Si el estudiante corrigió el movimiento, cada intervalo se corrige con los mismos saltos. La caja y la reorientación trabajan sobre la suma de los intervalos; el eje parte otra vez torcido al azar, entre 8° y 15°. Se guarda en el dispositivo, recortado a una caja alrededor del corazón.
+- **Paso 6.** Con el eje y el centro del estudiante: elipsoide común sobre la suma, perfiles por intervalo, bordes de la pared, volumen por intervalo, fin de diástole y de sístole, fracción de eyección, forma, excentricidad, curva de volumen por spline periódico y llenado (PER, PFR, PFR2, MFR/3, TTPF). Cuatro mapas polares: perfusión en fin de diástole y de sístole, movimiento del borde interno y engrosamiento por aumento de cuentas.
+- **Calibración congelada** en `caso7-gatillado-constantes.js`: base y bordes por intervalo, rectas de los cuatro mapas y factores de forma y llenado, obtenidos con la aplicación sobre el gatillado sin saltos y con el eje del equipo. En esa condición los doce números coinciden con QGS.
+- **Ventrículo en 3D:** superficie interna suavizada, sólida, que late en los 8 intervalos, y superficie externa de fin de diástole en alambre naranja, en la vista oblicua anterior derecha de QGS. Se gira arrastrando; el candado cerrado la bloquea.
+- Los números del equipo se ven al pulsar «Ver el resultado del equipo», igual que en el paso 4.
+
+**Validación.** Emulación de teléfono, ZIP con saltos, corrigiendo, eje del gatillado a 2° del equipo. Paso 5: 16 s. Paso 6: volumen de fin de diástole 56 ml (equipo 55), de fin de sístole 18 (18), fracción de eyección 67 % (67), PER −3,50 (−3,60), TTPF 126 ms (130).
+
+**Pendiente.** Paso 7, pantallas finales con el reposo.
+
