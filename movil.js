@@ -167,7 +167,7 @@ async function cargar(entrada){
    }
   }
   mensaje('Leyendo '+file.name+'…');
-  let bytes,origen=file.name,ct=null,gat=null,equipo=null;
+  let bytes,origen=file.name,ct=null,gat=null,equipo=null,ejes=null;
   if(/\.zip$/i.test(file.name)||/zip/.test(file.type)){
    const buf=await file.arrayBuffer();const lista=await entradasZip(buf);const e=elegirEntradas(lista);
    if(!e)throw Error('Dentro del ZIP no hay NM_estres.dcm. Revisa que sea el ZIP «Cardiaco …» de U-Cursos.');
@@ -175,9 +175,11 @@ async function cargar(entrada){
    bytes=await extraer(buf,e.cruda);
    if(e.ct.length){mensaje('Descomprimiendo el CT…');ct=[];for(const q of e.ct)ct.push(await extraer(buf,q));}
    if(e.gat){mensaje('Descomprimiendo la adquisición gatillada…');gat=await extraer(buf,e.gat);}
-   if(e.equipo.length){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo=[];const x=async q=>q?await extraer(buf,q):null;for(const q of e.equipo){const ct=[];for(const c of q.ct)ct.push(await extraer(buf,c));equipo.push({recon:await x(q.rec),proy:await x(q.proy),proyQC:await x(q.proyQC),saNoAC:await x(q.saNoAC),saAC:await x(q.saAC),saGat:await x(q.saGat),proyGat:await x(q.proyGat),ct,caso:q.caso,fase:q.fase});}}
+   if(e.equipo.length){mensaje('Descomprimiendo la reconstrucción del equipo…');equipo=[];const x=async q=>q?await extraer(buf,q):null;for(const q of e.equipo){const ct=[];for(const c of q.ct)ct.push(await extraer(buf,c));const it={recon:await x(q.rec),proy:await x(q.proy),proyQC:await x(q.proyQC),saNoAC:await x(q.saNoAC),saAC:await x(q.saAC),saGat:await x(q.saGat),proyGat:await x(q.proyGat),ct,caso:q.caso,fase:q.fase};equipo.push(it);
+     // Los ejes cortos del equipo de las mismas proyecciones que se abren: los usa la seccion del mapa polar.
+     if(q.proy.name===e.cruda.name)ejes=[it.saAC,it.saNoAC].filter(Boolean);}}
   }else bytes=new Uint8Array(await file.arrayBuffer());
-  if(await mostrar(bytes,origen,false,ct,gat,equipo))await guardar(bytes,origen,ct,gat,equipo);
+  if(await mostrar(bytes,origen,false,ct,gat,equipo,ejes))await guardar(bytes,origen,ct,gat,equipo,ejes);
  }catch(err){mensaje(err.message||String(err),'error');console.error(err);}
 }
 // Muestra un DICOM ya extraido. Devuelve true si se pudo leer.

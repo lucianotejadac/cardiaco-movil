@@ -450,5 +450,14 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 
 **Lo que es estimación, y se dice en la sección.** El equipo no guardó su mapa polar con atenuación: la zona anormal de referencia se armó dentro de los segmentos que el equipo puntuó, hasta completar 21 %. Los puntajes usan una referencia por segmento fijada para dar el puntaje del equipo. La magnitud del cambio de extensión con la receta no es confiable: el límite está pegado al mapa de referencia.
 
-**Sin publicar.** El cambio queda en la copia local. Trae constantes obtenidas de un examen real; la publicación espera la decisión del docente.
+**Publicación.** Quedó primero solo en la copia local, porque trae constantes obtenidas de un examen real. El docente pidió publicarla el mismo día.
+
+## 2026-09-29 · Caso 7 en ZIP y sección del mapa polar desde el ZIP
+
+**Contexto.** El docente pidió un ZIP con los archivos del caso de referencia y publicar el simulador.
+
+**Decisiones.**
+- **El caso de referencia pasa a ser el «caso 7».** El ZIP sigue la estructura de la entrega: `Caso 7/Estres/NM_estres.dcm`, `CT 512/` y `Referencia equipo/` con el eje corto con y sin atenuación y la transversal. Solo trae el estrés.
+- **DICOM anonimizados.** Se vaciaron nombre, identificador, fecha de nacimiento, número de acceso e identificador de estudio; se quitaron institución, médicos, operador, estación, número de serie y todas las etiquetas privadas. Se conservan sexo, edad, fechas del examen y los identificadores de estudio, serie y marco de referencia, porque el simulador reconoce el caso por el marco. Se comprobó que ningún archivo contiene el nombre, el identificador ni la institución del original.
+- **El simulador toma del ZIP los ejes cortos del equipo** de las mismas proyecciones que abre, y los entrega a la sección del mapa polar. Antes solo los tomaba al cargar por carpeta.
 
