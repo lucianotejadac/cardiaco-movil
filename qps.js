@@ -77,6 +77,29 @@ const Qps=(()=>{
   }else{q.L=null;q.f={cuentas:1,forma:1,excentricidad:1,extension:1,severidad:.9};q.refSeg=null;}
   q.ref=resultado(R);q.listo=true;controles();calcular();
  }
+ /* Caso 7: el eje de partida es el del estudiante; la calibracion viene congelada (constantes
+    obtenidas con los datos sin saltos y el eje del equipo) o, si faltan, se hace aqui con el eje del
+    equipo. La referencia del equipo queda oculta hasta que se pide. */
+ async function abrirCaso7({s,reg,ref,fuente,marco,centro}){
+  const n=s.n;q.caso7=true;q.revelar=false;q.s=s;q.reg=reg;q.fuente=fuente;q.d={nx:n,ny:n,nz:n};q.sp=s.spacing;q.x=ref;q.factor=ref.factor;
+  q.recetaEquipo={...ref.receta};q.receta={...ref.receta};q.volRef=ref.sim;q.vol=ref.sim;q.dAz=0;q.dEl=0;q.obj=EQUIPO[cardiacoHash(s.frame)]||null;
+  q.marcoEquipo=ref.marco;q.marco=marco;q.O0=centro.slice();
+  const K=window.CASO7_CONSTANTES?constantesDesde(window.CASO7_CONSTANTES):null;
+  if(K){q.cal=K.cal;q.f=K.f;q.refSeg=K.refSeg;q.L=K.L;q.congelado=true;q.R0=Q.evaluar(q.volRef,q.d,ref.marco,ref.centro,q.cal,q.sp,N);}
+  else{
+   const c=Q.calibrar(q.volRef,q.d,ref.marco,ref.centro,q.sp,q.obj,N,ref.cal||null);q.cal=c.cal;q.congelado=false;const R=Q.medir(q.volRef,q.d,c.E,c.P,c.W,c.S,c.cal,q.sp,N);q.R0=R;
+   const z=Q.zonaPorPuntajes(R,q.obj.puntajes,q.obj.extension,q.obj.zonaSinAtenuacion?desplegar(q.obj.zonaSinAtenuacion,96):null,96);q.L=Q.limiteDesdeZona(R,z.zona);const p=Q.perfusion(R,q.L);
+   q.f={cuentas:q.obj.cuentas/R.medidas.cuentas,forma:q.obj.forma/R.medidas.forma,excentricidad:q.obj.excentricidad/R.medidas.excentricidad,extension:q.obj.extension/p.extension,severidad:q.obj.tpd/p.extensionArea};
+   q.refSeg={};for(let k=1;k<=17;k++)q.refSeg[k]=p.valor[k]/(1.05-.1*(q.obj.puntajes[k]||0));
+  }
+  if(!ref.guardada)await guardarReferencia(s,fuente,ref,q.cal);
+  await leerRecetas();q.ref=resultado(q.R0);
+  if(q.obj){const o=q.obj;Object.assign(q.ref,{volumen:o.volumen,pared:o.pared,cuentas:o.cuentas,defecto:o.defecto,extension:o.extension,tpd:o.tpd,forma:o.forma,excentricidad:o.excentricidad,puntajes:Object.fromEntries(Array.from({length:17},(_,i)=>[i+1,o.puntajes[i+1]||0])),sss:Object.values(o.puntajes).reduce((a,b)=>a+b,0)});}
+  q.listo=true;controles();calcular();
+ }
+ // Constantes del caso 7: limite normal en enteros (centesimas; -32768 fuera del disco) en base64.
+ function constantesDesde(k){const b=atob(k.L),v=new Int16Array(b.length/2);for(let i=0;i<v.length;i++)v[i]=(b.charCodeAt(2*i)|(b.charCodeAt(2*i+1)<<8))<<16>>16;const L=new Float32Array(v.length);for(let i=0;i<v.length;i++)L[i]=v[i]===-32768?-1e9:v[i]/100;return {cal:k.cal,f:k.f,refSeg:k.refSeg,L};}
+ function exportarConstantes(){const v=new Int16Array(q.L.length);for(let i=0;i<v.length;i++)v[i]=q.L[i]<-1000?-32768:Math.max(-32767,Math.min(32767,Math.round(q.L[i]*100)));let s='';const u=new Uint8Array(v.buffer);for(let i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return {N,cal:q.cal,f:q.f,refSeg:q.refSeg,L:btoa(s)};}
  function resultado(X){
   const m=X.medidas,p=q.L?Q.perfusion(X,X===q.R0?q.L:Q.limiteEn(q.R0,q.L,X)):null,r={X,p};
   r.volumen=m.volumen;r.pared=m.pared;r.cuentas=m.cuentas*q.f.cuentas;r.forma=m.forma*q.f.forma;r.excentricidad=Math.min(.99,m.excentricidad*q.f.excentricidad);r.largo=m.largo;
@@ -89,14 +112,15 @@ const Qps=(()=>{
  function calcular(){
   if(!q.listo)return;const t0=performance.now(),aviso=$('qpsEstado');
   try{
-   const X=(q.dAz===0&&q.dEl===0&&q.vol===q.volRef)?q.R0:Q.evaluar(q.vol,q.d,ejeActual(),q.R0.E.O,q.cal,q.sp,N);q.act=resultado(X);
+   const X=(!q.caso7&&q.dAz===0&&q.dEl===0&&q.vol===q.volRef)?q.R0:Q.evaluar(q.vol,q.d,ejeActual(),q.caso7?q.O0:q.R0.E.O,q.cal,q.sp,N);q.act=resultado(X);
    const m=X.medidas,m0=q.R0.medidas,salto=Math.abs(m.pared/m0.pared-1)>.2||Math.abs(m.semiejeLargo/m0.semiejeLargo-1)>.12;q.inestable=salto&&q.vol===q.volRef;
-   aviso.className=q.inestable?'estado error':'estado ok';aviso.textContent=q.inestable?'Con este eje el ajuste de la pared dejó de ser confiable: la pared medida cambió más de 20 %. Los números de esta condición no deben leerse; acerca el eje al del equipo.':`${esReferencia()?'Condición de referencia: eje y receta del equipo.':'Condición modificada.'} Cálculo en ${dec(performance.now()-t0,0)} ms.`;
-  }catch(err){aviso.className='estado error';aviso.textContent='No se pudo calcular con este eje: '+(err.message||err)+' Acerca el eje al del equipo.';console.error(err);return;}
+   aviso.className=q.inestable?'estado error':'estado ok';aviso.textContent=q.inestable?'Con este eje el ajuste de la pared dejó de ser confiable: la pared medida cambió más de 20 %. Los números de esta condición no deben leerse; '+(q.caso7?'revisa el centro y endereza el eje.':'acerca el eje al del equipo.'):`${q.caso7?(q.dAz||q.dEl?'Tu eje, girado con los deslizadores.':'Tu eje, el que dejaste en la reorientación.'):esReferencia()?'Condición de referencia: eje y receta del equipo.':'Condición modificada.'} Cálculo en ${dec(performance.now()-t0,0)} ms.`;
+  }catch(err){aviso.className='estado error';aviso.textContent='No se pudo calcular con este eje: '+(err.message||err)+(q.caso7?' Revisa que el centro (la caja o el punto amarillo de la reorientación) esté sobre el ventrículo y endereza el eje.':' Acerca el eje al del equipo.');console.error(err);return;}
   pintar();
  }
  const mismaReceta=(a,b)=>a.it===b.it&&a.sub===b.sub&&Math.abs(a.fwhm-b.fwhm)<.05&&!!a.ac===!!b.ac&&!!a.dispersion===!!b.dispersion;
- const esReferencia=()=>q.dAz===0&&q.dEl===0&&q.vol===q.volRef;
+ const esReferencia=()=>!q.caso7&&q.dAz===0&&q.dEl===0&&q.vol===q.volRef;
+ const oculto=()=>q.caso7&&!q.revelar;
  const textoReceta=r=>`OSEM ${r.it} × ${r.sub}${r.ac?' con atenuación':' sin atenuación'}${r.dispersion?' y dispersión':''}${r.fwhm>0?`, gaussiano ${dec(r.fwhm,1)} mm`:', sin filtro'}`;
 
  /* ---------- controles ---------- */
@@ -186,24 +210,26 @@ const Qps=(()=>{
  }
  function tabla(){
   const a=q.act,r=q.ref,o=q.obj,f=[['Volumen','volumen',0,'ml'],['Pared','pared',0,'ml'],['Cuentas','cuentas',0,'mil'],['Defecto','defecto',0,'ml'],['Extensión','extension',0,'%'],['TPD','tpd',0,'%'],['Forma (SI)','forma',2,''],['Excentricidad','excentricidad',2,'']];
-  const t=$('qpsTabla');t.replaceChildren();const cab=t.insertRow();['Medida','Ahora','Referencia','Cambio'].forEach(x=>{const c=document.createElement('th');c.textContent=x;cab.append(c);});
+  const t=$('qpsTabla');t.replaceChildren();const cab=t.insertRow();(oculto()?['Medida','Tu resultado']:['Medida',q.caso7?'Tu resultado':'Ahora',q.caso7?'Equipo':'Referencia','Cambio']).forEach(x=>{const c=document.createElement('th');c.textContent=x;cab.append(c);});
   for(const [n,k,d,un] of f){if(a[k]===undefined)continue;const fila=t.insertRow(),dif=a[k]-r[k],cam=Math.abs(dif)<.5*10**-d?'—':(dif>0?'+':'−')+dec(Math.abs(dif),d);
-   [n,`${dec(a[k],d)}${un?' '+un:''}`,`${dec(r[k],d)}${un?' '+un:''}`,cam].forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if(i===3&&cam!=='—')c.className='cambia';});}
-  if(a.sss!==undefined){const fila=t.insertRow(),d=a.sss-r.sss;['Suma de puntajes (SSS)',String(a.sss),String(r.sss),d?(d>0?'+':'−')+Math.abs(d):'—'].forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if(i===3&&d)c.className='cambia';});
-   const f2=t.insertRow(),p=x=>Math.round(x/68*100);['SS%',p(a.sss)+' %',p(r.sss)+' %',p(a.sss)-p(r.sss)?String(p(a.sss)-p(r.sss)):'—'].forEach(x=>f2.insertCell().textContent=x);}
-  const s=$('qpsSegmentos');s.replaceChildren();const c2=s.insertRow();['Segmento','Valor','Ref.',...(a.porcentaje?['% anormal','Ref.','Puntaje','Ref.']:[])].forEach(x=>{const c=document.createElement('th');c.textContent=x;c2.append(c);});
-  for(let k=1;k<=17;k++){const fila=s.insertRow(),v=[Q.NOMBRES[k-1],dec(a.valor[k]),dec(r.valor[k])];if(a.porcentaje)v.push(dec(a.porcentaje[k]),dec(r.porcentaje[k]),String(a.puntajes[k]),String(r.puntajes[k]));
+   (oculto()?[n,`${dec(a[k],d)}${un?' '+un:''}`]:[n,`${dec(a[k],d)}${un?' '+un:''}`,`${dec(r[k],d)}${un?' '+un:''}`,cam]).forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if(i===3&&cam!=='—')c.className='cambia';});}
+  if(a.sss!==undefined){const fila=t.insertRow(),d=a.sss-r.sss;(oculto()?['Suma de puntajes (SSS)',String(a.sss)]:['Suma de puntajes (SSS)',String(a.sss),String(r.sss),d?(d>0?'+':'−')+Math.abs(d):'—']).forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if(i===3&&d)c.className='cambia';});
+   const f2=t.insertRow(),p=x=>Math.round(x/68*100);(oculto()?['SS%',p(a.sss)+' %']:['SS%',p(a.sss)+' %',p(r.sss)+' %',p(a.sss)-p(r.sss)?String(p(a.sss)-p(r.sss)):'—']).forEach(x=>f2.insertCell().textContent=x);}
+  const s=$('qpsSegmentos');s.replaceChildren();const c2=s.insertRow();(oculto()?['Segmento','Valor',...(a.porcentaje?['% anormal','Puntaje']:[])]:['Segmento','Valor','Ref.',...(a.porcentaje?['% anormal','Ref.','Puntaje','Ref.']:[])]).forEach(x=>{const c=document.createElement('th');c.textContent=x;c2.append(c);});
+  for(let k=1;k<=17;k++){const fila=s.insertRow();if(oculto()){const v=[Q.NOMBRES[k-1],dec(a.valor[k])];if(a.porcentaje)v.push(dec(a.porcentaje[k]),String(a.puntajes[k]));v.forEach(x=>fila.insertCell().textContent=x);continue;}const v=[Q.NOMBRES[k-1],dec(a.valor[k]),dec(r.valor[k])];if(a.porcentaje)v.push(dec(a.porcentaje[k]),dec(r.porcentaje[k]),String(a.puntajes[k]),String(r.puntajes[k]));
    v.forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if((i===1&&Math.abs(a.valor[k]-r.valor[k])>=3)||(i===3&&Math.abs(a.porcentaje[k]-r.porcentaje[k])>=5)||(i===5&&a.puntajes[k]!==r.puntajes[k]))c.className='cambia';});}
  }
  function pintar(){
   const a=q.act,X=a.X,E=X.E,ang=CardiacoCore.angulosDe(E.eje[0],E.eje[1],E.eje[2]),a0=CardiacoCore.angulosDe(q.marco.a[0],q.marco.a[1],q.marco.a[2]);
   $('qpsAzTexto').textContent=`${q.dAz>0?'+':''}${q.dAz}°`;$('qpsElTexto').textContent=`${q.dEl>0?'+':''}${q.dEl}°`;
-  $('qpsEje').textContent=`Eje actual: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Eje del equipo: ${dec(a0.azimut,1)}° y ${dec(a0.elevacion,1)}°.`;
+  const eq=q.marcoEquipo?CardiacoCore.angulosDe(q.marcoEquipo.a[0],q.marcoEquipo.a[1],q.marcoEquipo.a[2]):a0;
+  $('qpsEje').textContent=oculto()?`Tu eje: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Los deslizadores lo giran desde el eje que dejaste en la reorientación.`:`Eje actual: azimut ${dec(ang.azimut,1)}°, elevación ${dec(ang.elevacion,1)}°. Eje del equipo: ${dec(eq.azimut,1)}° y ${dec(eq.elevacion,1)}°.`;
+  $('qpsPolarRef').closest('figure').hidden=oculto();$('qpsPuntajesRef').closest('figure').hidden=oculto();$('qpsRevelar').hidden=!q.caso7;$('volverQps').textContent=q.caso7?'← Volver a la orientación de los ejes':'← Volver al control de calidad';$('qpsRevelar').textContent=q.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';$('qpsReferencia').textContent=q.caso7?'Volver a tu eje y a la receta del equipo':'Volver al eje y a la receta del equipo';
   $('qpsRecetaTexto').textContent=`Reconstrucción en pantalla: ${textoReceta(q.receta)}${mismaReceta(q.receta,q.recetaEquipo)?' (la del equipo)':''}.`;
   $('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);
   ejes(a);vivo(a);guardadas();
   tabla();polar('qpsPolar',a,300,a.porcentaje||a.valor);polar('qpsPolarRef',q.ref,300,q.ref.porcentaje||q.ref.valor);
-  $('qpsPolarTitulo').textContent=a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';$('qpsPolarRefTitulo').textContent=a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
+  $('qpsPolarTitulo').textContent=a.porcentaje?'Ahora · extensión (%)':'Ahora · valor medio';$('qpsPolarRefTitulo').textContent=q.caso7?'Eje del equipo sobre esta reconstrucción':a.porcentaje?'Referencia · extensión (%)':'Referencia · valor medio';
   miniatura('qpsPuntajes',a.puntajes,150);miniatura('qpsPuntajesRef',q.ref.puntajes,150);$('qpsPuntajesCaja').hidden=!a.puntajes;
   cortes(a);splash(a);
   $('qpsNota').textContent=q.obj?`${q.obj.informe} Base de normales del equipo: ${q.obj.normales}. El límite normal y los puntajes son de este paciente y valen para la receta y el eje del equipo: si cambias la receta, la extensión cambia aunque la perfusión sea la misma. El equipo no guardó su mapa polar con atenuación: la zona de referencia parte de la que dibujó sin atenuación, que es la misma anatomía, y se extiende dentro de los segmentos que el equipo puntuó con atenuación hasta su 21 %.`:'Este examen no es el caso de referencia: no hay datos del equipo para calibrar. Se muestran las medidas directas, sin extensión, TPD ni puntajes.';
@@ -217,7 +243,7 @@ const Qps=(()=>{
   for(const [id,der,aba] of planos){
    const ctx=lienzo(id,lado,lado);corte(ctx,0,0,lado,q.vol,C,der,aba,semi,vm);
    const linea=(e,O,col,ancho,punto)=>{const o=[0,1,2].map(i=>O[i]-C[i]),x=(dot(o,der)+semi)*k,y=(dot(o,aba)+semi)*k,dx=dot(e,der)*L*k,dy=dot(e,aba)*L*k;ctx.strokeStyle=col;ctx.lineWidth=ancho;ctx.beginPath();ctx.moveTo(x-dx,y-dy);ctx.lineTo(x+dx,y+dy);ctx.stroke();if(punto){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x+dx,y+dy,4,0,2*Math.PI);ctx.fill();}return [x,y];};
-   ctx.setLineDash([5,4]);linea(m.a,q.R0.E.O,'rgba(255,255,255,.9)',2,false);ctx.setLineDash([]);
+   if(!oculto()){ctx.setLineDash([5,4]);linea((q.marcoEquipo||m).a,q.R0.E.O,'rgba(255,255,255,.9)',2,false);ctx.setLineDash([]);}
    const c=linea(E.eje,E.O,'#4dd0e1',2.5,true);ctx.fillStyle='#ffee58';ctx.beginPath();ctx.arc(c[0],c[1],3.5,0,2*Math.PI);ctx.fill();
   }
  }
@@ -240,6 +266,7 @@ const Qps=(()=>{
  const textoCorto=r=>`${r.it}×${r.sub}, ${r.fwhm>0?dec(r.fwhm,1)+' mm':'sin filtro'}${r.ac?', AC':''}${r.dispersion?', disp.':''}`;
  function iniciar(){
   $('qpsBorrar').addEventListener('click',borrarGuardadas);
+  $('qpsRevelar').addEventListener('click',()=>{q.revelar=!q.revelar;pintar();});
   $('qpsVerImagenes').addEventListener('click',e=>{const c=document.querySelector('#qps .controles.fijo'),o=c.classList.toggle('sinImagenes');e.target.textContent=o?'Mostrar imágenes':'Ocultar imágenes';e.target.setAttribute('aria-pressed',String(o));});
   let t=null;const vivo=()=>{clearTimeout(t);t=setTimeout(calcular,60);};
   $('qpsAz').addEventListener('input',e=>{q.dAz=+e.target.value;$('qpsAzTexto').textContent=`${q.dAz>0?'+':''}${q.dAz}°`;vivo();});
@@ -250,6 +277,6 @@ const Qps=(()=>{
   $('qpsRecetaEquipo').addEventListener('click',()=>{if(!q.listo)return;const r=q.recetaEquipo;$('qpsIter').value=r.it;$('qpsSub').value=String(r.sub);$('qpsFwhm').value=r.fwhm;$('qpsAC').checked=!!r.ac;$('qpsDisp').checked=!!r.dispersion;$('qpsPendiente').hidden=mismaReceta(leerReceta(),q.receta);});
  }
  function olvidar(){q.listo=false;q.vol=q.volRef=null;q.R0=null;q.act=q.ref=null;q.L=null;}
- return {iniciar,abrir,calcular,reconstruir,aReferencia,olvidar,leerReferencia,borrarGuardadas,estado:q};
+ return {iniciar,abrir,abrirCaso7,exportarConstantes,guardarReferencia,calcular,reconstruir,aReferencia,olvidar,leerReferencia,borrarGuardadas,estado:q};
 })();
 window.Qps=Qps;

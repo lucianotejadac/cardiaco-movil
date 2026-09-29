@@ -498,3 +498,20 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **Tres cortes más en el bloque fijo:** eje corto, largo vertical y largo horizontal por el centro, con los bordes de la pared, rehechos con cada movimiento. Un botón «Ocultar imágenes» deja solo los deslizadores.
 - Las reconstrucciones guardadas siguen sirviendo: la zona no cambia la reconstrucción ni la calibración.
 
+## 2026-09-29 · Recorrido del caso 7, pasos 1 a 4
+
+**Contexto.** El docente pidió ordenar el simulador para el caso 7 en un recorrido fijo: control de calidad con saltos y corrección automática; registro del mapa de atenuación ya alineado; caja y orientación de ejes que parten torcidos al azar; mapa polar con posibilidad de modificar ejes; luego caja y ejes del gatillado, mapa QGS con ventrículo en 3D y, al final, las pantallas completas, para lo cual entra también el reposo. Durante el trabajo el estudiante ve la receta del equipo; el eje y los resultados del equipo se ven al final, con un botón.
+
+**ZIP nuevo del caso 7** (`mapa-polar-qps/armar_zip_caso7.py`): estrés y reposo, cada uno con proyecciones, gatillada, CT e imágenes del equipo (ejes cortos con y sin atenuación, transversal y gatillado), anonimizados; sin las copias corregidas por el equipo. Dos saltos a lo largo de la camilla en las proyecciones de estrés, crudas y gatilladas: 3 píxeles desde el paso 10 y 2 más desde el paso 22. 105 archivos, 31 MB. Una versión sin saltos queda solo en el computador del docente.
+
+**Corrección automática mejorada.** El salto de 2 píxeles se medía en 1,5 y el umbral era 1,77. Ahora los candidatos débiles (sobre 60 % del umbral) se aceptan si el perfil de cinco pasos antes y cinco después confirma al menos 1,5 píxeles en el mismo sentido. Caso 7: encuentra los dos saltos. Caso 7 sin saltos y los cinco originales: ningún salto. Casos 1 a 5 modificados: igual que antes.
+
+**Decisiones del recorrido (`caso7.js`).**
+- Barra de pasos bajo el título; se puede volver a los pasos ya alcanzados.
+- En el caso 7 se ocultan los accesos de las otras secciones (comparador, acceso directo, OSEM paso a paso).
+- Paso 2: el registro existente, que ya parte alineado; al confirmar aparece «Paso 3».
+- Paso 3: reconstruye con la receta del equipo sobre las proyecciones que dejó el estudiante, corregidas o no. La caja y la reorientación usan la reconstrucción completa, sin la máscara del equipo, para que ubicar el corazón no sea trivial. El eje parte entre 8° y 15° fuera del eje del equipo, en azimut y elevación, con signo al azar.
+- Paso 4: el mapa polar parte del eje y del centro que dejó el estudiante. La calibración viene congelada en `caso7-constantes.js`, obtenida con la aplicación sobre las proyecciones sin saltos y con el eje del equipo; así la corrección, el eje y la receta cambian los resultados. La columna del equipo muestra lo que informó el equipo y se ve solo al pulsar «Ver el resultado del equipo».
+
+**Validación.** Emulación de teléfono, ZIP con saltos. Corrigiendo y con el eje a 2° del equipo: volumen 46 ml, extensión 19 %, suma de puntajes 20 (equipo: 43 ml, 21 %, 13). Sin corregir los saltos: con el eje del equipo sobre esa reconstrucción, la extensión sube a 43 %.
+

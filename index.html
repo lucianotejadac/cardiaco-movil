@@ -4,13 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=31">
+<link rel="stylesheet" href="movil.css?v=32">
 </head>
 <body>
 <header class="barra">
  <h1 id="titulo">SPECT cardíaco · Caso 1 · Estrés</h1>
  <button id="cambiar" type="button" class="mini" hidden>Cambiar archivo</button>
 </header>
+<nav id="pasos7" class="pasos7" hidden aria-label="Pasos del caso 7"></nav>
 <main>
  <section class="tarjeta" id="carga">
   <h2>Cargar el ZIP del caso</h2>
@@ -97,6 +98,8 @@
   </div>
   <button id="regConfirmar" type="button" class="boton ancho">Confirmar registro</button>
   <p id="regResultado" class="dato"></p>
+  <button id="a7Reconstruir" type="button" class="boton ancho solo7" hidden>Paso 3: reconstruir con la receta del equipo y ubicar el corazón →</button>
+  <p class="clave solo7">Receta del equipo: OSEM 6 × 4 con corrección de atenuación y de dispersión, filtro gaussiano de 9 mm. Se reconstruye sobre las proyecciones que dejaste en el control de calidad, corregidas o no.</p>
   <button id="aOsem" type="button" class="boton ancho" hidden>Siguiente: OSEM 1 × 1 sin correcciones →</button>
   <button type="button" class="vermas ancho" data-dialogo="dRegistro">Ver más sobre el registro</button>
  </section>
@@ -257,6 +260,7 @@
    <div id="qpsGuardadas" class="recetas"></div>
    <button id="qpsBorrar" type="button" class="mini">Borrar las reconstrucciones guardadas</button>
   </details>
+  <button id="qpsRevelar" type="button" class="boton ancho otro" hidden>Ver el resultado del equipo</button>
   <button id="qpsReferencia" type="button" class="vermas ancho">Volver al eje y a la receta del equipo</button>
 
   <h3 class="qpsT">Resultados</h3>
@@ -363,6 +367,7 @@
    </div>
   </div>
   <p id="reoResumen" class="dato"></p>
+  <button id="a7Mapa" type="button" class="boton ancho solo7">Paso 4: mapa polar con tu eje →</button>
   <button type="button" class="vermas ancho" data-dialogo="dReo">Ver más sobre la reorientación</button>
  </section>
 </main>
@@ -654,23 +659,25 @@
 <script src="vendor/dicomParser.min.js"></script>
 <script src="simulador95-engine.js?v=1"></script>
 <script src="cardiaco-casos.js?v=1"></script>
-<script src="correccion.js?v=1"></script>
+<script src="correccion.js?v=2"></script>
 <script src="progreso.js?v=1"></script>
-<script src="registro.js?v=6"></script>
+<script src="registro.js?v=7"></script>
 <script src="algorithm.js?v=1"></script>
 <script src="simulador95-psf.js?v=1"></script>
 <script src="simulador95-osem.js?v=1"></script>
 <script src="simulador95-pool.js?v=1"></script>
 <script src="osem-movil.js?v=4"></script>
 <script src="cardiaco-core.js?v=1"></script>
-<script src="reorientar.js?v=7"></script>
+<script src="reorientar.js?v=8"></script>
 <script src="referencia.js?v=1"></script>
 <script src="caja.js?v=3"></script>
 <script src="comparador.js?v=3"></script>
 <script src="gatillado.js?v=2"></script>
-<script src="eje-equipo.js?v=4"></script>
+<script src="eje-equipo.js?v=5"></script>
 <script src="qps-nucleo.js?v=4"></script>
-<script src="qps.js?v=4"></script>
-<script src="movil.js?v=30"></script>
+<script src="qps.js?v=6"></script>
+<script src="caso7-constantes.js?v=1"></script>
+<script src="caso7.js?v=1"></script>
+<script src="movil.js?v=32"></script>
 </body>
 </html>

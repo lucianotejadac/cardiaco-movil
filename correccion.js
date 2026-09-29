@@ -73,7 +73,9 @@ const Correccion=(()=>{
   // largo de la camilla de varios pasos antes y despues del salto (los dos cabezales juntos): ese
   // perfil casi no cambia con el angulo y junta muchas mas cuentas.
   const perfil=(t0,t1)=>{const q=new Float64Array(n);for(let h=0;h<H;h++)for(let t=t0;t<t1;t++){const g=im[h][t];for(let y=0;y<n;y++){let s=0;for(let x=0;x<n;x++)s+=g[y*n+x];q[y]+=s;}}let s=0;for(let y=0;y<n;y++)s+=q[y];for(let y=0;y<n;y++)q[y]/=s||1;return q;};
-  const candidatos=[];for(let t=1;t<T;t++)if(Math.abs(axial[t])>ua)candidatos.push(t);
+  // Candidatos: los que pasan el umbral y tambien los mas debiles (sobre 60 % del umbral); a estos
+  // ultimos se les exige que el perfil de varios pasos antes y despues confirme el salto.
+  const debil=.6*ua,candidatos=[];for(let t=1;t<T;t++)if(Math.abs(axial[t])>Math.max(.9,debil))candidatos.push(t);
   const afinar=t=>{
    const prev=candidatos.filter(c=>c<t).pop()||0,sig=candidatos.find(c=>c>t)||T,a0=Math.max(prev,t-5),b1=Math.min(sig,t+5);
    if(t-a0<2||b1-t<2)return axial[t];
@@ -84,7 +86,7 @@ const Correccion=(()=>{
   };
   const ax=new Int32Array(T),latV=[new Int32Array(T),new Int32Array(T)],saltos=[];let acum=0,ad=[0,0];
   for(let t=1;t<T;t++){
-   if(Math.abs(axial[t])>ua){const fino=afinar(t),m=Math.round(fino);if(m){acum+=m;saltos.push({tipo:'camilla',paso:t+1,pixeles:m,medido:axial[t],afinado:fino});}}
+   if(candidatos.includes(t)){const fino=afinar(t),m=Math.round(fino),fuerte=Math.abs(axial[t])>ua;if(m&&(fuerte||(Math.abs(fino)>=1.5&&Math.sign(fino)===Math.sign(axial[t])))){acum+=m;saltos.push({tipo:'camilla',paso:t+1,pixeles:m,medido:axial[t],afinado:fino,confirmado:!fuerte});}}
    ax[t]=acum;
    if(lat[t]>ul){
     const vx=rx[0][t]*u[0][t][0]+rx[1][t]*u[1][t][0],vy=rx[0][t]*u[0][t][1]+rx[1][t]*u[1][t][1],mod=Math.hypot(vx,vy),m=Math.round(mod);

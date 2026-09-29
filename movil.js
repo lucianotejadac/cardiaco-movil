@@ -196,6 +196,7 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes){
   estado.aviso=esDelCaso?'':propio?'Archivo propio, no es el caso 1. ':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
   mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+(esDelCaso?String(origen).replace(PROPIO,''):origen)+(recuperado?' (guardado en este teléfono)':''),esDelCaso||propio?'ok':'error');
   $('titulo').textContent=esDelCaso?'SPECT cardíaco · Caso 1 · Estrés':'SPECT cardíaco · '+(crudo.description||'archivo propio');
+  Caso7.entrar(Caso7.esCaso7(crudo.frame));if(Caso7.activo){estado.aviso='';mensaje('Caso 7, estrés: '+origen+(recuperado?' (guardado en este teléfono)':''),'ok');}
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=!esDelCaso;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
@@ -398,8 +399,12 @@ function aComparar(i){const q=estado.equipo[i];if(!q)return;mostrarSolo('cmp');C
 function aReorientar(){
  mostrarSolo('reo');botonesEquipo();
  Reorientar.abrir({entrada:Caja.estado.entrada,s:segunda.s,referencia:segunda.referencia,caja:Caja.caja()});
+ if(segunda.origen==='caso7'&&!Caso7.estado.inicial)Caso7.torcer();
 }
-function aOsemDesdeCaja(){if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
+function aOsemDesdeCaja(){if(segunda.origen==='caso7')mostrarSolo('reg');else if(segunda.origen==='qc'){mostrarSolo('qc');armar();}else mostrarSolo('osem');}
+// Caso 7: la caja y la reorientacion trabajan sobre la reconstruccion con la receta del equipo.
+function prepararCaso7({s}){Object.assign(segunda,{origen:'caso7',s,referencia:null,directo:null});$('volverOsem').textContent='← Volver al registro';}
+function aQc7(){mostrarSolo('qc');armar();}
 // Gatillado: se reconstruye con la receta del escritorio en el rango que elige el estudiante.
 function aGatillado(){
  mostrarSolo('gat');
@@ -479,7 +484,7 @@ async function aQps(){
 }
 let pendienteQps=false;
 $('aQps').addEventListener('click',aQps);
-$('volverQps').addEventListener('click',()=>{mostrarSolo('qc');armar();});
+$('volverQps').addEventListener('click',()=>{if(Caso7.activo){mostrarSolo('reo');return;}mostrarSolo('qc');armar();});
 // Con o sin atenuacion: un solo valor, con un selector en cada pantalla donde se usa.
 const selectoresTipo=()=>document.querySelectorAll('.tipoEquipoSel');
 function ponerTipo(t){EjeEquipo.fijarTipo(t);selectoresTipo().forEach(q=>{q.value=EjeEquipo.estado.tipo;});}
@@ -506,7 +511,7 @@ $('reoArchivoEquipo').addEventListener('change',async ev=>{
 });
 $('volverOsem').addEventListener('click',aOsemDesdeCaja);
 $('volverCaja').addEventListener('click',aCajaDesdeReo);
-Progreso.iniciar();Qps.iniciar();
+Progreso.iniciar();Qps.iniciar();Caso7.iniciar();
 Registro.iniciar();
 OsemMovil.iniciar();
 Reorientar.iniciar();
@@ -533,6 +538,6 @@ function candado(cerrado,avisar){
 }
 $('candado').addEventListener('click',()=>candado(!document.documentElement.classList.contains('bloqueado'),true));
 candado(false,false);
-window.MovilCardiaco={aQps,estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo,aComparar};
+window.MovilCardiaco={aQps,mostrarSolo,prepararCaso7,aQc7,estado,cargar,mostrar,recuperar,redibujar,armar,corregir,aRegistro,aQc,aOsem,aReg,aCaja,aReorientar,aGatillado,aEquipo,aComparar};
 // Al abrir la pagina, si el telefono ya tiene el archivo guardado, se muestra sin pedir el ZIP.
 recuperar();

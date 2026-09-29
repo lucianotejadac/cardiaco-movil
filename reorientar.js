@@ -151,6 +151,7 @@ const Reorientar=(()=>{
   for(const [id,ejes] of [['reoCortoEq',()=>{const m=Mk();return [m.u,m.v,M];}],['reoVlaEq',()=>{const m=Mk();return [m.a.map(q=>-q),m.v,M];}],['reoHlaEq',()=>{const m=Mk();return [m.u,m.a.map(q=>-q),M];}]])arrastre(id,ejes);
  }
  function olvidar(){r.vol=null;r.origen=null;r.claveCaja=null;r.caja=null;r.referencia=null;r.marcoFijo=null;r.comparar=null;r.equipo=null;cacheVol.entrada=null;cacheVol.vol=null;}
- return {iniciar,abrir,usarEquipo,olvidar,volumen,estado:r};
+ function fijar(az,el){r.marcoFijo=null;r.az=Math.max(-30,Math.min(120,az));r.el=Math.max(-40,Math.min(60,el));pintar();}
+ return {iniciar,abrir,usarEquipo,fijar,olvidar,volumen,estado:r};
 })();
 window.Reorientar=Reorientar;

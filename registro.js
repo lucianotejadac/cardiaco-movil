@@ -131,7 +131,7 @@ const Registro=(()=>{
   if(r.plano==='axial'){r.off[0]=tope(r.off[0]+du);r.off[1]=tope(r.off[1]+dv);}
   else if(r.plano==='coronal')r.off[0]=tope(r.off[0]+du);
   else r.off[1]=tope(r.off[1]+du);
-  if(r.confirmado){r.confirmado=null;$('aOsem').hidden=true;$('regResultado').textContent='Moviste el CT después de confirmar: vuelve a confirmar cuando calce.';$('regResultado').className='dato';}
+  if(r.confirmado){r.confirmado=null;$('aOsem').hidden=true;if($('a7Reconstruir'))$('a7Reconstruir').hidden=true;$('regResultado').textContent='Moviste el CT después de confirmar: vuelve a confirmar cuando calce.';$('regResultado').className='dato';}
   pintar();
  }
  function arrastre(c){
@@ -150,7 +150,7 @@ const Registro=(()=>{
   if(peor<=EXACTO){r.confirmado={x,y};out.className='dato bien';out.textContent=`Registro confirmado. Quedó a ${x} mm en X y ${y} mm en Y de la posición correcta: dentro de un vóxel (${vox} mm). El CT calza con la emisión.`;}
   else if(peor<=ACEPTABLE){r.confirmado={x,y};out.className='dato bien';out.textContent=`Registro confirmado. Quedó a ${x} mm en X y ${y} mm en Y de la posición correcta, unos dos vóxeles. Aceptable; si quieres afinar, ajusta y confirma de nuevo.`;}
   else{r.confirmado=null;out.className='dato mal';out.textContent='Todavía no calza. Mira la piel del tórax y el corazón en los tres planos, sigue moviendo el CT y vuelve a confirmar.';}
-  $('aOsem').hidden=!r.confirmado;
+  $('aOsem').hidden=!r.confirmado;if($('a7Reconstruir'))$('a7Reconstruir').hidden=!r.confirmado;
  }
 
  function iniciar(){

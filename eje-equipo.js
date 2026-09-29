@@ -146,7 +146,10 @@ const EjeEquipo=(()=>{
    if(R.fwhm){Progreso.avance(.87,'Gaussiano final…');vol=await Lab95.gaussian3D(vol,n,R.fwhm/s.spacing/2.354820045,()=>e.detenido);if(!vol)throw Error('detenida');}
    const sim=new Float32Array(n*p);for(let z=0;z<n;z++)sim.set(vol.subarray((n-1-z)*p,(n-z)*p),z*p); // z hacia la cabeza
    Progreso.avance(.92,'Misma grilla, máscara y escala de valores…');await pausa();
+   const completa=Float32Array.from(sim);
    e.clave=clave;e.resultado={...alinear(D,s,sim),modo:'receta',nombre,dispersion:disp,segundos:(performance.now()-t0)/1000};
+   // la misma reconstruccion sin la mascara del equipo, en la misma escala (la usa el caso 7)
+   for(let o=0;o<completa.length;o++)completa[o]=Math.max(0,completa[o])*e.resultado.factor;e.resultado.completa=completa;
    e.resultado.entrada.etiqueta=`receta del equipo · ${nombre}`;
    return e.resultado;
   }finally{e.ocupado=false;e.tarea=null;e.rechazo=null;Progreso.cerrar();}
