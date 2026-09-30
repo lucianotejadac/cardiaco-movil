@@ -700,3 +700,9 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - La calibración se hizo con los grados redondeados; con decimales, algún valor cambia en 1 punto (caso 7, estrés con atenuación: extensión 20 % frente a 21 %).
 
 **Validación.** En local, caso 8 listo en 2 min 11 s y caso 7 en 2 min 8 s: eje del equipo exacto en las cuatro orientaciones, centro del equipo, resultados del equipo a la vista, bases del navegador propias del dev y sin errores de JavaScript.
+
+## 2026-09-30 · Carga solo con el ZIP en la versión de estudiantes
+
+**Contexto.** El docente pidió dejar solo el botón del ZIP en la pantalla de carga de la versión de los estudiantes, antes de subir los casos 7 y 8 al grupo APG.
+
+**Decisiones.** Los bloques provisionales «Otra forma de cargar» y «Comparación directa con el equipo», y el «Ver más» de la carga, quedan ocultos con `hidden data-dev` (los elementos siguen en la página porque `movil.js` les engancha eventos). `sincronizar.py` los vuelve visibles en la versión dev. El texto de carga nombra los ZIP de los casos 7 y 8, y el título inicial ya no dice «Caso 1».

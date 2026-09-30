@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cardíaco móvil · Caso 1</title>
+<title>SPECT cardíaco</title>
 <link rel="stylesheet" href="movil.css?v=43">
 </head>
 <body>
 <header class="barra">
- <h1 id="titulo">SPECT cardíaco · Caso 1 · Estrés</h1>
+ <h1 id="titulo">SPECT cardíaco</h1>
  <div class="barraBotones"><button id="tutAbrir" type="button" class="mini solo7 tutBoton" aria-pressed="false">Tutorial</button><button id="cambiar" type="button" class="mini" hidden>Cambiar archivo</button></div>
 </header>
 <nav id="pasos7" class="pasos7" hidden aria-label="Pasos del caso 7"></nav>
 <main>
  <section class="tarjeta" id="carga">
   <h2>Cargar el ZIP del caso</h2>
-  <p>Elige el ZIP que descargaste de U-Cursos («Cardiaco …zip»), tal como está. La aplicación busca dentro las proyecciones de estrés del Caso 1, tal como salieron del equipo, y abre solo ese archivo.</p>
+  <p>Elige el ZIP del caso que descargaste de U-Cursos («Cardiaco caso 7.zip» o «Cardiaco caso 8.zip»), tal como está, sin descomprimirlo.</p>
   <label class="boton" for="archivo">Elegir el ZIP…</label>
   <input id="archivo" type="file" accept=".zip,application/zip,application/x-zip-compressed,.dcm,*/*">
-  <button type="button" class="vermas" data-dialogo="dCarga">Ver más</button>
-  <div class="otra">
+  <button type="button" class="vermas" data-dialogo="dCarga" hidden data-dev>Ver más</button>
+  <div class="otra" hidden data-dev>
    <h3>Otra forma de cargar (provisional)</h3>
    <p>Si tienes el examen fuera de un ZIP, elige los archivos DICOM o la carpeta completa. La aplicación revisa cada archivo y abre las proyecciones de estrés tal como salieron del equipo, con su tomografía computada y su adquisición sincronizada si están. Lo demás no se abre.</p>
    <label class="boton otro" for="archivos">Elegir archivos…</label>
@@ -27,7 +27,7 @@
    <label class="boton otro" for="carpeta">Elegir carpeta…</label>
    <input id="carpeta" type="file" webkitdirectory multiple>
   </div>
-  <div class="otra">
+  <div class="otra" hidden data-dev>
    <h3>Comparación directa con el equipo (provisional)</h3>
    <p>Elige la carpeta del examen, o sus archivos, con las proyecciones de estrés, la tomografía computada y el eje corto que reconstruyó el equipo, con o sin corrección de atenuación. La aplicación reconstruye con la receta del equipo y muestra las dos imágenes una sobre otra, sin pasar por los pasos intermedios.</p>
    <label class="tipoEquipo">Imagen del equipo <select class="tipoEquipoSel" aria-label="Imagen del equipo con o sin corrección de atenuación"><option value="ac">con atenuación (AC)</option><option value="noac">sin atenuación (NoAC)</option></select></label>
@@ -433,8 +433,8 @@
  <h2>Qué se carga</h2>
  <dl class="leyenda">
   <dt>El ZIP de U-Cursos</dt>
-  <dd>Es el mismo que descargaste para el computador. No hace falta descomprimirlo en la tablet: la aplicación lo abre y lee solo un archivo de la carpeta Caso 1 › Estres.</dd>
-  <dt>NM_estres.dcm, sin corregir</dt>
+  <dd>Es el mismo que descargaste de U-Cursos. No hace falta descomprimirlo en la tablet: la aplicación lo abre y lee de las carpetas Estres y Reposo solo lo que necesita.</dd>
+  <dt>NM_estres.dcm y NM_reposo.dcm, sin corregir</dt>
   <dd>Las proyecciones tal como salieron de la gammacámara, sin ninguna corrección.</dd>
   <dt>La corrección la hace la aplicación</dt>
   <dd>Con el botón «Corregir» la aplicación busca si el paciente se movió y corrige las proyecciones. No usa ninguna copia corregida por el equipo.</dd>
