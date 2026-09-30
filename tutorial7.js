@@ -71,8 +71,9 @@ const Tutorial7=(()=>{
   qgs7:[
    {o:'#qgsFase',t:'Elige la fase del gatillado: estrés o reposo.'},
    {o:'#qgsEstado',t:()=>K('Tu eje del gatillado y la receta del equipo con que se reconstruyó: OSEM 4 × 4, gaussiano de 8,4 mm, sin atenuación.','Tu eje del gatillado y la receta con que se reconstruyó: OSEM 4 × 4, gaussiano de 8,4 mm, sin atenuación. Es la del caso 7, porque este caso no trae el gatillado reconstruido por el equipo.')},
-   {o:'#qgs3d',t:'El ventrículo en 3D late con los 8 intervalos: en gris la superficie interna, en naranja la externa en fin de diástole. Arrástralo para girarlo.'},
+   {o:'#qgs3d',t:'El ventrículo en 3D late con los 8 intervalos medidos y cuadros interpolados entre ellos: en gris la superficie interna, en naranja la externa en fin de diástole. Arrástralo para girarlo.'},
    {o:'#qgsLatir',t:'Para o hace latir el ventrículo.'},
+   {o:'#qgsVel',t:'Late a la frecuencia real de esta fase. Con este control lo haces más lento o más rápido; los resultados no cambian.'},
    {o:'#qgsTabla',t:()=>'EDV y ESV: el ventrículo lleno y vacío. SV: lo que expulsa en cada latido. Fracción de eyección: SV sobre EDV. Forma y excentricidad. PER, PFR, PFR2, MFR/3 y TTPF: cómo se vacía y se llena.'+K('',' En este caso compara la fracción de eyección con el límite normal de la clase y con el del informe.')},
    {o:'#qgsRevelar',si:()=>!Gatillado7.estado.revelar,t:'Pulsa «Ver el resultado del equipo» para comparar par a par.',hasta:()=>!!Gatillado7.estado.revelar,espera:'Esperando que pulses «Ver el resultado del equipo»…'},
    {o:'#qgsCurvas',t:()=>'La curva de volumen de los 8 intervalos, en rojo, y su pendiente, en gris: el mínimo es el fin de sístole y la subida después es el llenado. Al revelar, la del equipo queda al lado.'+K(' En este caso el fin de diástole está en el primer intervalo y el de sístole, en el cuarto.',' En este caso el equipo puso el fin de diástole en el último intervalo, en las dos fases; el fin de sístole está en el intervalo 3 en estrés y en el 4 en reposo.')},

@@ -674,3 +674,17 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - Pauta en Word del caso 8 con las respuestas (local, no se publica).
 
 **Validación.** Exportación: con el eje del equipo redondeado, el simulador iguala al equipo en los cuatro mapas polares (extensión 3/0 % con atenuación y 6/0 % sin ella, SSS 2 y 7) y en el QGS (57 y 58 % frente a 57 y 59 %). Recorrido completo del caso 8 con saltos: la corrección informa los tres saltos y todo pasa. Recorrido completo del caso 7 como regresión: todo pasa.
+
+## 2026-09-30 · Latido interpolado y superficies lisas
+
+**Contexto.** El docente pidió que el latido tuviera más cuadros y que las superficies se vieran más lisas. Decisiones del docente: aplicarlo al ventrículo que late en el mapa QGS y a las superficies de las pantallas finales; latir a la frecuencia real del caso y además con un control de velocidad; sin botón para alternar entre lo medido y lo interpolado; la superficie externa sigue en alambre.
+
+**Decisiones.**
+- **Interpolación temporal** (`caso7-gatillado.js`): cada vértice del ventrículo es una suma ponderada de sus 8 posiciones medidas, con los pesos del mismo spline cúbico periódico que une los 8 volúmenes en la curva. Pasa exactamente por los 8 intervalos; el volumen de fin de diástole, el de fin de sístole, la fracción de eyección y el llenado se siguen midiendo con los 8. La etiqueta dice «Intervalo k de 8» en los cuadros medidos y «Entre los intervalos k y k+1» en los interpolados.
+- Para interpolar con la misma malla, la superficie de cada intervalo se remuestrea a 48 anillos del ápex a la base (la base sube y baja en el ciclo).
+- **Animación** con `requestAnimationFrame` en vez de un cuadro cada 140 ms. Late con el R-R que informó el equipo para esa fase (caso 7: 81 y 80 lpm; caso 8: 60 lpm), por la velocidad del control nuevo (25 a 200 %). No dibuja si la sección no está a la vista.
+- **Superficies lisas** (`malla3d.js`, nuevo): WebGL con la malla completa (antes, uno de cada 2 anillos y uno de cada 4 ángulos), normal por vértice, luz suave y bordes sin serrucho. Se dibuja en un lienzo aparte y se copia al lienzo 2D, donde siguen las etiquetas y el alambre. Para alisar el ventrículo sin encogerlo se suaviza el desplazamiento de cada punto sobre el elipsoide (100 pasadas), no las posiciones; antes, 14 pasadas de promedio sobre las posiciones lo achicaban. Con 200 o más pasadas quedaba un elipsoide genérico que escondería diferencias regionales. Encima, un alisado de Taubin suave, normales promediadas y un brillo leve. Se probó en un banco aparte con las superficies reales de los 8 intervalos. Sin WebGL, cada sección usa su dibujo por caras (ya con la malla interpolada).
+- **Superficie QPS** (mapa polar y pantallas finales): la misma malla lisa con el mapa polar como textura; la zona bajo el límite sigue en negro.
+- Textos: tutorial del mapa QGS (paso nuevo para la velocidad), guion de la pantalla QGS, nota bajo el ventrículo y glosario («interpolado», «lpm»).
+
+**Validación.** Recorridos completos de los casos 7 y 8 en local: el ventrículo dibuja 60 cuadros por segundo, late a 81 lpm (caso 7) y 60 lpm (caso 8) con la velocidad real, y el control de velocidad cambia la frecuencia. Con WebGL bloqueado, el dibujo por caras también late interpolado y sin errores de JavaScript.

@@ -110,6 +110,8 @@ const Glosario=(()=>{
   C('referencia','Lo que da la reconstrucción del simulador con el eje y la receta del equipo; los números de la columna «Equipo» son los que informó el equipo.',pal('referencia','i')),
   C('gatillado','Adquisición sincronizada con el electrocardiograma: cada latido se divide en 8 intervalos y se reconstruye un volumen por intervalo.',pal('gatillad[oa]s?','i')),
   C('intervalos','Las 8 partes en que se divide el latido en el gatillado.',pal('intervalos?','i')),
+  C('interpolado','Cuadro calculado entre dos intervalos medidos, con la misma curva que une los 8 volúmenes. Suaviza el latido, pero no agrega información: los resultados se miden con los 8 intervalos.',pal('interpolad[oa]s?|interpolan|interpolación','i')),
+  S('lpm','Latidos por minuto: la frecuencia cardíaca.'),
   C('curva de volumen','El volumen del ventrículo en cada intervalo del ciclo, unido por una curva. De su pendiente salen el vaciado y el llenado.',/curva/i),
   C('llenado y vaciado','Velocidad con que el ventrículo se llena en la diástole y se vacía en la sístole.',/llenado|vaciado|Filling/i),
   C('movimiento de la pared','Cuánto se mueve el borde interno entre fin de diástole y fin de sístole, en mm.',pal('movimiento','i')),
@@ -145,7 +147,7 @@ const Glosario=(()=>{
   d.showModal();d.scrollTop=0;
  }
  // Lo que va dibujado dentro de cada lienzo (no es texto de la pagina).
- const DIBUJADO={qgs3d:'BASE ANT SEPT ÁPEX INF intervalo ml superficie interna superficie externa',qgsCurva:'curva de volumen ml llenado intervalos',qgsCortes:'fin de diástole fin de sístole eje corto largo vertical largo horizontal',
+ const DIBUJADO={qgs3d:'BASE ANT SEPT ÁPEX INF intervalo intervalos interpolados ml superficie interna superficie externa',qgsCurva:'curva de volumen ml llenado intervalos',qgsCortes:'fin de diástole fin de sístole eje corto largo vertical largo horizontal',
   qpsCortes:'eje corto largo horizontal largo vertical superficie ANT INF SEPT ÁPEX borde interno borde externo base',qpsPolar:'mapa polar extensión % segmentos límite normal',qpsPolarRef:'mapa polar extensión % segmentos límite normal eje del equipo',qpsPuntajes:'puntajes segmentos',qpsPuntajesRef:'puntajes segmentos',
   qpsEjeAxial:'transversal azimut eje centro ápex',qpsEjeVertical:'plano vertical elevación eje',qgsEd:'ED %',qgsEs:'ES %',qgsMov:'movimiento mm',qgsEng:'engrosamiento %',regFusion:'SPECT CT fusión',
   reoAxial:'transaxial eje centro ápex',reoVertical:'plano vertical eje elevación',reoCorto:'eje corto',reoVla:'largo vertical',reoHla:'largo horizontal',cajaCoronal:'coronal caja',cajaSagital:'sagital caja'};

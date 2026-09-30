@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=42">
+<link rel="stylesheet" href="movil.css?v=43">
 </head>
 <body>
 <header class="barra">
@@ -307,7 +307,7 @@
   <p id="qgsEstado" class="estado"></p>
   <h3 class="qpsT">Ventrículo en 3D</h3>
   <canvas id="qgs3d" class="libre gira" aria-label="Ventrículo en 3D: superficie interna que late y externa en alambre. Arrastra para girarlo."></canvas>
-  <div class="recetas"><button id="qgsLatir" type="button" class="mini">■ Parar</button><span class="clave">Arrastra la imagen para girarlo. Gris, la superficie interna en cada intervalo; naranja, la externa en fin de diástole.</span></div>
+  <div class="recetas"><button id="qgsLatir" type="button" class="mini">■ Parar</button><label class="vel3d">Velocidad <input id="qgsVel" type="range" min="25" max="200" step="5" value="100" aria-label="Velocidad del latido"><span id="qgsVelTxt" class="mono"></span></label><span class="clave">Arrastra la imagen para girarlo. Gris, la superficie interna; naranja, la externa en fin de diástole. Entre los 8 intervalos medidos, los cuadros se interpolan con la misma curva del volumen.</span></div>
   <h3 class="qpsT" id="qgsTablaT">Resultados</h3>
   <table id="qgsTabla" class="qpsTabla"></table>
   <button id="qgsRevelar" type="button" class="boton ancho otro">Ver el resultado del equipo</button>
@@ -753,16 +753,17 @@
 <script src="comparador.js?v=4"></script>
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=7"></script>
+<script src="malla3d.js?v=1"></script>
 <script src="qps-nucleo.js?v=6"></script>
-<script src="qps.js?v=12"></script>
+<script src="qps.js?v=13"></script>
 <script src="caso7-constantes.js?v=6"></script>
 <script src="caso7-gatillado-constantes.js?v=5"></script>
-<script src="caso7-gatillado.js?v=11"></script>
-<script src="pantallas7.js?v=8"></script>
+<script src="caso7-gatillado.js?v=12"></script>
+<script src="pantallas7.js?v=9"></script>
 <script src="caso7.js?v=12"></script>
-<script src="glosario.js?v=3"></script>
+<script src="glosario.js?v=4"></script>
 <script src="preguntas7.js?v=5"></script>
-<script src="tutorial7.js?v=7"></script>
+<script src="tutorial7.js?v=8"></script>
 <script src="apaisado.js?v=6"></script>
 <script src="movil.js?v=40"></script>
 </body>

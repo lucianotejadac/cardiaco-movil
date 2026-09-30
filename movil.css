@@ -332,4 +332,7 @@ body.caso7 .preguntasBtn.solo7:not([hidden]){display:block}
 .antecedentes7{margin:0 0 8px;border-left-color:var(--celeste)}
 .antecedentes7 b{color:var(--celeste)}
 body.caso7 .antecedentes7[hidden]{display:none}
-
+/* velocidad del ventriculo que late (mapa QGS) */
+.vel3d{display:flex;align-items:center;gap:8px;flex:1 1 220px;font-size:.9em;color:var(--texto2)}
+.vel3d input[type=range]{flex:1;min-width:90px;height:32px}
+.vel3d .mono{white-space:nowrap;font-size:.95em}

@@ -200,7 +200,7 @@ const Pantallas7=(()=>{
   const ext=(m,dec)=>{const v=sv[m];if(!v)return '';let lo=0,hi=0;v.forEach((x,i)=>{if(x<v[lo])lo=i;if(x>v[hi])hi=i;});const fmt=x=>dec?d1(x):f0(x);return ` En tu ${f==='estres'?'estrés':'reposo'}, el menor es ${nombreSeg(lo+1)} (${fmt(v[lo])}) y el mayor, ${nombreSeg(hi+1)} (${fmt(v[hi])}).`;};
   add('titulo',`Pantalla QGS del ${f==='estres'?'estrés':'reposo'}, generada con tu eje del gatillado. Te explico cada resultado y qué significa tu valor. Los rangos que menciono son aproximados y dependen del protocolo.`);
   add('cortes','Arriba fin de diástole y abajo fin de sístole, en eje corto, largo vertical y largo horizontal. De diástole a sístole la cavidad se achica y la pared se engruesa, por eso brilla más.');
-  add('v3d','El ventrículo en fin de diástole: en gris la superficie interna y en naranja la externa. En la sección del mapa QGS late con los 8 intervalos y se puede girar.');
+  add('v3d','El ventrículo en fin de diástole: en gris la superficie interna y en naranja la externa. En la sección del mapa QGS late con los 8 intervalos, con cuadros interpolados entre ellos, y se puede girar.');
   add('ed',`Perfusión en fin de diástole, en porcentaje del máximo, por segmento.${ext('ed')}`);
   add('es',`Perfusión en fin de sístole. Es más alta que en diástole porque la pared engrosada suma más cuentas.${ext('es')}`);
   add('mov',`Movimiento del borde interno entre diástole y sístole, en mm. El septum se mueve menos que la pared lateral, y eso es normal. Un segmento que casi no se mueve es hipocinético.${ext('mov',true)}`);

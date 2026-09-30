@@ -217,6 +217,14 @@ const Qps=(()=>{
   let der=E.eje.slice(),arr=E.v.map(t=>-t),hac=E.u.map(t=>-t);[der,hac]=rotar(der,hac,-58);[arr,hac]=rotar(arr,hac,8);[der,arr]=rotar(der,arr,4);
   const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],esc=lado/36,P=(i,j)=>{const o=(i*NF+((j+NF)%NF))*3,d=[S[o]-E.O[0],S[o+1]-E.O[1],S[o+2]-E.O[2]];return {x:x0+lado/2+dot(d,der)*esc,y:y0+lado/2-dot(d,arr)*esc,z:dot(d,hac),d};},luz=[-.45,.45,.77],ln=Math.hypot(...luz),caras=[];
   const T=Q.arco(E,X.cal.base),frac=t=>{let a=0,b=T.t.length-1;while(b-a>1){const m=(a+b)>>1;if(T.t[m]<=t)a=m;else b=m;}return T.g[a];};
+  // Con WebGL: malla completa alisada, con el mapa polar (y la zona bajo el limite en negro) como textura.
+  if(window.Malla3D){
+   const Sa=Malla3D.alisar(S,nsel,NF,6),uv=new Float32Array(nsel*NF*2),tx=new Uint8Array(N*N*4),K=2,e=esc/(lado/2);
+   for(let i=0;i<nsel;i++){const rho=frac(X.P.t[i]);for(let j=0;j<NF;j++){const f=X.P.f[j],o=(i*NF+j)*2;uv[o]=(rho*Math.cos(f)+1)/2;uv[o+1]=(rho*Math.sin(f)+1)/2;}}
+   for(let o=0;o<N*N;o++){const c=r.zona&&r.zona[o]?[0,0,0]:rgb(X.A[o]||0);tx[o*4]=c[0];tx[o*4+1]=c[1];tx[o*4+2]=c[2];tx[o*4+3]=255;}
+   const img=Malla3D.dibujar({w:lado*K,h:lado*K,S:Sa,nr:nsel,nf:NF,O:E.O,D:der,A:arr,H:hac,k:[e,e],fondo:[0,0,0],luz,modo:'textura',tex:{data:tx,n:N},uv,interior:'oculto'});
+   if(img){ctx.drawImage(img,x0,y0,lado,lado);ctx.fillStyle='#ffee00';ctx.font='11px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';for(const [t,a,b] of [['ANT',.5,.13],['INF',.5,.95],['SEPT',.1,.5],['ÁPEX',.9,.6]])ctx.fillText(t,x0+a*lado,y0+b*lado);return;}
+  }
   for(let i=0;i+pi<nsel;i+=pi)for(let j=0;j<NF;j+=pj){const A=P(i,j),B=P(i,j+pj),C=P(i+pi,j+pj),D=P(i+pi,j),e1=[0,1,2].map(k=>B.d[k]-A.d[k]),e2=[0,1,2].map(k=>D.d[k]-A.d[k]);
    let n=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];const l=Math.hypot(...n)||1;n=n.map(t=>t/l);const m=[0,1,2].map(k=>(A.d[k]+C.d[k])/2),ax=dot(m,E.eje),mr=[0,1,2].map(k=>m[k]-(ax>0?0:.7)*ax*E.eje[k]);if(dot(n,mr)<0)n=n.map(t=>-t);
    const nv=[dot(n,der),dot(n,arr),dot(n,hac)];if(nv[2]<=0)continue;const lu=Math.max(0,(nv[0]*luz[0]+nv[1]*luz[1]+nv[2]*luz[2])/ln),rho=frac(X.P.t[Math.min(nsel-1,i+1)]),f=X.P.f[(j+2)%NF],ox=Math.min(N-1,Math.max(0,Math.round((rho*Math.cos(f)+1)/2*N-.5))),oy=Math.min(N-1,Math.max(0,Math.round((rho*Math.sin(f)+1)/2*N-.5))),o=oy*N+ox;
