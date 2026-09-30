@@ -22,7 +22,7 @@ const Glosario=(()=>{
   S('FWHM','Ancho a media altura (full width at half maximum). Mide el ancho del filtro gaussiano final, en milímetros: más ancho, imagen más suave y defectos más borrosos.'),
   S('QPS','Quantitative Perfusion SPECT: programa del equipo que arma el mapa polar, compara con una base de normales y calcula la extensión, el TPD y los puntajes.'),
   S('QGS','Quantitative Gated SPECT: programa del equipo que mide el ventrículo en cada intervalo del ciclo cardíaco: volúmenes, fracción de eyección, movimiento y engrosamiento de la pared.'),
-  S('QC','Control de calidad (quality control). En «QC=4.47» es el indicador de calidad de la segmentación del ventrículo que informa el programa; en este paciente fue 1,12 a 1,41 en los estudios que segmentaron bien y 4,47 en el que falló.'),
+  S('QC','Control de calidad (quality control). En «QC=1.90» o «QC=4.47» es el indicador de calidad de la segmentación del ventrículo que informa el programa del equipo: más bajo es mejor. Cuando la segmentación falla, el programa lo avisa, por ejemplo con «Mask Failure».'),
   S('IR','Otro indicador de calidad que el programa del equipo informa junto al QC. Las pantallas no dicen cómo se calcula.'),
   S('SSS','Summed stress score: suma de los puntajes de los 17 segmentos en estrés. Cada segmento va de 0 (normal) a 4 (ausencia de captación).'),
   S('SRS','Summed rest score: suma de los puntajes de los 17 segmentos en reposo.'),

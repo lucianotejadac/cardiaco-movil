@@ -196,7 +196,7 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes,opciones){
   estado.aviso=esDelCaso?'':propio?'Archivo propio, no es el caso 1. ':'Atención: este archivo no es el estrés del caso 1. Se muestra igual. ';
   mensaje((esDelCaso?'Proyecciones del caso 1, estrés: ':propio?'':'Atención: este archivo no es el estrés del caso 1 (se muestra igual). ')+(esDelCaso?String(origen).replace(PROPIO,''):origen)+(recuperado?' (guardado en esta tablet)':''),esDelCaso||propio?'ok':'error');
   $('titulo').textContent=esDelCaso?'SPECT cardíaco · Caso 1 · Estrés':'SPECT cardíaco · '+(crudo.description||'archivo propio');
-  const fase7=opciones&&opciones.fase;Caso7.entrar(fase7?true:Caso7.esCaso7(crudo.frame),fase7);if(Caso7.activo){estado.aviso='';mensaje(`Caso 7, ${fase7==='reposo'?'reposo':'estrés'}: `+origen+(recuperado?' (guardado en esta tablet)':''),'ok');}
+  const fase7=opciones&&opciones.fase;Caso7.entrar(fase7?true:Caso7.esCaso7(crudo.frame),fase7);if(Caso7.activo){estado.aviso='';mensaje(`${Caso7.nombre}, ${fase7==='reposo'?'reposo':'estrés'}: `+origen+(recuperado?' (guardado en esta tablet)':''),'ok');}
   const c=CARDIACO_CASOS[CASO].clinica;$('antecedenteTexto').textContent=c.antecedentes;$('procedimientoTexto').textContent=c.procedimiento;$('antecedente').hidden=!esDelCaso;
   detener();estado.k=0;
   estado.crudo=preparar(crudo,null);estado.corr=null;estado.correccion=null;estado.modo='uno';
@@ -416,7 +416,7 @@ function aQc7(){mostrarSolo('qc');armar();}
 // fase ya se habia trabajado, recupera su correccion de movimiento.
 async function cargarFase(fase,previo){
  const q=estado.equipo.find(e=>e.fase===fase);if(!q||!q.proy){mensaje(`El ZIP no trae las proyecciones del ${fase==='reposo'?'reposo':'estrés'}.`,'error');return false;}
- const ok=await mostrar(q.proy,`Cardiaco caso 7/Caso 7/${fase==='reposo'?'Reposo/NM_reposo.dcm':'Estres/NM_estres.dcm'}`,false,q.ct,q.proyGat,estado.equipo,null,{fase});
+ const ok=await mostrar(q.proy,`${Caso7.nombre} · ${fase==='reposo'?'Reposo/NM_reposo.dcm':'Estres/NM_estres.dcm'}`,false,q.ct,q.proyGat,estado.equipo,null,{fase});
  if(ok&&previo&&previo.corr){Object.assign(estado,previo);$('comparacion').textContent=estado.comparacion||'';armar();}
  return ok;
 }

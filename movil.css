@@ -328,4 +328,8 @@ body.caso7 .preguntasBtn.solo7:not([hidden]){display:block}
 .preguntasLista{padding-left:1.3em;margin:8px 0 12px}
 .preguntasLista li{margin:0 0 12px}
 .preguntasLista p{margin:0 0 3px;line-height:1.45}
+/* Antecedentes clinicos del caso, visibles desde el inicio */
+.antecedentes7{margin:0 0 8px;border-left-color:var(--celeste)}
+.antecedentes7 b{color:var(--celeste)}
+body.caso7 .antecedentes7[hidden]{display:none}
 

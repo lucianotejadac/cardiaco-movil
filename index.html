@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cardíaco móvil · Caso 1</title>
-<link rel="stylesheet" href="movil.css?v=41">
+<link rel="stylesheet" href="movil.css?v=42">
 </head>
 <body>
 <header class="barra">
@@ -40,6 +40,7 @@
  </section>
 
  <section class="oculta" id="qc">
+  <div class="antecedentes7 dato" hidden><b>Antecedentes del caso.</b> <span class="antecedentes7Texto"></span></div>
   <button id="modo" type="button" class="cambio" aria-pressed="false">Corregir</button>
   <div id="rejilla" class="rejilla"></div>
 
@@ -333,6 +334,7 @@
 
  <section class="oculta" id="pantallas7">
   <div class="columna">Pantallas finales · con tus ejes</div>
+  <div class="antecedentes7 dato" hidden><b>Antecedentes del caso.</b> <span class="antecedentes7Texto"></span></div>
   <p id="pantEstado" class="estado"></p>
   <div id="pantMenu" class="menuPant" role="group" aria-label="Pantalla"></div>
   <figure class="pantalla"><figcaption id="pantTitulo"></figcaption><canvas id="pantLienzo" class="libre ancho" aria-label="Pantalla final generada con tus resultados."></canvas></figure>
@@ -474,11 +476,9 @@
   <dd>Debajo de las dos imágenes del eje están los tres cortes estándar por el centro del ventrículo, con los bordes de la pared: en amarillo el interno, en naranja el externo y en blanco la base. Se rehacen cada vez que mueves un deslizador. Si ocupan mucho espacio, «Ocultar imágenes» deja solo los deslizadores.</dd>
   <dt>Con y sin atenuación, estrés y reposo</dt>
   <dd>En el caso 7, los dos menús de arriba eligen la fase y la corrección de atenuación. La reconstrucción sin atenuación la hace la aplicación al generar las pantallas finales, con la receta del equipo y tus ejes.</dd>
-  <dt>De dónde sale el mapa con atenuación</dt>
-  <dd>El equipo no guardó sus mapas polares con atenuación y el informe médico no usó esas imágenes. En el estrés, el mapa de referencia se armó con la zona que el equipo dibujó sin atenuación, que es la misma anatomía, extendida dentro de los segmentos que el equipo puntuó con atenuación hasta completar la extensión que informó, 21 %. En el reposo, dentro de los segmentos que puntuó, hasta su 9 %.</dd>
-  <dt>El mapa sin atenuación</dt>
-  <dd>El equipo sí guardó sus mapas polares sin atenuación. La zona bajo el límite de referencia es la que dibujó, y su imagen aparece al pulsar «Ver el resultado del equipo».</dd>
-  <dt>La falla de máscara del reposo con atenuación</dt>
+  <dt>De dónde sale la zona de referencia</dt>
+  <dd>Cuando el equipo guardó el mapa polar de una reconstrucción, la zona bajo el límite de referencia es la que dibujó, y su imagen aparece al pulsar «Ver el resultado del equipo». Cuando no lo guardó, la zona parte de la que dibujó en la otra reconstrucción, que es la misma anatomía, y se ajusta dentro de los segmentos que puntuó hasta completar la extensión que informó. En el caso 7 el equipo guardó los mapas sin atenuación; en el caso 8, los con atenuación.</dd>
+  <dt>La falla de máscara del reposo con atenuación (caso 7)</dt>
   <dd>El equipo marcó «Mask Failure: QC=4.47» en ese estudio y su volumen quedó inflado. La referencia reproduce ese resultado. «Ver más sobre la falla de máscara» lo explica.</dd>
   <dt>Lo que queda guardado</dt>
   <dd>Cada reconstrucción se guarda en este dispositivo, dentro del navegador. La próxima vez la sección se abre sin reconstruir, y las recetas que ya probaste aparecen como botones. No se envía nada a ningún servidor. Se pueden borrar con el botón de la receta.</dd>
@@ -754,16 +754,16 @@
 <script src="gatillado.js?v=2"></script>
 <script src="eje-equipo.js?v=7"></script>
 <script src="qps-nucleo.js?v=5"></script>
-<script src="qps.js?v=10"></script>
-<script src="caso7-constantes.js?v=3"></script>
-<script src="caso7-gatillado-constantes.js?v=2"></script>
-<script src="caso7-gatillado.js?v=8"></script>
-<script src="pantallas7.js?v=4"></script>
-<script src="caso7.js?v=9"></script>
-<script src="glosario.js?v=2"></script>
-<script src="preguntas7.js?v=1"></script>
+<script src="qps.js?v=11"></script>
+<script src="caso7-constantes.js?v=4"></script>
+<script src="caso7-gatillado-constantes.js?v=3"></script>
+<script src="caso7-gatillado.js?v=9"></script>
+<script src="pantallas7.js?v=5"></script>
+<script src="caso7.js?v=10"></script>
+<script src="glosario.js?v=3"></script>
+<script src="preguntas7.js?v=2"></script>
 <script src="tutorial7.js?v=4"></script>
 <script src="apaisado.js?v=6"></script>
-<script src="movil.js?v=38"></script>
+<script src="movil.js?v=39"></script>
 </body>
 </html>

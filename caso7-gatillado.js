@@ -14,12 +14,19 @@ const Gatillado7=(()=>{
  const N=192,RECETA={it:4,sub:4,fwhm:8.4},MEDIO=24,LADO_XY=34;
  // Lo que informo el equipo en las pantallas QGS de cada fase (por la huella del marco de
  // referencia de sus proyecciones), con los valores por segmento del 1 al 17.
- const EQUIPOS={'22d4f455':{fase:'estrés',imagen:'estres',edv:55,esv:18,sv:37,ef:67,ed:1,es:4,si_ed:.61,si_es:.45,ecc:.79,per:-3.60,pfr:1.08,pfr2:3.50,mfr3:.78,ttpf:130,bpm:81.3,rr:738,
+ const EQUIPOS={'22d4f455':{fase:'estrés',imagen:'caso7-qgs-estres',edv:55,esv:18,sv:37,ef:67,ed:1,es:4,si_ed:.61,si_es:.45,ecc:.79,per:-3.60,pfr:1.08,pfr2:3.50,mfr3:.78,ttpf:130,bpm:81.3,rr:738,
   curva:[55,40.5,24.7,18.0,21.4,27.0,35.0,51.5],
   seg:{ed:[51,37,36,36,32,42,50,45,45,48,46,56,50,45,48,53,42],es:[62,53,45,46,48,62,75,64,68,60,56,72,75,64,76,80,84],mov:[10.5,4.6,1.3,5.2,9.6,11.8,8.0,3.7,1.7,5.7,9.5,10.0,7.4,3.3,8.0,11.3,10.2],eng:[31,35,28,25,30,38,39,40,47,32,30,39,51,46,50,50,68]}},
-  '474e44e4':{fase:'reposo',imagen:'reposo',edv:68,esv:22,sv:46,ef:68,ed:1,es:4,si_ed:.61,si_es:.44,ecc:.81,per:-3.40,pfr:1.72,pfr2:3.17,mfr3:1.04,ttpf:132,bpm:79.9,rr:751,
+  '474e44e4':{fase:'reposo',imagen:'caso7-qgs-reposo',edv:68,esv:22,sv:46,ef:68,ed:1,es:4,si_ed:.61,si_es:.44,ecc:.81,per:-3.40,pfr:1.72,pfr2:3.17,mfr3:1.04,ttpf:132,bpm:79.9,rr:751,
   curva:[68,50.5,30.2,22.0,25.8,35.6,47.5,66.2],
-  seg:{ed:[49,38,35,41,36,47,56,47,47,52,49,63,51,46,51,53,46],es:[68,56,42,48,48,63,92,69,70,71,67,90,91,72,88,85,89],mov:[12.5,6.0,1.1,4.3,9.2,12.3,11.0,4.8,1.1,5.0,10.0,11.9,10.4,4.0,7.9,12.7,10.3],eng:[36,37,27,21,25,33,52,44,49,39,37,48,62,50,57,54,68]}}};
+  seg:{ed:[49,38,35,41,36,47,56,47,47,52,49,63,51,46,51,53,46],es:[68,56,42,48,48,63,92,69,70,71,67,90,91,72,88,85,89],mov:[12.5,6.0,1.1,4.3,9.2,12.3,11.0,4.8,1.1,5.0,10.0,11.9,10.4,4.0,7.9,12.7,10.3],eng:[36,37,27,21,25,33,52,44,49,39,37,48,62,50,57,54,68]}},
+  // Caso 8 (fin de diastole en el intervalo 8; el estres no tiene segundo pico de llenado: PFR2 «--»).
+  '127d82cf':{fase:'estrés',imagen:'caso8-qgs-estres',edv:108,esv:71,sv:37,ef:35,ed:8,es:5,si_ed:.70,si_es:.65,ecc:.84,per:-1.91,pfr:2.25,pfr2:null,mfr3:.78,ttpf:174,bpm:99.8,rr:601,
+  curva:[106.7,99.5,84.7,74.2,71.0,78.4,92.1,108.0],
+  seg:{ed:[59,33,36,22,13,41,58,51,49,37,21,67,44,48,50,54,39],es:[70,38,36,19,12,39,82,64,63,35,16,63,71,76,69,60,68],mov:[5.9,2.3,2.0,2.3,2.2,5.2,5.4,2.2,3.1,3.8,3.8,5.1,5.2,3.4,6.0,6.6,6.0],eng:[16,17,9,4,4,1,34,31,27,6,0,5,41,42,30,17,44]}},
+  '2061c0ed':{fase:'reposo',imagen:'caso8-qgs-reposo',edv:107,esv:71,sv:36,ef:34,ed:8,es:4,si_ed:.70,si_es:.62,ecc:.83,per:-1.85,pfr:1.53,pfr2:1.40,mfr3:.92,ttpf:105,bpm:87.0,rr:690,
+  curva:[105.2,94.3,78.4,71.0,72.1,84.8,96.4,107.0],
+  seg:{ed:[57,31,37,22,13,43,68,59,54,41,24,73,55,60,58,63,43],es:[66,36,40,17,11,44,87,75,75,41,14,75,87,92,71,64,82],mov:[6.6,2.8,0.1,1.9,1.9,5.9,5.5,2.5,1.4,3.1,3.2,5.3,6.1,2.7,4.6,6.6,5.0],eng:[16,16,9,1,3,6,30,29,27,6,-4,9,40,42,22,12,44]}}};
  let EQUIPO=EQUIPOS['22d4f455'];
  const g={vols:null,suma:null,s:null,d:null,sp:1,fuente:'',res:null,ref:null,K:null,revelar:false,t:0,timer:null,yaw:28,pitch:12,vis:null,ocupado:false,tarea:null,rechazo:null,detenido:false};
 
@@ -114,7 +121,7 @@ const Gatillado7=(()=>{
   let per=0,tper=0;for(let i=0;i<ies;i++)if(der[i]<per){per=der[i];tper=tt[i]+1;}
   const p1=pic[0]??ies,p2=pic[1]??p1,Dd=T-tt[ies],mfr3=(sp8.val(tt[ies]+Dd/3)-cur[ies])/(Dd/3/T*rr)/edv;
   const crudo={edv,esv,ef:100*(edv-esv)/edv,si_ed:forma(S[ed]),si_es:forma(S[es]),ecc:Math.sqrt(1-(E.b/E.a)**2),per,pfr:der[p1],pfr2:der[p2],mfr3,ttpf:(tt[p1]-tt[ies])/T*rr*1000};
-  const factores=K?K.factores:Object.fromEntries(['si_ed','si_es','ecc','per','pfr','pfr2','mfr3','ttpf'].map(k=>[k,EQUIPO[k]/crudo[k]]));
+  const factores=K?K.factores:Object.fromEntries(['si_ed','si_es','ecc','per','pfr','pfr2','mfr3','ttpf'].map(k=>[k,EQUIPO[k]==null||!crudo[k]?1:EQUIPO[k]/crudo[k]]));
   const r={edv:Math.round(edv),esv:Math.round(esv),ed:ed+1,es:es+1,tper,tpfr:tt[p1]+1,tpfr2:tt[p2]+1};r.sv=r.edv-r.esv;r.ef=Math.round(100*(edv-esv)/edv);for(const k in factores)r[k]=crudo[k]*factores[k];
   return {E,S,V,ed,es,r,mapas,segv,rho:Ded.rho,cur,der,tt,constantes:{bases,fe,fp,rectas,factores}};
  }
@@ -139,7 +146,7 @@ const Gatillado7=(()=>{
  function tabla(){
   const r=g.res.r,e=EQUIPO,f=[['Volumen de fin de diástole','edv',0,'ml'],['Volumen de fin de sístole','esv',0,'ml'],['Volumen sistólico','sv',0,'ml'],['Fracción de eyección','ef',0,'%'],['Forma en fin de diástole','si_ed',2,''],['Forma en fin de sístole','si_es',2,''],['Excentricidad','ecc',2,''],['Vaciado máximo (PER)','per',2,'EDV/s'],['Llenado, primer pico (PFR)','pfr',2,'EDV/s'],['Llenado, segundo pico (PFR2)','pfr2',2,'EDV/s'],['Llenado del primer tercio (MFR/3)','mfr3',2,'EDV/s'],['Tiempo al primer pico (TTPF)','ttpf',0,'ms']];
   const t=$('qgsTabla');t.replaceChildren();const cab=t.insertRow();(g.revelar?['Medida','Tu resultado','Equipo']:['Medida','Tu resultado']).forEach(x=>{const c=document.createElement('th');c.textContent=x;cab.append(c);});
-  for(const [n,k,d,u] of f){const fila=t.insertRow();[n,`${dec(r[k],d)}${u?' '+u:''}`,...(g.revelar?[`${dec(e[k],d)}${u?' '+u:''}`]:[])].forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if(i===1&&g.revelar&&Math.abs(r[k]-e[k])>=(d?.5*10**-d:.5))c.className='cambia';});}
+  for(const [n,k,d,u] of f){const fila=t.insertRow();[n,`${dec(r[k],d)}${u?' '+u:''}`,...(g.revelar?[e[k]==null?'—':`${dec(e[k],d)}${u?' '+u:''}`]:[])].forEach((x,i)=>{const c=fila.insertCell();c.textContent=x;if(i===1&&g.revelar&&e[k]!=null&&Math.abs(r[k]-e[k])>=(d?.5*10**-d:.5))c.className='cambia';});}
  }
  function curva(destino){
   const res=g.res,w=340,h=150,ctx=lienzo(destino||'qgsCurva',w,h),x0=34,y0=10,W=w-80,H=h-34,vmax=Math.ceil(Math.max(...res.V)/10)*10+10,X=t=>x0+t/8*W,Y=v=>y0+H-v/vmax*H,YD=v=>y0+H/2-v/250*H/2;
@@ -190,8 +197,8 @@ const Gatillado7=(()=>{
   // Comparacion par a par: cada mapa y la curva del estudiante junto a los del equipo de esta fase.
   $('qgs7').classList.toggle('revelado',g.revelar);$('qgsCurvaEquipo').hidden=!g.revelar;
   const pon=(im,src)=>{if(im&&im.getAttribute('src')!==src)im.src=src;};
-  pon(document.querySelector('#qgsCurvaEquipo img'),`caso7-qgs-${EQUIPO.imagen}-curva.png?v=1`);
-  document.querySelectorAll('#qgsMapas figure.equipo').forEach(f=>{f.hidden=!g.revelar;if(g.revelar)pon(f.querySelector('img'),`caso7-qgs-${EQUIPO.imagen}-${f.dataset.mapa}.png?v=1`);});
+  pon(document.querySelector('#qgsCurvaEquipo img'),`${EQUIPO.imagen}-curva.png?v=1`);
+  document.querySelectorAll('#qgsMapas figure.equipo').forEach(f=>{f.hidden=!g.revelar;if(g.revelar)pon(f.querySelector('img'),`${EQUIPO.imagen}-${f.dataset.mapa}.png?v=1`);});
   $('qgsRevelar').textContent=g.revelar?'Ocultar el resultado del equipo':'Ver el resultado del equipo';
   $('qgsNota').textContent=g.revelar?`El equipo informó para el ${EQUIPO.fase}: volumen de fin de diástole ${EQUIPO.edv} ml, de fin de sístole ${EQUIPO.esv} ml, fracción de eyección ${EQUIPO.ef} %. Los cuatro mapas del equipo traen un número por segmento; la calibración de esta sección se hizo con ellos, con el eje del equipo y sin los saltos.`:'Los números del equipo se ven al pulsar «Ver el resultado del equipo».';
  }

@@ -14,7 +14,11 @@
 'use strict';
 const Caso7=(()=>{
  const $=id=>document.getElementById(id);
- const HUELLA='22d4f455',NOMBRE={estres:'Estrés',reposo:'Reposo'},MINUS={estres:'estrés',reposo:'reposo'};
+ const NOMBRE={estres:'Estrés',reposo:'Reposo'},MINUS={estres:'estrés',reposo:'reposo'};
+ // Casos del recorrido, por la huella del marco de referencia de sus proyecciones de estres.
+ const CASOS={
+  '22d4f455':{num:7,reposo:'474e44e4',notaReposo:true,antecedentes:null},
+  '127d82cf':{num:8,reposo:'2061c0ed',notaReposo:false,antecedentes:'Hombre de 73 años. Antecedente de cirugía de revascularización miocárdica en 2017; estudio de control. SPECT/CT miocárdico con 99mTc-sestamibi, protocolo de dos días. Estrés farmacológico con adenosina en infusión continua de 140 µg/kg/min por 6 minutos, con 27 mCi; reposo otro día, con 25 mCi. Gatillado con ECG en las dos fases y CT de baja dosis para corregir la atenuación.'}};
  const PASOS=[
   {fase:'estres',id:'qc',n:'Control de calidad'},{fase:'estres',id:'reg',n:'Registro'},{fase:'estres',id:'ejes',n:'Caja y ejes'},{fase:'estres',id:'ejesGat',n:'Ejes del gatillado'},
   {fase:'reposo',id:'qc',n:'Control de calidad'},{fase:'reposo',id:'reg',n:'Registro'},{fase:'reposo',id:'ejes',n:'Caja y ejes'},{fase:'reposo',id:'ejesGat',n:'Ejes del gatillado'},
@@ -27,16 +31,19 @@ const Caso7=(()=>{
  const F=()=>c.F[c.fase],base=()=>c.fase==='reposo'?4:0;
  // Compatibilidad: lo de la fase activa se lee como antes (Caso7.estado.x, .s, .fuente, .reg).
  for(const k of ['x','s','fuente','reg'])Object.defineProperty(c,k,{get:()=>F()[k],enumerable:false});
- const esCaso7=frame=>cardiacoHash(frame)===HUELLA;
+ const esCaso7=frame=>CASOS[cardiacoHash(frame)]||null;
 
- function titulo(texto){$('titulo').textContent='SPECT cardíaco · Caso 7 · '+(texto||NOMBRE[c.fase]);}
+ const nombreCaso=()=>'Caso '+(c.caso?c.caso.num:'');
+ function titulo(texto){$('titulo').textContent=`SPECT cardíaco · ${nombreCaso()} · `+(texto||NOMBRE[c.fase]);}
+ // Antecedentes clinicos del caso, visibles desde el inicio (control de calidad y pantallas finales).
+ function antecedentes(){const a=c.caso&&c.caso.antecedentes;document.querySelectorAll('.antecedentes7').forEach(e=>{e.hidden=!a;const p=e.querySelector('.antecedentes7Texto');if(p)p.textContent=a||'';});}
  // fase: al cambiar de fase dentro del recorrido no se borra lo hecho.
  function entrar(activo,fase){
   if(fase&&c.activo){c.fase=fase;c.sub='estatico';titulo();receta();pintarPasos();return;}
-  c.activo=!!activo;document.body.classList.toggle('caso7',c.activo);$('pasos7').hidden=!c.activo;
-  if(!c.activo){if(window.Tutorial7&&Tutorial7.estado.activo)Tutorial7.cerrar();return;}
+  c.activo=!!activo;c.caso=activo&&typeof activo==='object'?activo:null;document.body.classList.toggle('caso7',c.activo);$('pasos7').hidden=!c.activo;
+  if(!c.activo){if(window.Tutorial7&&Tutorial7.estado.activo)Tutorial7.cerrar();antecedentes();return;}
   setTimeout(()=>{if(c.activo&&window.Tutorial7)Tutorial7.ofrecer();},500);Object.assign(c,{paso:0,alcanzado:0,fase:'estres',sub:'estatico',F:{estres:nueva(),reposo:nueva()},vista:{mapa:'estres',tipo:'ac',qgs:'estres'}});
-  if(window.Pantallas7)Pantallas7.olvidar();titulo();receta();pintarPasos();
+  if(window.Pantallas7)Pantallas7.olvidar();titulo();receta();antecedentes();pintarPasos();
  }
  function receta(){const p=$('a7Receta');if(p)p.textContent=`Receta del equipo para el ${MINUS[c.fase]}: ${RECETA[c.fase]}. Se reconstruye sobre las proyecciones que dejaste en el control de calidad, corregidas o no.`;}
  function pintarPasos(){
@@ -99,7 +106,7 @@ const Caso7=(()=>{
  function abrirCajaEstatica(){
   const Fx=F(),s=Fx.s,n=s.n;c.sub='estatico';configurarRef(s);MovilCardiaco.prepararCaso7({s:{n,spacing:s.spacing}});
   Caja.abrir({entrada:Fx.entradaEstatica||(Fx.entradaEstatica={tipo:'osem',zArriba:true,data:Fx.x.completa,etiqueta:'receta del equipo'}),s:{n,spacing:s.spacing}});
-  const nota=$('a7NotaReposo');if(nota)nota.hidden=c.fase!=='reposo';
+  const nota=$('a7NotaReposo');if(nota)nota.hidden=c.fase!=='reposo'||!(c.caso&&c.caso.notaReposo);
   botonSiguiente();MovilCardiaco.mostrarSolo('caja');
  }
  function abrirCajaGat(){
@@ -224,6 +231,6 @@ const Caso7=(()=>{
  // Paso 2: el registro parte con la configuracion elegida por el docente (en las dos fases).
  const REGISTRO={plano:'axial',corte:{axial:42},mezcla:.5,nivel:.51,ancho:.82,ventana:'blando'};
  function volverDesdeMapa(){conBloqueo(()=>abrirPantallas(false));}
- return {REGISTRO,iniciar,entrar,esCaso7,partirEnCero,debeTorcer,antesDeReo,alAbrirReo,volverDesdeCaja,volverDesdeMapa,estado:c,get activo(){return c.activo;},get fase(){return c.fase;}};
+ return {REGISTRO,iniciar,entrar,esCaso7,partirEnCero,debeTorcer,antesDeReo,alAbrirReo,volverDesdeCaja,volverDesdeMapa,estado:c,CASOS,get activo(){return c.activo;},get fase(){return c.fase;},get caso(){return c.caso;},get nombre(){return nombreCaso();}};
 })();
 window.Caso7=Caso7;

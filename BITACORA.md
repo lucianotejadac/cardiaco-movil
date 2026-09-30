@@ -633,3 +633,17 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - Sin respuestas en la aplicación: las respuestas son evidencia del estudiante en la rúbrica del APG.
 
 **Validación.** Recorrido completo con clics: control de calidad con 2 preguntas, pantallas finales con 3 y QGS con 3, todas con su lámina. Sin errores de JavaScript.
+
+## 2026-09-30 · Caso 8 en el mismo recorrido
+
+**Contexto.** El docente pidió un simulador con un caso nuevo (hombre de 73 años, revascularizado en 2017, estrés con adenosina, protocolo de dos días; defecto fijo inferolateral, inferior y anterolateral de cerca de 30 %, fracción de eyección 35 %). Decisiones del docente: el mismo simulador, saltos simulados en el control de calidad, antecedentes visibles desde el inicio, el mismo registro inicial y 2 o 3 preguntas por etapa.
+
+**Decisiones.**
+- **Recorrido para varios casos** (`caso7.js`): tabla `CASOS` por huella del marco de referencia del estrés (caso 7 `22d4f455`, caso 8 `127d82cf`, reposo `2061c0ed`). El título, la receta del paso 3, la nota del intestino (solo caso 7) y los antecedentes salen del caso.
+- **ZIP del caso 8** (local, `mapa-polar-qps/armar_zip_caso8.py`): mismo método que el caso 7, DICOM anonimizados como «CASO 8», saltos de 2 píxeles desde el paso 8 y de 3 desde el paso 20 en el estrés crudo y gatillado; versión sin saltos solo local para calibrar.
+- **Referencias del equipo del caso 8**, leídas de sus pantallas: QPS con atenuación (el equipo guardó esos mapas; su zona bajo el límite es la de referencia y su imagen aparece al revelar), Splash sin atenuación (números y puntajes; la zona parte de la dibujada con atenuación), QGS de las dos fases (números, 17 valores por mapa y la curva de 8 volúmenes digitalizada con la escala del EDV y el ESV). El estrés no tiene segundo pico de llenado: la tabla muestra «—» y ese factor queda en 1.
+- **Constantes congeladas del caso 8** para las cuatro combinaciones de fase y atenuación y los dos QGS, con el ZIP sin saltos y el eje del equipo.
+- **Antecedentes clínicos** en el control de calidad y en las pantallas finales. Textos generales en la nota del mapa polar, el «Saber más» del control de calidad y la ayuda del mapa polar; la falla de máscara queda marcada como del caso 7.
+- **Preguntas del caso 8** desde la clase CT13: adenosina y actividad esplácnica, CT por día en el protocolo de dos días, duración de los intervalos y fin de diástole en el intervalo 8, defecto extenso y eje, SSS alto con SDS bajo, riesgo vital, patrón fijo, territorios y revascularización, viabilidad (nitratos, PET con 18F-FDG, mismatch), fracción de eyección, llenado según la frecuencia, movimiento y engrosamiento. Pauta en Word, local.
+
+**Validación.** Caso 8 en modo exportación: QGS igual al equipo; mapa polar igual en volumen, pared, cuentas, forma, excentricidad y puntajes, con la extensión algo más baja con el eje redondeado. Caso 8 con saltos: la corrección encuentra exactamente los dos saltos y todo el recorrido pasa. Caso 7 sin cambios en sus números. Sin errores de JavaScript.
