@@ -688,3 +688,15 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - Textos: tutorial del mapa QGS (paso nuevo para la velocidad), guion de la pantalla QGS, nota bajo el ventrículo y glosario («interpolado», «lpm»).
 
 **Validación.** Recorridos completos de los casos 7 y 8 en local: el ventrículo dibuja 60 cuadros por segundo, late a 81 lpm (caso 7) y 60 lpm (caso 8) con la velocidad real, y el control de velocidad cambia la frecuencia. Con WebGL bloqueado, el dibujo por caras también late interpolado y sin errores de JavaScript.
+
+## 2026-09-30 · Versión de revisión (dev) con botón «Automático»
+
+**Contexto.** El docente pidió un segundo simulador con el sufijo «dev», igual al de los estudiantes, con un botón que haga todos los pasos solo, para tener el caso listo y revisar resultados, copiando la orientación del equipo (Siemens). Decisiones del docente: eje exacto con decimales; en el gatillado del caso 8, el eje del estático; el dev siempre sincronizado con este simulador.
+
+**Decisiones.**
+- Repositorio aparte `cardiaco-movil-dev`, publicado en https://lucianotejadac.github.io/cardiaco-movil-dev/. Lo único propio es `auto7.js`; el resto se copia de este repositorio con `sincronizar.py`, que además cambia el título y renombra las bases del navegador y la marca del tutorial (las dos versiones comparten el origen de Pages y no deben compartir lo guardado).
+- `auto7.js`: franja «Versión de revisión», botón «Automático» (también detiene) y un aviso con el avance. En el estrés y en el reposo: corrige los saltos, deja el registro como viene, reconstruye con la receta del equipo, fija el centro y el eje del equipo con decimales en el estático y en el gatillado, genera las pantallas finales, pasa por el mapa QGS y termina en el mapa polar. En el dev, el mapa polar y el QGS abren con el resultado del equipo a la vista.
+- El gatillado usa el eje del estático de la misma fase: en el caso 7, el eje corto gatillado del equipo tiene exactamente la misma orientación que el estático (misma ImageOrientationPatient); en el caso 8, el equipo no lo exportó.
+- La calibración se hizo con los grados redondeados; con decimales, algún valor cambia en 1 punto (caso 7, estrés con atenuación: extensión 20 % frente a 21 %).
+
+**Validación.** En local, caso 8 listo en 2 min 11 s y caso 7 en 2 min 8 s: eje del equipo exacto en las cuatro orientaciones, centro del equipo, resultados del equipo a la vista, bases del navegador propias del dev y sin errores de JavaScript.
