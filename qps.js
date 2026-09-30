@@ -12,8 +12,8 @@ const Qps=(()=>{
  const Q=QpsNucleo,$=id=>document.getElementById(id),dec=(x,d=0)=>Number(x).toFixed(d).replace('.',',');
  // Lo que informo el equipo en el caso de referencia (pantalla «Splash AC»).
  const INFORME='El informe médico describe un defecto inferolateral apical, medio y basal, de cerca de 10 % del ventrículo, reversible por completo en reposo, en las imágenes sin corrección de atenuación. Las imágenes con corrección de atenuación no se usaron para interpretar, por actividad intestinal en la fase de reposo.';
- const INFORME8='El informe médico describe, en estrés y en reposo, un defecto de perfusión en las paredes inferolateral, inferior y anterolateral, en sus segmentos medios y basales, de cerca de 30 % del ventrículo, sin reversibilidad en reposo. El gatillado muestra hipocinesia marcada inferolateral y una fracción de eyección de 35 % en estrés y 34 % en reposo, sin dilatación transitoria (TID 1,04). Impresión: necrosis en esas paredes, sin isquemia.';
- const ZONA8_ESTRES_AC='1807,2,94,3,94,4,92,5,1,1,90,6,90,7,89,8,87,9,86,11,84,12,82,15,79,17,78,19,76,20,78,18,78,19,77,19,76,20,77,19,77,20,41,1,1,1,32,20,40,4,32,20,39,6,31,20,39,6,30,21,38,8,25,26,37,11,21,27,36,14,19,27,36,16,17,27,37,15,16,28,38,14,13,31,38,14,13,31,37,14,12,33,36,13,13,34,39,6,17,34,39,4,18,35,58,38,59,36,60,36,60,36,59,37,59,37,56,39,57,39,57,39,57,39,56,39,53,1,2,40,57,39,57,38,57,39,56,39,56,40,56,39,58,38,57,38,55,40,55,41,55,40,56,39,57,39,57,38,56,39,52,43,53,42,54,41,54,41,55,40,56,38,58,37,58,36,60,34,62,33,64,30,67,27,72,21,77,15,81,10,138',ZONA8_REPOSO_AC='2102,1,94,2,92,5,89,8,87,9,86,11,86,10,86,11,85,11,85,12,85,11,85,11,83,14,80,16,79,17,79,17,79,18,78,18,78,18,78,18,75,21,73,24,72,24,71,25,71,25,70,26,69,27,69,27,69,27,66,30,66,30,65,31,64,32,60,35,61,35,62,34,62,34,61,35,60,35,60,36,59,37,58,38,58,37,58,38,57,39,57,38,55,1,1,39,55,40,56,40,56,39,58,38,57,38,58,37,59,37,59,36,56,2,1,36,57,39,57,38,58,37,58,37,59,36,56,39,54,41,55,40,56,38,58,37,58,36,60,34,62,33,64,30,67,27,72,21,77,15,81,10,138';
+ const INFORME8='El informe médico describe perfusión adecuada en todos los segmentos, en reposo y post estrés, con motilidad y engrosamiento normales, sin dilatación isquémica transitoria y sin captación pulmonar (LHR 0,33). Fracción de eyección de 57 % post estrés y 59 % en reposo (valor normal del informe: más de 42 %). Impresión: sin evidencias de insuficiencia del riego coronario; función ventricular izquierda normal.';
+ const ZONA8_ESTRES_AC='3051,1,96,1,188,1,98,1,58,1,36,2,55,3,36,3,53,6,34,3,53,6,34,3,55,5,33,4,54,7,28,7,56,5,1,1,22,11,62,1,19,14,62,3,17,13,63,5,15,13,64,4,15,12,68,1,14,13,84,12,84,5,1,6,94,1,1340,1,2998';
  const ZONA_ESTRES_NOAC='2914,2,89,1,1,6,88,8,87,10,87,9,87,10,85,12,84,11,84,12,84,13,82,15,82,15,81,16,81,15,81,15,81,15,33,1,47,14,27,2,1,6,46,14,26,10,46,14,26,10,47,11,28,10,48,9,29,11,48,4,33,15,81,16,79,18,78,18,78,18,78,17,80,16,80,16,80,15,80,16,79,17,79,16,79,17,79,16,80,16,81,14,82,9,1,3,83,7,89,6,12,1,76,3,93,1,2334',ZONA_REPOSO_NOAC='3968,1,94,2,92,4,91,6,90,7,93,2,4766';
  // Clave: huella de la fase; con «|noac», la reconstruccion sin atenuacion.
  const EQUIPO={'22d4f455':{serie:'Stress [Recon - AC ]',estado:'QC=1.38, IR=0.31',normales:'symbiaMaleStressTc_AC',volumen:43,pared:120,cuentas:1105,defecto:25,extension:21,tpd:16,forma:.46,excentricidad:.86,puntajes:{6:2,14:1,16:2,11:3,5:2,10:2,4:1},
@@ -31,16 +31,16 @@ const Qps=(()=>{
   zonaSinAtenuacion:ZONA_ESTRES_NOAC,zonaPropia:true,imagen:'caso7-qps-noac-estres.png',informe:INFORME},
   '474e44e4|noac':{serie:'Rest [Recon - NoAC ]',estado:'QC=1.41, IR=0.29',normales:'symbiaMaleRestTc_NC_F3D',volumen:52,pared:128,cuentas:557,defecto:1,extension:1,tpd:1,forma:.53,excentricidad:.83,puntajes:{14:1},
   zonaSinAtenuacion:ZONA_REPOSO_NOAC,zonaPropia:true,imagen:'caso7-qps-noac-reposo.png',informe:INFORME},
-  // Caso 8. El equipo guardo los mapas polares CON atenuacion (pantalla QPS): esa zona es la de referencia; sin atenuacion,
-  // la zona parte de la dibujada con atenuacion y se ajusta a los segmentos que puntuo (pantalla Splash NO AC).
-  '127d82cf':{serie:'Stress [Recon - AC ]',estado:'QC=1.90, IR=0.55',normales:'symbiaMaleStressTc_AC',volumen:94,pared:145,cuentas:1985,defecto:48,extension:33,tpd:30,forma:.71,excentricidad:.84,puntajes:{4:3,5:4,6:2,10:2,11:4,12:2,16:3,17:2},
+  // Caso 8 (estudio normal). El equipo guardo los mapas polares CON atenuacion (pantalla QPS EXTENT): esa zona es la de
+  // referencia; sin atenuacion la zona parte de la dibujada con atenuacion y se ajusta a sus puntajes (Splash NO AC).
+  'b13ef109':{serie:'Stress [Recon - AC ]',estado:'QC=1.09, IR=0.21',normales:'symbiaMaleStressTc_AC',volumen:76,pared:136,cuentas:1850,defecto:4,extension:3,tpd:4,forma:.54,excentricidad:.85,puntajes:{12:1,17:1},
   zonaSinAtenuacion:ZONA8_ESTRES_AC,zonaPropia:true,imagen:'caso8-qps-ac-estres.png',informe:INFORME8},
-  '2061c0ed':{serie:'Rest [Recon - AC ]',estado:'QC=1.82, IR=0.17',normales:'symbiaMaleRestTc_AC',volumen:90,pared:143,cuentas:1473,defecto:37,extension:26,tpd:24,forma:.67,excentricidad:.84,puntajes:{4:3,5:4,6:2,10:2,11:4,16:2},
-  zonaSinAtenuacion:ZONA8_REPOSO_AC,zonaPropia:true,imagen:'caso8-qps-ac-reposo.png',informe:INFORME8},
-  '127d82cf|noac':{serie:'Stress [Recon - NoAC ]',estado:'QC=1.61, IR=0.60',normales:'symbiaMaleStressTc_NC_F3D',volumen:86,pared:138,cuentas:575,defecto:40,extension:29,tpd:27,forma:.69,excentricidad:.83,puntajes:{4:3,5:4,6:1,10:2,11:4,14:1,16:2,17:2},
+  'a17066aa':{serie:'Rest [Recon - AC ]',estado:'QC=1.23, IR=0.23',normales:'symbiaMaleRestTc_AC',volumen:71,pared:139,cuentas:1514,defecto:0,extension:0,tpd:0,forma:.54,excentricidad:.85,puntajes:{},
+  zonaSinAtenuacion:null,zonaPropia:true,imagen:'caso8-qps-ac-reposo.png',informe:INFORME8},
+  'b13ef109|noac':{serie:'Stress [Recon - NoAC ]',estado:'QC=1.29, IR=0.21',normales:'symbiaMaleStressTc_NC_F3D',volumen:74,pared:134,cuentas:518,defecto:8,extension:6,tpd:5,forma:.55,excentricidad:.84,puntajes:{3:1,13:2,14:2,17:2},
   zonaSinAtenuacion:ZONA8_ESTRES_AC,previaDe:'con atenuación',informe:INFORME8},
-  '2061c0ed|noac':{serie:'Rest [Recon - NoAC ]',estado:'QC=1.83, IR=0.14',normales:'symbiaMaleRestTc_NC_F3D',volumen:93,pared:144,cuentas:464,defecto:37,extension:26,tpd:26,forma:.65,excentricidad:.85,puntajes:{4:3,5:4,6:2,10:2,11:4,16:2},
-  zonaSinAtenuacion:ZONA8_REPOSO_AC,previaDe:'con atenuación',informe:INFORME8}};
+  'a17066aa|noac':{serie:'Rest [Recon - NoAC ]',estado:'QC=1.50, IR=0.22',normales:'symbiaMaleRestTc_NC_F3D',volumen:71,pared:133,cuentas:428,defecto:0,extension:0,tpd:1,forma:.56,excentricidad:.85,puntajes:{},
+  zonaSinAtenuacion:null,informe:INFORME8}};
  const desplegar=(rle,n)=>{const z=new Uint8Array(n*n);let o=0,v=0;for(const k of rle.split(',').map(Number)){if(v)z.fill(1,o,o+k);o+=k;v^=1;}return z;};
  const N=192,q={listo:false,ocupado:false,dAz:0,dEl:0,t:null,guardadas:new Map()};
 
@@ -98,7 +98,7 @@ const Qps=(()=>{
   const R=Q.medir(q.volRef,q.d,c.E,c.P,c.W,c.S,c.cal,q.sp,N);q.R0=R;
   if(q.obj){
    const z=Q.zonaPorPuntajes(R,q.obj.puntajes,q.obj.extension,q.obj.zonaSinAtenuacion?desplegar(q.obj.zonaSinAtenuacion,96):null,96);q.L=Q.limiteDesdeZona(R,z.zona);q.umbral=z.umbral;const p=Q.perfusion(R,q.L);
-   q.f={cuentas:q.obj.cuentas/R.medidas.cuentas,forma:q.obj.forma/R.medidas.forma,excentricidad:q.obj.excentricidad/R.medidas.excentricidad,extension:q.obj.extension/p.extension,severidad:q.obj.tpd/p.extensionArea};
+   q.f={cuentas:q.obj.cuentas/R.medidas.cuentas,forma:q.obj.forma/R.medidas.forma,excentricidad:q.obj.excentricidad/R.medidas.excentricidad,extension:p.extension>0?q.obj.extension/p.extension:1,severidad:p.extensionArea>0?q.obj.tpd/p.extensionArea:.9};
    q.refSeg={};for(let k=1;k<=17;k++)q.refSeg[k]=p.valor[k]/(1.05-.1*(q.obj.puntajes[k]||0));
   }else{q.L=null;q.f={cuentas:1,forma:1,excentricidad:1,extension:1,severidad:.9};q.refSeg=null;}
   q.ref=resultado(R);q.listo=true;controles();calcular();
@@ -115,7 +115,7 @@ const Qps=(()=>{
   else{
    const c=Q.calibrar(q.volRef,q.d,ref.marco,ref.centro,q.sp,q.obj,N,ref.cal||null);q.cal=c.cal;q.congelado=false;const R=Q.medir(q.volRef,q.d,c.E,c.P,c.W,c.S,c.cal,q.sp,N);q.R0=R;
    const z=Q.zonaPorPuntajes(R,q.obj.puntajes,q.obj.extension,q.obj.zonaSinAtenuacion?desplegar(q.obj.zonaSinAtenuacion,96):null,96);q.L=Q.limiteDesdeZona(R,z.zona);const p=Q.perfusion(R,q.L);
-   q.f={cuentas:q.obj.cuentas/R.medidas.cuentas,forma:q.obj.forma/R.medidas.forma,excentricidad:q.obj.excentricidad/R.medidas.excentricidad,extension:q.obj.extension/p.extension,severidad:q.obj.tpd/p.extensionArea};
+   q.f={cuentas:q.obj.cuentas/R.medidas.cuentas,forma:q.obj.forma/R.medidas.forma,excentricidad:q.obj.excentricidad/R.medidas.excentricidad,extension:p.extension>0?q.obj.extension/p.extension:1,severidad:p.extensionArea>0?q.obj.tpd/p.extensionArea:.9};
    q.refSeg={};for(let k=1;k<=17;k++)q.refSeg[k]=p.valor[k]/(1.05-.1*(q.obj.puntajes[k]||0));
   }
   if(!ref.guardada)await guardarReferencia(s,fuente,ref,q.cal,q.tipo);

@@ -18,7 +18,8 @@ const Caso7=(()=>{
  // Casos del recorrido, por la huella del marco de referencia de sus proyecciones de estres.
  const CASOS={
   '22d4f455':{num:7,reposo:'474e44e4',notaReposo:true,antecedentes:null},
-  '127d82cf':{num:8,reposo:'2061c0ed',notaReposo:false,antecedentes:'Hombre de 73 años. Antecedente de cirugía de revascularización miocárdica en 2017; estudio de control. SPECT/CT miocárdico con 99mTc-sestamibi, protocolo de dos días. Estrés farmacológico con adenosina en infusión continua de 140 µg/kg/min por 6 minutos, con 27 mCi; reposo otro día, con 25 mCi. Gatillado con ECG en las dos fases y CT de baja dosis para corregir la atenuación.'}};
+  'b13ef109':{num:8,reposo:'a17066aa',notaReposo:false,antecedentes:'Hombre de 84 años con tumor maligno de la cabeza del páncreas. SPECT de perfusión miocárdica con 99mTc-MIBI, estrés y reposo en días distintos, con 25,6 mCi en cada fase; estrés farmacológico con adenosina endovenosa. ECG de reposo en ritmo sinusal, con bloqueo completo de rama derecha y extrasístoles ventriculares aisladas. En el estrés la frecuencia máxima fue de 76 lpm (56 % de la predicha para la edad, 135 lpm) y la presión, 145/90 mmHg, sin cambios en el ECG y sin síntomas. Gatillado en las dos fases y CT de baja dosis para corregir la atenuación.',resumen:'paciente con tumor de páncreas, estrés farmacológico con adenosina en días distintos, bloqueo de rama derecha y extrasístoles',
+   gatillado:'OSEM 4 × 4, gaussiano 8,4 mm, la misma del caso 7: este caso no trae el gatillado reconstruido por el equipo'}};
  const PASOS=[
   {fase:'estres',id:'qc',n:'Control de calidad'},{fase:'estres',id:'reg',n:'Registro'},{fase:'estres',id:'ejes',n:'Caja y ejes'},{fase:'estres',id:'ejesGat',n:'Ejes del gatillado'},
   {fase:'reposo',id:'qc',n:'Control de calidad'},{fase:'reposo',id:'reg',n:'Registro'},{fase:'reposo',id:'ejes',n:'Caja y ejes'},{fase:'reposo',id:'ejesGat',n:'Ejes del gatillado'},

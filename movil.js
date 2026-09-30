@@ -71,8 +71,10 @@ function elegirEntradas(lista){
  // equipo y para mostrar en las proyecciones donde esta el corazon.
  // Puede haber una por fase (caso 4: estres y reposo); se ofrecen todas.
  const equipo=[];
- for(const rec of lista.filter(e=>/(^|\/)caso\s*\d+\/(estres|reposo)\/referencia equipo\/recon_transversal_noac\.dcm$/i.test(e.name))){
-  const m=rec.name.match(/caso\s*(\d+)\/(estres|reposo)\//i),fase=m[2].toLowerCase(),dir=rec.name.slice(0,rec.name.toLowerCase().indexOf('referencia equipo/')).toLowerCase();
+ // Cada fase con carpeta «Referencia equipo» (con o sin la transversal: el caso 8 no la trae).
+ const dirsRef=[...new Set(lista.filter(e=>/(^|\/)caso\s*\d+\/(estres|reposo)\/referencia equipo\/[^/]+\.dcm$/i.test(e.name)).map(e=>e.name.slice(0,e.name.toLowerCase().indexOf('referencia equipo/'))))];
+ for(const dirOrig of dirsRef){
+  const m=dirOrig.match(/caso\s*(\d+)\/(estres|reposo)\//i),fase=m[2].toLowerCase(),dir=dirOrig.toLowerCase(),rec=lista.find(e=>e.name.toLowerCase()===dir+'referencia equipo/recon_transversal_noac.dcm')||null;
   const f=nombre=>lista.find(e=>e.name.toLowerCase()===dir+nombre)||null,ref=nombre=>f('referencia equipo/'+nombre);
   const proy=f('nm_'+fase+'.dcm');
   // Tambien los ejes cortos y el gatillado de Siemens, la gatillada de esa fase y su CT (para AC).
@@ -205,7 +207,7 @@ async function mostrar(bytes,origen,recuperado,ct,gat,equipo,ejes,opciones){
   // Caso 7: los ejes cortos del equipo de las dos fases; EjeEquipo elige el de cada fase por su marco de referencia.
   if(Caso7.activo)EjeEquipo.configurar(estado.equipo.flatMap(q=>[q.saAC,q.saNoAC]).filter(Boolean));
   $('equipoBotones').replaceChildren(...estado.equipo.flatMap((q,i)=>{const fase=q.fase==='reposo'?'reposo':'estrés',boton=(texto,f)=>{const b=document.createElement('button');b.type='button';b.className='boton ancho secundario';b.textContent=texto;b.addEventListener('click',f);return b;};
-   return [boton(`Comparar Siemens con el simulador (caso ${q.caso}, ${fase}) →`,()=>aComparar(i)),boton(`Reorientar con la reconstrucción del equipo (caso ${q.caso}, ${fase}) →`,()=>aEquipo(i))];}));Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
+   return [boton(`Comparar Siemens con el simulador (caso ${q.caso}, ${fase}) →`,()=>aComparar(i)),...(q.recon?[boton(`Reorientar con la reconstrucción del equipo (caso ${q.caso}, ${fase}) →`,()=>aEquipo(i))]:[])];}));Registro.olvidar();OsemMovil.olvidar();Reorientar.olvidar();Caja.olvidar();Gatillado.olvidar();$('gat').classList.add('oculta');$('reg').classList.add('oculta');$('osem').classList.add('oculta');$('caja').classList.add('oculta');$('reo').classList.add('oculta');
   estado.y=estado.crudo.filaInicial;
   textos();
   $('modo').disabled=false;

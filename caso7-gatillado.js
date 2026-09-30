@@ -20,13 +20,14 @@ const Gatillado7=(()=>{
   '474e44e4':{fase:'reposo',imagen:'caso7-qgs-reposo',edv:68,esv:22,sv:46,ef:68,ed:1,es:4,si_ed:.61,si_es:.44,ecc:.81,per:-3.40,pfr:1.72,pfr2:3.17,mfr3:1.04,ttpf:132,bpm:79.9,rr:751,
   curva:[68,50.5,30.2,22.0,25.8,35.6,47.5,66.2],
   seg:{ed:[49,38,35,41,36,47,56,47,47,52,49,63,51,46,51,53,46],es:[68,56,42,48,48,63,92,69,70,71,67,90,91,72,88,85,89],mov:[12.5,6.0,1.1,4.3,9.2,12.3,11.0,4.8,1.1,5.0,10.0,11.9,10.4,4.0,7.9,12.7,10.3],eng:[36,37,27,21,25,33,52,44,49,39,37,48,62,50,57,54,68]}},
-  // Caso 8 (fin de diastole en el intervalo 8; el estres no tiene segundo pico de llenado: PFR2 «--»).
-  '127d82cf':{fase:'estrés',imagen:'caso8-qgs-estres',edv:108,esv:71,sv:37,ef:35,ed:8,es:5,si_ed:.70,si_es:.65,ecc:.84,per:-1.91,pfr:2.25,pfr2:null,mfr3:.78,ttpf:174,bpm:99.8,rr:601,
-  curva:[106.7,99.5,84.7,74.2,71.0,78.4,92.1,108.0],
-  seg:{ed:[59,33,36,22,13,41,58,51,49,37,21,67,44,48,50,54,39],es:[70,38,36,19,12,39,82,64,63,35,16,63,71,76,69,60,68],mov:[5.9,2.3,2.0,2.3,2.2,5.2,5.4,2.2,3.1,3.8,3.8,5.1,5.2,3.4,6.0,6.6,6.0],eng:[16,17,9,4,4,1,34,31,27,6,0,5,41,42,30,17,44]}},
-  '2061c0ed':{fase:'reposo',imagen:'caso8-qgs-reposo',edv:107,esv:71,sv:36,ef:34,ed:8,es:4,si_ed:.70,si_es:.62,ecc:.83,per:-1.85,pfr:1.53,pfr2:1.40,mfr3:.92,ttpf:105,bpm:87.0,rr:690,
-  curva:[105.2,94.3,78.4,71.0,72.1,84.8,96.4,107.0],
-  seg:{ed:[57,31,37,22,13,43,68,59,54,41,24,73,55,60,58,63,43],es:[66,36,40,17,11,44,87,75,75,41,14,75,87,92,71,64,82],mov:[6.6,2.8,0.1,1.9,1.9,5.9,5.5,2.5,1.4,3.1,3.2,5.3,6.1,2.7,4.6,6.6,5.0],eng:[16,16,9,1,3,6,30,29,27,6,-4,9,40,42,22,12,44]}}};
+  // Caso 8 (estudio normal; fin de diastole en el intervalo 8. En el reposo la curva leida bajaba apenas bajo el ESV en el
+  // intervalo 3; se dejo en 37,5 ml para respetar el intervalo 4 que informa el equipo).
+  'b13ef109':{fase:'estrés',imagen:'caso8-qgs-estres',edv:92,esv:40,sv:52,ef:57,ed:8,es:3,si_ed:.68,si_es:.50,ecc:.85,per:-2.51,pfr:1.81,pfr2:.99,mfr3:1.16,ttpf:186,bpm:60.4,rr:994,
+  curva:[82.5,58.5,40.0,40.9,58.9,76.1,83.2,92.0],
+  seg:{ed:[61,42,30,32,35,48,51,53,47,37,40,52,40,52,41,47,36],es:[82,49,32,43,48,64,87,73,60,60,63,81,71,76,70,72,65],mov:[9.7,6.1,4.0,3.8,6.8,9.2,9.2,7.3,5.9,6.5,7.3,7.5,7.3,6.7,7.5,6.8,6.8],eng:[34,19,10,18,19,26,50,38,28,36,34,44,45,43,44,41,46]}},
+  'a17066aa':{fase:'reposo',imagen:'caso8-qgs-reposo',edv:88,esv:37,sv:52,ef:59,ed:8,es:4,si_ed:.72,si_es:.49,ecc:.85,per:-2.63,pfr:1.87,pfr2:1.01,mfr3:1.24,ttpf:176,bpm:59.9,rr:1001,
+  curva:[82.3,53.3,37.5,37.0,56.5,71.7,78.4,88.0],
+  seg:{ed:[54,41,34,26,32,44,48,51,46,33,42,50,39,45,43,52,36],es:[76,51,36,38,47,66,90,70,66,60,62,85,73,73,70,79,61],mov:[10.9,7.2,4.5,4.6,6.3,10.1,10.9,7.4,5.6,6.2,6.3,8.2,8.3,5.7,5.8,6.2,5.9],eng:[35,20,8,17,18,30,58,35,33,38,30,48,48,44,40,40,38]}}};
  let EQUIPO=EQUIPOS['22d4f455'];
  const g={vols:null,suma:null,s:null,d:null,sp:1,fuente:'',res:null,ref:null,K:null,revelar:false,t:0,timer:null,yaw:28,pitch:12,vis:null,ocupado:false,tarea:null,rechazo:null,detenido:false};
 
@@ -59,7 +60,7 @@ const Gatillado7=(()=>{
   else{
    if(!est.gat)throw Error(`El ZIP no trae la adquisición gatillada del ${EQUIPO.fase}.`);
    g.ocupado=true;g.detenido=false;const t0=performance.now();
-   Progreso.abrir('Gatillado: receta del equipo (OSEM 4 × 4, gaussiano 8,4 mm)',cancelar,'Ocho reconstrucciones, una por intervalo del ciclo cardíaco. Queda guardado en este dispositivo.');
+   Progreso.abrir(window.Caso7&&Caso7.caso&&Caso7.caso.gatillado?'Gatillado: OSEM 4 × 4, gaussiano 8,4 mm':'Gatillado: receta del equipo (OSEM 4 × 4, gaussiano 8,4 mm)',cancelar,'Ocho reconstrucciones, una por intervalo del ciclo cardíaco. Queda guardado en este dispositivo.');
    try{
     Progreso.avance(0,'Leyendo la adquisición gatillada…');await new Promise(r=>setTimeout(r,20));
     const d=await Lab95.read(new Blob([est.gat])),sg0=Lab95.spect(d,{gated:true}),cuadros=Array.from({length:sg0.frames},(_,i)=>({cabezal:d.uint16('x00540020',i),ventana:d.uint16('x00540010',i),paso:d.uint16('x00540090',i)}));
@@ -193,7 +194,7 @@ const Gatillado7=(()=>{
   const res=g.res;tabla();curva();ventriculo();cortes();
   polar('qgsEd',res.mapas.ed,res.rho,100,res.segv.ed);polar('qgsEs',res.mapas.es,res.rho,100,res.segv.es);polar('qgsMov',res.mapas.mov,res.rho,10,res.segv.mov,true);polar('qgsEng',res.mapas.eng,res.rho,100,res.segv.eng);
   const E=res.E,a=CardiacoCore.angulosDe(E.eje[0],E.eje[1],E.eje[2]);
-  $('qgsEstado').className='estado ok';$('qgsEstado').textContent=`Tu eje del gatillado: azimut ${dec(a.azimut,1)}°, elevación ${dec(a.elevacion,1)}°. Receta del equipo para el gatillado: OSEM 4 × 4, gaussiano 8,4 mm.${g.deMemoria?' Reconstrucción recuperada de lo guardado.':''}`;
+  $('qgsEstado').className='estado ok';$('qgsEstado').textContent=`Tu eje del gatillado: azimut ${dec(a.azimut,1)}°, elevación ${dec(a.elevacion,1)}°. ${window.Caso7&&Caso7.caso&&Caso7.caso.gatillado?`Receta para el gatillado: ${Caso7.caso.gatillado}.`:'Receta del equipo para el gatillado: OSEM 4 × 4, gaussiano 8,4 mm.'}${g.deMemoria?' Reconstrucción recuperada de lo guardado.':''}`;
   // Comparacion par a par: cada mapa y la curva del estudiante junto a los del equipo de esta fase.
   $('qgs7').classList.toggle('revelado',g.revelar);$('qgsCurvaEquipo').hidden=!g.revelar;
   const pon=(im,src)=>{if(im&&im.getAttribute('src')!==src)im.src=src;};

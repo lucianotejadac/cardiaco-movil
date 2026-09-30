@@ -210,7 +210,9 @@ const QpsNucleo=(()=>{
   const N=R.N,M=N*N,bx=[],by=[],bv=[];
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){const o=y*N+x;if(R.rho[o]>=1)continue;let borde=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=N||Y>=N)continue;if(z[Y*N+X]!==z[o]){borde=true;break;}}if(borde){bx.push(x);by.push(y);bv.push(R.A[o]);}}
   const L=new Float32Array(M),dist=new Float32Array(M);
-  if(!bx.length){for(let o=0;o<M;o++)L[o]=R.rho[o]<1?R.A[o]-HOLGURA:-1e9;return L;}
+  // Sin zona (estudio normal, extension 0 en el equipo): el limite no puede seguir cada pixel con la holgura minima,
+  // porque un giro de medio grado ya lo cruza. Va bajo el mapa suavizado, con 5 puntos mas de holgura, que crece hacia la base.
+  if(!bx.length){const As=desenfocar(R.A,N,3*N/256);for(let o=0;o<M;o++)L[o]=R.rho[o]<1?Math.min(R.A[o],As[o])-(HOLGURA+5+(R.rho[o]>.75?(R.rho[o]-.75)/.25*9:0)):-1e9;return L;}
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){let m=Infinity,k=0;for(let i=0;i<bx.length;i++){const q=(bx[i]-x)**2+(by[i]-y)**2;if(q<m){m=q;k=i;}}L[y*N+x]=bv[k];dist[y*N+x]=Math.sqrt(m);}
   const Ls=desenfocar(L,N,3*N/256),h=6*N/256;
   for(let o=0;o<M;o++){if(R.rho[o]>=1){Ls[o]=-1e9;continue;}// hacia la base las cuentas caen rapido y cambian mucho con el eje: ahi la holgura crece

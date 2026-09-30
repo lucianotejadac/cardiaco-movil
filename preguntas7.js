@@ -1,4 +1,4 @@
-/* Casos 7 y 8: botón «Preguntas» en cada etapa del recorrido. Regla: ninguna pregunta pide señalar algo en la
+/* Casos 7 (isquemia reversible) y 8 (estudio normal): botón «Preguntas» en cada etapa del recorrido. Regla: ninguna pregunta pide señalar algo en la
    Splash ni se refiere a una imagen sin una coordenada precisa (paso, píxeles, ángulo, intervalo, segmento o valor). Pocas preguntas por etapa, tomadas de la
    clase «CT13. Exploraciones de MN en Cardiología» del curso (U-Cursos, TM08315) y aplicadas a lo
    que se ve en ese paso del simulador. Cada pregunta dice de qué lámina viene. No trae respuestas:
@@ -36,34 +36,34 @@ const Preguntas7=(()=>{
    {l:'105',q:'La ventana QGS muestra la curva de volumen y de llenado. ¿En qué intervalo ocurre el fin de sístole, y cómo se relaciona con el volumen de fin de sístole de la tabla?'},
    {l:'3 y 75',q:'El estudio gatillado agrega el movimiento y el engrosamiento de la pared. ¿Cómo ayudan a distinguir un defecto fijo por infarto de uno por atenuación? ¿Qué valores de movimiento y de engrosamiento tienen los segmentos basal y medio inferolateral de este caso?'}]};
 
- // Caso 8: defecto fijo (necrosis) con estres farmacologico con adenosina y protocolo de dos dias.
+ // Caso 8: estudio normal, estres farmacologico con adenosina en dias distintos, bloqueo de rama derecha y extrasistoles.
  const P8={
   qc:()=>[
-   rep()?{l:'41–49 y 71',q:'En el reposo, ¿la corrección automática encontró saltos? Este caso se hizo con estrés farmacológico con adenosina. ¿Es esperable aquí el desplazamiento del corazón que describe la clase después del ejercicio? ¿Por qué?'}
+   rep()?{l:'41–49 y 71',q:'En el reposo, ¿cuántos saltos informó la corrección automática? Este caso se hizo con adenosina: ¿es esperable aquí el desplazamiento del corazón que describe la clase después del ejercicio? ¿Por qué?'}
         :{l:'71–72',q:'La clase indica que el movimiento del paciente es la causa más común de artefactos en SPECT y que se controla con el cine y el sinograma. En este estudio, ¿en qué pasos del giro aparecen los saltos, de cuántos píxeles son y hacia dónde, y qué pasaría con el mapa polar si no se corrigieran?'},
-   {l:'67 y 73',q:'La clase indica que en el esfuerzo farmacológico hay más actividad extracardiaca y recomienda esperar al menos 30 minutos y dar una colación grasa antes de adquirir. ¿Por qué ocurre esto con adenosina, y cómo puede afectar la pared inferior?'}],
+   {l:'38 y 41–47',q:'Según los antecedentes, la frecuencia cardíaca llegó a 76 lpm, el 56 % de la predicha para la edad (135 lpm). La clase pide alcanzar el 85 % de la frecuencia máxima teórica en el esfuerzo físico. ¿Se aplica ese criterio a este estudio con adenosina? ¿Por qué?'}],
   reg:()=>[
-   {l:'75 y 84',q:'La clase advierte que en hombres la atenuación diafragmática puede simular un defecto de la pared inferior. En este caso hay un defecto inferior e inferolateral. ¿Qué papel cumple el CT registrado para decidir si es atenuación o un defecto real?'},
-   {l:'60',q:'Este estudio se hizo con protocolo de dos días, con un CT en cada fase. ¿Por qué cada fase necesita su propio CT registrado, y qué pasaría si se usara el CT del otro día?'}],
+   {l:'75 y 84',q:'El paciente es hombre: ¿qué pared se espera más atenuada por el diafragma? Comparando la extensión y la suma de puntajes del estrés sin atenuación y con atenuación de este caso, ¿qué indica la diferencia?'},
+   {l:'60',q:'El estrés y el reposo se adquirieron en días distintos, con un CT en cada día. ¿Por qué cada fase necesita su propio CT registrado, y qué pasaría si se usara el CT del otro día?'}],
   caja:()=>gat()?[
-   {l:'66',q:`La clase indica que el ciclo cardíaco se divide en 8 o 16 imágenes sincronizadas con la onda R. En el estrés con adenosina la frecuencia fue cercana a 100 latidos por minuto y en el reposo, a 87. ¿Cuánto dura cada intervalo en cada fase, y por qué la caja se ubica sobre la suma de los 8?`},
-   {l:'133',q:'La adquisición gatillada rechaza los latidos que se salen de una tolerancia del intervalo R-R. En este caso el equipo ubicó el fin de diástole en el último intervalo, el 8, y no en el primero. ¿Qué puede explicarlo, y qué consecuencia tiene para la curva de volumen?'}]:[
-   {l:'27, 67 y 73',q:'El MIBI se elimina en un 60 % por vía hepatobiliar y en un 30 % por vía renal. ¿Qué órganos pueden sumar actividad junto a la pared inferior del corazón, cómo puede afectarla, y qué recomienda la clase en el esfuerzo farmacológico para reducirla?'}],
+   {l:'133',q:'El ECG muestra extrasístoles ventriculares aisladas. La clase indica una tolerancia de 10 a 15 % para el intervalo R-R. ¿Qué pasa con esos latidos en la adquisición gatillada, y qué efecto tendrían muchas extrasístoles en la curva de volumen?'},
+   {l:'66',q:'El estrés se adquirió a 60 latidos por minuto (R-R de 994 ms) y el ciclo se divide en 8 intervalos. ¿Cuánto dura cada intervalo, y por qué la caja se ubica sobre la suma de los 8?'}]:[
+   {l:'27, 67 y 73',q:'Con adenosina hay más actividad hepatobiliar e intestinal que con ejercicio. ¿Qué órganos pueden sumar actividad junto a la pared inferior del corazón, cómo puede afectarla, y qué recomienda la clase en el esfuerzo farmacológico para reducirla?'}],
   reo:()=>gat()?[
    {l:'3 y 66',q:'¿Por qué el eje del gatillado debería quedar parecido al del estudio estático de la misma fase? ¿Qué cambiaría en el movimiento y en el engrosamiento de la pared si quedara torcido?'}]:[
    {l:'76',q:'La clase muestra un ejemplo de mala y de buena reorientación. ¿Con qué azimut y elevación quedó tu eje, cuántos grados lo giraste desde 0° y 0°, y qué criterios de la clase usaste para decidir que quedó bien?'},
-   {l:'76–77',q:'En este caso falta captación en una parte grande de la pared inferior e inferolateral. ¿Qué dificultad agrega un defecto extenso para ubicar el centro y el eje del ventrículo, y cómo la resolvieron?'}],
+   {l:'77',q:'El paso 3 del procesado es la correspondencia de cortes entre esfuerzo y reposo. ¿Qué ángulos quedaron en cada fase? Si quedaran muy distintos, ¿podría aparecer un defecto o una reversibilidad que no existe? ¿Por qué?'}],
   pantallas7:()=>[
-   {l:'99–100',q:'¿Cuánto valen el SSS, el SRS y el SDS en este caso, con y sin atenuación? ¿Qué indica un SDS bajo junto a un SSS alto?'},
-   {l:'103',q:'La clase marca como posible riesgo vital un SDS mayor que 12 o una extensión mayor que 30 %. ¿Cumple este caso alguno de esos criterios, con y sin atenuación? En este caso, ¿qué pesa más: la extensión del defecto o su reversibilidad?'}],
+   {l:'99–100',q:'¿Cuánto valen el SSS, el SRS y el SDS en este caso, con y sin atenuación? Con los rangos que explica la «Pantalla final tutorial», ¿qué sugeriría cada juego de valores por sí solo, y cuál es más confiable en este paciente?'},
+   {l:'103',q:'La clase marca como posible riesgo vital un SDS mayor que 12 o una extensión mayor que 30 %. ¿Qué SDS y qué extensión informa el equipo en este caso, con y sin atenuación, y qué se concluye?'}],
   qps:()=>[
-   {l:'85–88',q:'Según los patrones de la clase (reversible, fijo, parcialmente reversible y reversibilidad paradójica), ¿cómo se clasifica el defecto de este caso? Para justificar, usar la extensión en estrés y en reposo y el porcentaje de reversibilidad que informa la pantalla QPS.'},
-   {l:'80–82',q:'¿Qué paredes y segmentos están alterados, y a qué territorios coronarios corresponden? ¿Cómo se relaciona con el antecedente de cirugía de revascularización?'},
-   {l:'68, 109 y 120',q:'La clase indica que el MIBI por sí solo no permite evaluar la viabilidad: para eso se agregan nitritos en el reposo o se hace un PET con 18F-FDG. En este defecto fijo, ¿qué estudio ayudaría a decidir si queda miocardio viable, y qué patrón indicaría viabilidad?'}],
+   {l:'83–88',q:'La clase describe un estudio normal como una captación homogénea en esfuerzo y en reposo. Con la extensión en estrés y en reposo y el porcentaje de reversibilidad que informa la pantalla QPS, ¿cómo se clasifica este estudio?'},
+   {l:'84',q:'Sin atenuación, el estrés puntúa en los segmentos apical anterior, apical septal, ápex y basal inferoseptal. ¿Qué puntaje tiene cada uno con atenuación? ¿Qué sugiere que bajen o desaparezcan al corregir la atenuación?'},
+   {l:'34',q:'La clase lista el bloqueo de rama izquierda entre las contraindicaciones de la prueba de esfuerzo. Este paciente tiene bloqueo de rama derecha y se estudió con adenosina. ¿Qué puntajes tienen los segmentos septales (anteroseptales e inferoseptales) de este caso con atenuación?'}],
   qgs7:()=>[
-   {l:'143',q:'La clase da como límite inferior normal de la fracción de eyección del ventrículo izquierdo alrededor de 50 %. ¿Cuánto vale en estrés y en reposo en este caso, y qué se concluye?'},
-   {l:'105',q:'La ventana QGS muestra la curva de volumen y de llenado. ¿Qué diferencia hay entre el llenado del estrés y el del reposo (PFR y TTPF), considerando la frecuencia cardíaca de cada fase?'},
-   {l:'3 y 75',q:'El informe describe hipocinesia marcada inferolateral. ¿Qué valores de movimiento y de engrosamiento tienen los segmentos basal y medio inferolateral, y cómo apoyan que el defecto fijo sea necrosis y no atenuación?'}]};
+   {l:'143',q:'La clase da como límite inferior normal de la fracción de eyección alrededor de 50 %, y el informe usa más de 42 %. ¿Cuánto vale la fracción de eyección en estrés y en reposo, y qué se concluye con cada límite?'},
+   {l:'105',q:'¿En qué intervalo ocurren el fin de diástole y el fin de sístole en cada fase, y cómo se relacionan con los volúmenes de fin de diástole y de sístole de la tabla?'},
+   {l:'3 y 75',q:'En un estudio normal todos los segmentos se mueven y engruesan. ¿Qué segmento tiene el menor engrosamiento en el estrés, cuánto vale, y cuánto se mueve ese mismo segmento?'}]};
  const P=()=>window.Caso7&&Caso7.caso&&Caso7.caso.num===8?P8:P7;
  const NOMBRE={qc:'Control de calidad',reg:'Registro',caja:'Caja',reo:'Orientación de los ejes',pantallas7:'Pantallas finales',qps:'Mapa polar',qgs7:'Mapa QGS'};
  let D=null;
