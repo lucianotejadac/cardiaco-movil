@@ -647,3 +647,12 @@ En el eje corto el anillo del simulador cae en el mismo lugar y con la misma for
 - **Preguntas del caso 8** desde la clase CT13: adenosina y actividad esplácnica, CT por día en el protocolo de dos días, duración de los intervalos y fin de diástole en el intervalo 8, defecto extenso y eje, SSS alto con SDS bajo, riesgo vital, patrón fijo, territorios y revascularización, viabilidad (nitratos, PET con 18F-FDG, mismatch), fracción de eyección, llenado según la frecuencia, movimiento y engrosamiento. Pauta en Word, local.
 
 **Validación.** Caso 8 en modo exportación: QGS igual al equipo; mapa polar igual en volumen, pared, cuentas, forma, excentricidad y puntajes, con la extensión algo más baja con el eje redondeado. Caso 8 con saltos: la corrección encuentra exactamente los dos saltos y todo el recorrido pasa. Caso 7 sin cambios en sus números. Sin errores de JavaScript.
+
+## 2026-09-30 · Preguntas sin la Splash ni imágenes sin coordenadas
+
+**Contexto.** El docente pidió eliminar las preguntas que piden indicar algo en la Splash o que se refieren a imágenes sin una coordenada precisa.
+
+**Decisiones.**
+- Se quitó la pregunta de la Splash de las pantallas finales (quedan 2 en esa etapa).
+- Se reescribieron las que pedían mirar imágenes: saltos por paso del giro, píxeles y dirección (no «cómo se ven en el sinograma»); órganos que suman actividad junto a la pared inferior (no «qué se ve en esta caja»); azimut y elevación del eje y grados girados desde 0° y 0° (no «cómo se ven los cortes»); reversibilidad con el porcentaje que informa la pantalla QPS (no «el mapa de reversibilidad»); comparación con y sin atenuación por extensión y puntajes (no «comparando el mapa»); movimiento y engrosamiento por valores de los segmentos basal y medio inferolateral.
+- La pauta en Word del caso 7 se regeneró con las 19 preguntas nuevas (local).
