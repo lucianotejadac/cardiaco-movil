@@ -25,3 +25,8 @@ Caso 1, fase de estrés, fijo. Carga las proyecciones sin corregir (`NM_estres.d
 ## Pruebas
 
 `prueba-movil-temporal.html` (ignorado por git) carga el ZIP real desde la unión `_datos/` y comprueba las imágenes; se corre con `cdp_run.cjs --movil`, que emula un teléfono de 390 × 844 con pantalla táctil.
+
+## Licencia
+
+© 2026 Luciano Tejada Castro. Distribuido bajo licencia [MIT](LICENSE).
+Los componentes y datos de terceros conservan sus propias licencias, indicadas en este documento o junto a ellos.
